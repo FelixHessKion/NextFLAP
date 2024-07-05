@@ -1,0 +1,76 @@
+cmake_minimum_required(VERSION 3.5)  
+  
+project(NextFLAP)  
+  
+# Set the C++ standard to use  
+set(CMAKE_CXX_STANDARD 20)  
+
+set(CMAKE_BUILD_TYPE Debug)
+  
+# Add source files  
+set(SOURCES  
+   grounder/grounder.cpp  
+   grounder/groundedTask.cpp  
+   heuristics/evaluator.cpp  
+   heuristics/hFF.cpp  
+   heuristics/hLand.cpp  
+   heuristics/landmarks.cpp  
+   heuristics/numericRPG.cpp  
+   heuristics/rpg.cpp  
+   heuristics/temporalRPG.cpp  
+   parser/parsedTask.cpp  
+   parser/parser.cpp  
+   parser/syntaxAnalyzer.cpp  
+   planner/intervalCalculations.cpp  
+   planner/linearizer.cpp  
+   planner/plan.cpp  
+   planner/planBuilder.cpp  
+   planner/planComponents.cpp  
+   planner/planEffects.cpp  
+   planner/planner.cpp  
+   planner/plannerSetting.cpp  
+   planner/printPlan.cpp  
+   planner/selector.cpp  
+   planner/state.cpp  
+   planner/successors.cpp  
+   planner/z3Checker.cpp  
+   preprocess/preprocess.cpp  
+   preprocess/preprocessedTask.cpp  
+   sas/mutexGraph.cpp  
+   sas/sasTask.cpp  
+   sas/sasTranslator.cpp  
+   utils/utils.cpp  
+)  
+  
+# Find Z3 library    
+find_library(Z3_LIBRARY z3 HINTS ${CMAKE_CURRENT_BINARY_DIR}/z3/src/z3-build)  
+
+
+  
+# If Z3 library is not found, print an error message  
+if(NOT Z3_LIBRARY)  
+  # External project to build Z3 library
+  include(ExternalProject)
+  ExternalProject_Add(z3
+    GIT_REPOSITORY https://github.com/Z3Prover/z3.git
+    GIT_TAG z3-4.13.0
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/z3
+    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+    INSTALL_COMMAND ""
+)
+endif()   
+
+  
+# Create the executable target  
+add_library(${PROJECT_NAME} SHARED ${SOURCES})  
+
+add_executable(nextflap_planner nextflap.cpp
+                               ${SOURCES})  
+  
+# Link necessary libraries  
+target_link_libraries(nextflap_planner  ${Z3_LIBRARY})  
+  
+# Include necessary directories  
+target_include_directories(${PROJECT_NAME} PRIVATE  
+    ${Z3_INCLUDE_DIR}  
+)  
