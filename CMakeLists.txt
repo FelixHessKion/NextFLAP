@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_BUILD_TYPE Debug)
   
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(BUILD_EXECUTABLE "Build executable" ON)
+
 # Add source files  
 set(SOURCES  
    grounder/grounder.cpp  
@@ -60,10 +63,10 @@ if(NOT Z3_LIBRARY)
 )
 endif()   
 
-  
-# Create the executable target  
+# Create shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})  
 
+# Create the executable target
 add_executable(nextflap_planner nextflap.cpp
                                ${SOURCES})  
   
