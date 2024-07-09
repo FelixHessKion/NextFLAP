@@ -46,34 +46,43 @@ set(SOURCES
 )  
   
 # Find Z3 library    
-find_library(Z3_LIBRARY z3 HINTS ${CMAKE_CURRENT_BINARY_DIR}/z3/src/z3-build)  
+find_library(Z3_LIBRARY z3)  
+
+# Find Z3 includes
+find_path(Z3_INCLUDE_DIRS z3++.h PATH_SUFFIXES z3)
 
 
-  
-# If Z3 library is not found, print an error message  
 if(NOT Z3_LIBRARY)  
-  # External project to build Z3 library
-  include(ExternalProject)
-  ExternalProject_Add(z3
-    GIT_REPOSITORY https://github.com/Z3Prover/z3.git
-    GIT_TAG z3-4.13.0
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/z3
-    BUILD_COMMAND ${CMAKE_COMMAND} --build .
-    INSTALL_COMMAND ""
-)
+  message(FATAL_ERROR "Z3 library not found")
+else()
+  message(STATUS "Z3 library found at ${Z3_LIBRARY}.")
+  message(STATUS "Z3 includes found at ${Z3_INCLUDE_DIRS}.")
 endif()   
 
-# Create shared library
-add_library(${PROJECT_NAME} SHARED ${SOURCES})  
+if(BUILD_SHARED_LIBS)
+  message(STATUS "Building shared library.")
+  # Create shared library
+  add_library(${PROJECT_NAME} SHARED ${SOURCES})  
 
-# Create the executable target
-add_executable(nextflap_planner nextflap.cpp
+  # Link necessary libraries  
+  target_link_libraries(${PROJECT_NAME}  ${Z3_LIBRARY})  
+  
+  # Include necessary directories  
+  target_include_directories(${PROJECT_NAME} PRIVATE  
+  ${Z3_INCLUDE_DIRS}
+  )  
+endif()
+
+if(NOT BUILD_EXECUTABLE)
+  # Create the executable target
+  add_executable(nextflap_planner nextflap.cpp
                                ${SOURCES})  
   
-# Link necessary libraries  
-target_link_libraries(nextflap_planner  ${Z3_LIBRARY})  
+  # Link necessary libraries  
+  target_link_libraries(nextflap_planner  ${Z3_LIBRARY})  
   
-# Include necessary directories  
-target_include_directories(${PROJECT_NAME} PRIVATE  
-    ${Z3_INCLUDE_DIR}  
-)  
+  # Include necessary directories  
+  target_include_directories(nextflap_planner PRIVATE  
+  ${Z3_INCLUDE_DIRS}
+  )   
+endif()
