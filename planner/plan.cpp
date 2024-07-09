@@ -19,10 +19,12 @@ Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEf
 	this->id = idPlan;
 	this->cvarValues = nullptr;
 	this->planUpdates = nullptr;
-	this->fixedInit = false;
-	if (parentPlan != nullptr) this->g = parentPlan->g + 1;
-	else this->g = 0;
-	this->h = (int)MAX_UINT16;
+    this->fixedInit = false;
+    if (parentPlan != nullptr && action->startNumEff.size()) this->g = parentPlan->g + action->startNumEff[0].exp.value;
+    // if (parentPlan != nullptr) this->g = parentPlan->g + 1;
+    else this->g = 0;
+    addFluentIntervals();
+    this->h = (int)MAX_UINT16;
 	this->hLand = 0;
 	this->repeatedState = false;
 	this->fs = nullptr;

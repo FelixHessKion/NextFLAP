@@ -16,6 +16,8 @@
 #include "../planner/state.h"
 #include "../planner/intervalCalculations.h"
 
+// #define NUMRPG_DEBUG true
+
 // Numeric effect of an action
 class NumericRPGEffect {
 public:

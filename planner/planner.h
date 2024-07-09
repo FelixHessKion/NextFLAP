@@ -14,6 +14,8 @@
 #include "successors.h"
 #include "selector.h"
 
+// #define _DEBUG true
+
 class Planner {
 private:
 	SASTask* task;

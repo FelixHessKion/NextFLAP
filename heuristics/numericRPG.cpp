@@ -432,8 +432,9 @@ int NumericRPG::evaluate()
 			a = c->producer;
 		}
 		if (a != nullptr) {
-			h++;
-			addSubgoals(a, level, c->type != 'V' ? c : nullptr);
+            // h++;
+            h += a->startNumEff[0].exp.value;
+            addSubgoals(a, level, c->type != 'V' ? c : nullptr);
 		}
 		delete c;
 	}
