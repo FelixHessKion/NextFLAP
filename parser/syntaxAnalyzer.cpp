@@ -8,6 +8,7 @@
 
 #include "syntaxAnalyzer.h"
 #include <fstream>
+#include <sstream>
 #include <cstring>
 #include <algorithm>
 #include <cstdarg>
@@ -58,6 +59,24 @@ SyntaxAnalyzer::SyntaxAnalyzer(char* fileName) {
     if (in.fail()) {
         throwError("File not found: " + std::string(fileName));
     }
+    string contents((istreambuf_iterator<char>(in)),
+        istreambuf_iterator<char>());
+    std::transform(contents.begin(), contents.end(), contents.begin(), ::tolower);
+    bufferLength = contents.length() + 1;
+    buffer = new char[bufferLength];
+    strcpy(buffer, contents.c_str());
+    tokenIndex = 0;
+    lineNumber = 1;
+    position = 0;
+    tokens.reserve(8096);
+    for (unsigned int i = 0; i < numSymbols; i++) {
+        if (symbolNames[i] != nullptr)
+            symbols[symbolNames[i]] = (Symbol)i;
+    }
+}
+
+SyntaxAnalyzer::SyntaxAnalyzer(std::string &pddlStr){
+    std::stringstream in(pddlStr);
     string contents((istreambuf_iterator<char>(in)),
         istreambuf_iterator<char>());
     std::transform(contents.begin(), contents.end(), contents.begin(), ::tolower);

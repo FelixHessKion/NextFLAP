@@ -70,7 +70,9 @@ public:
     Parser();
     ~Parser();
     ParsedTask* parseDomain(char* domainFileName);
+    ParsedTask* parseDomain(std::string &domainPddlStr);
     ParsedTask* parseProblem(char* problemFileName);
+    ParsedTask* parseProblem(std::string &problemPddlStr);
 };
 
 #endif

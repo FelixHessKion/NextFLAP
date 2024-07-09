@@ -16,7 +16,6 @@
 /* launches the planner.                                */
 /********************************************************/
 
-// #define OPTIMIZE_MAKESPAN true
 #define OPTIMIZE_MAKESPAN true
 // #define _DEBUG true
 

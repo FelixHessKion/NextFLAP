@@ -81,6 +81,7 @@ public:
     int tokenIndex;
     SyntaxAnalyzer();
     SyntaxAnalyzer(char* fileName);
+    SyntaxAnalyzer(std::string &pddlStr);
     ~SyntaxAnalyzer();
     Token* nextToken();
     Token* readSymbol(Symbol s);
