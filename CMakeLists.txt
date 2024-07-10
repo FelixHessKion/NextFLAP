@@ -76,7 +76,7 @@ if(BUILD_SHARED_LIBS)
   install(DIRECTORY grounder heuristics parser planner preprocess sas utils DESTINATION include/nextflap FILES_MATCHING PATTERN "*.h")
 endif()
 
-if(NOT BUILD_EXECUTABLE)
+if(BUILD_EXECUTABLE)
   # Create the executable target
   add_executable(nextflap_planner nextflap.cpp
                                ${SOURCES})  

@@ -58,6 +58,39 @@ ParsedTask* Parser::parseDomain(char* domainFileName) {
     delete syn;
     return task;
 }
+ParsedTask* Parser::parseDomain(std::string &domainStr) {
+    task = new ParsedTask();
+    syn = new SyntaxAnalyzer(domainStr);
+    syn->openPar();
+    syn->readSymbol(Symbol::DEFINE);
+    syn->openPar();
+    syn->readSymbol(Symbol::PDDLDOMAIN);
+    task->setDomainName(syn->readName());
+    syn->closePar();
+    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    while (syn->isSym(token, Symbol::OPEN_PAR)) {
+        syn->readColon();
+        token = syn->readSymbol(9, Symbol::REQUIREMENTS, Symbol::TYPES,
+            Symbol::CONSTANTS, Symbol::PREDICATES, Symbol::FUNCTIONS,
+            Symbol::CONSTRAINTS, Symbol::ACTION, Symbol::DURATIVE_ACTION,
+            Symbol::DERIVED);
+        switch (token->symbol) {
+        case Symbol::REQUIREMENTS:      parseRequirements();    break;
+        case Symbol::TYPES:             parseTypes();           break;
+        case Symbol::CONSTANTS:         parseConstants();       break;
+        case Symbol::PREDICATES:        parsePredicates();      break;
+        case Symbol::FUNCTIONS:         parseFunctions();       break;
+        case Symbol::DURATIVE_ACTION:   parseDurativeAction();  break;
+        case Symbol::ACTION:            parseAction();          break;
+        case Symbol::CONSTRAINTS:       parseConstraints();     break;
+        case Symbol::DERIVED:           parseDerivedPredicates();   break;
+        default:;
+        }
+        token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    }
+    delete syn;
+    return task;
+}
 
 // <problem> ::= (define (problem <name>)
 //               (:domain <name>)
@@ -71,6 +104,43 @@ ParsedTask* Parser::parseProblem(char* problemFileName) {
     task->serialLength = -1;
     task->parallelLength = -1;
     syn = new SyntaxAnalyzer(problemFileName);
+    syn->openPar();
+    syn->readSymbol(Symbol::DEFINE);
+    syn->openPar();
+    syn->readSymbol(Symbol::PROBLEM);
+    task->setProblemName(syn->readName());
+    syn->closePar();
+    syn->openPar();
+    syn->readColon();
+    syn->readSymbol(Symbol::PDDLDOMAIN);
+    syn->readName();
+    syn->closePar();
+    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    while (syn->isSym(token, Symbol::OPEN_PAR)) {
+        syn->readColon();
+        token = syn->readSymbol(7, Symbol::REQUIREMENTS, Symbol::OBJECTS,
+            Symbol::INIT, Symbol::GOAL, Symbol::CONSTRAINTS, Symbol::METRIC,
+            Symbol::LENGTH);
+        switch (token->symbol) {
+        case Symbol::REQUIREMENTS:      parseRequirements();    break;
+        case Symbol::OBJECTS:           parseObjects();         break;
+        case Symbol::INIT:              parseInit();            break;
+        case Symbol::GOAL:              parseGoal();            break;
+        case Symbol::CONSTRAINTS:       parseConstraints();     break;
+        case Symbol::METRIC:            parseMetric();          break;
+        case Symbol::LENGTH:            parseLength();          break;
+        default:;
+        }
+        token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    }
+    delete syn;
+    return task;
+}
+ParsedTask* Parser::parseProblem(std::string &problemStr) {
+    task->metricType = MT_NONE;
+    task->serialLength = -1;
+    task->parallelLength = -1;
+    syn = new SyntaxAnalyzer(problemStr);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
     syn->openPar();
