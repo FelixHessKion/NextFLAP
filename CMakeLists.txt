@@ -71,6 +71,8 @@ if(BUILD_SHARED_LIBS)
   target_include_directories(${PROJECT_NAME} PRIVATE  
   ${Z3_INCLUDE_DIRS}
   )  
+  # Install shared library
+  install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
 endif()
 
 if(NOT BUILD_EXECUTABLE)
@@ -85,4 +87,6 @@ if(NOT BUILD_EXECUTABLE)
   target_include_directories(nextflap_planner PRIVATE  
   ${Z3_INCLUDE_DIRS}
   )   
+  # Install executable
+  install(TARGETS nextflap_planner DESTINATION bin)
 endif()
