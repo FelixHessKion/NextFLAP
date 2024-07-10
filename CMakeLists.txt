@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)  
   
-project(NextFLAP)  
+project(nextflap)  
   
 # Set the C++ standard to use  
 set(CMAKE_CXX_STANDARD 20)  
@@ -73,6 +73,7 @@ if(BUILD_SHARED_LIBS)
   )  
   # Install shared library
   install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
+  install(DIRECTORY grounder heuristics parser planner preprocess sas utils DESTINATION include/nextflap FILES_MATCHING PATTERN "*.h")
 endif()
 
 if(NOT BUILD_EXECUTABLE)
