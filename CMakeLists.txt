@@ -46,7 +46,7 @@ set(SOURCES
 )  
   
 # Find Z3 library    
-find_library(Z3_LIBRARY z3)  
+find_library(Z3_LIBRARY NAMES libz3.so.4.13)  
 
 # Find Z3 includes
 find_path(Z3_INCLUDE_DIRS z3++.h PATH_SUFFIXES z3)
