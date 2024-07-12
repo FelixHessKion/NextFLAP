@@ -53,7 +53,7 @@ find_path(Z3_INCLUDE_DIRS z3++.h PATH_SUFFIXES z3)
 
 
 if(NOT Z3_LIBRARY)  
-  message(FATAL_ERROR "Z3 library not found")
+  message(FATAL_ERROR "Z3 library not found! Please install version 4.13")
 else()
   message(STATUS "Z3 library found at ${Z3_LIBRARY}.")
   message(STATUS "Z3 includes found at ${Z3_INCLUDE_DIRS}.")
