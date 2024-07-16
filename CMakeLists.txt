@@ -9,6 +9,13 @@ set(CMAKE_BUILD_TYPE Debug)
   
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_EXECUTABLE "Build executable" ON)
+option(DEBUG_SAS_TRANSLATIN "Debug SAS translation" OFF)
+option(DEBUG_NUM_RPG_HEURISTICS "Debug numeric RPG heuristics" OFF)
+option(DEBUG_TEMP_RPG_HEURISTICS "Debug temporal RPG heuristics" OFF)
+option(DEBUG_LANDMARKS "Debug landmarks" OFF)
+option(DEBUG_SUCCESSOR "Debug successors" OFF)
+option(DEBUG_PLANNER "Debug planning module" OFF)
+
 
 # Add source files  
 set(SOURCES  
@@ -44,7 +51,29 @@ set(SOURCES
    sas/sasTranslator.cpp  
    utils/utils.cpp  
 )  
-  
+
+# set options with variables
+if(DEBUG_SAS_TRANSLATIN)
+  add_definitions(-DDEBUG_SASTRANS_ON)
+endif()  
+if(DEBUG_NUM_RPG_HEURISTICS)
+  add_definitions(-DNUMRPG_DEBUG)
+endif()
+if(DEBUG_TEMP_RPG_HEURISTICS)
+  add_definitions(-DDEBUG_TEMPORALRPG_ON)
+endif()
+if(DEBUG_LANDMARKS)
+  add_definitions(-DDEBUG_LANDMARKS_ON)
+endif()
+if(DEBUG_SUCCESSOR)
+  add_definitions(-DDEBUG_SUCC_ON)
+endif()
+if(DEBUG_PLANNER)
+  add_definitions(-D_DEBUG)
+endif()
+
+ 
+
 # Find Z3 library    
 find_library(Z3_LIBRARY NAMES libz3.so.4.13)  
 
