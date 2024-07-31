@@ -110,18 +110,15 @@ void Grounder::groundTask(PreprocessedTask *prepTask, bool keepStaticData, std::
 // Creates the matrix of types for a fast checking of types compatibility
 void Grounder::initTypesMatrix() {
     unsigned int numTypes = prepTask->task->types.size();
-    typesMatrix = new bool*[numTypes];
+    typesMatrix = std::make_unique<std::unique_ptr<bool[]>[]>(numTypes);  
     for (unsigned int i = 0; i < numTypes; i++)
-        typesMatrix[i] = new bool[numTypes]();
+        typesMatrix[i] = std::make_unique<bool[]>(numTypes);  
     for (unsigned int i = 0; i < numTypes; i++)
         addTypeToMatrix(i, i);
 }
 
 // Deletes the allocated memory
 void Grounder::clearMemory() {
-    for (unsigned int i = 0; i < prepTask->task->types.size(); i++)
-        delete[] typesMatrix[i];
-    delete[] typesMatrix;
     delete[] opRequireFunction;
     delete[] ops;
     delete[] valuesByFunction;

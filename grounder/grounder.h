@@ -63,7 +63,8 @@ class Grounder {
 private:
     PreprocessedTask *prepTask;
     std::unique_ptr<GroundedTask> gTask;
-    bool **typesMatrix;
+    std::unique_ptr<std::unique_ptr<bool[]>[]> typesMatrix;  
+    // bool **typesMatrix;
     unsigned int numOps;
     GrounderOperator *ops;
     std::vector<GrounderOperator*> *opRequireFunction;
