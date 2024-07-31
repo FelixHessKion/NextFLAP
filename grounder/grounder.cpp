@@ -120,7 +120,6 @@ void Grounder::initTypesMatrix() {
 // Deletes the allocated memory
 void Grounder::clearMemory() {
     delete[] opRequireFunction;
-    delete[] ops;
     delete[] valuesByFunction;
     delete newValues;
     delete auxValues;
@@ -137,7 +136,7 @@ void Grounder::addTypeToMatrix(unsigned int typeIndex, unsigned int subtypeIndex
 // Initializes the operators for grounding
 void Grounder::initOperators() {
     numOps = prepTask->operators.size();
-    ops = new GrounderOperator[numOps];
+    ops = std::make_unique<GrounderOperator[]>(numOps);
     unsigned int numObjects = prepTask->task->objects.size();
     for (unsigned int i = 0; i < numOps; i++) {
         GrounderOperator &g = ops[i];

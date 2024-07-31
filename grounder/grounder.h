@@ -64,9 +64,8 @@ private:
     PreprocessedTask *prepTask;
     std::unique_ptr<GroundedTask> gTask;
     std::unique_ptr<std::unique_ptr<bool[]>[]> typesMatrix;  
-    // bool **typesMatrix;
     unsigned int numOps;
-    GrounderOperator *ops;
+    std::unique_ptr<GrounderOperator[]> ops;
     std::vector<GrounderOperator*> *opRequireFunction;
     std::unordered_map<std::string,unsigned int> variableIndex;
     std::unordered_map<std::string,unsigned int> preferenceIndex;
