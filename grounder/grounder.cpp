@@ -121,8 +121,6 @@ void Grounder::initTypesMatrix() {
 void Grounder::clearMemory() {
     delete[] opRequireFunction;
     delete[] valuesByFunction;
-    delete newValues;
-    delete auxValues;
 }
 
 // Recursively initializes the matrix of types
@@ -179,8 +177,8 @@ void Grounder::addOpToRequireFunction(GrounderOperator *op, unsigned int f) {
 // Sets the initial state in the first level of the relaxed planning graph
 void Grounder::initInitialState() {
     unsigned int numFunctions = prepTask->task->functions.size();
-    newValues = new vector<ProgrammedValue>();
-    auxValues = new vector<ProgrammedValue>();
+    newValues = std::make_unique<vector<ProgrammedValue>>();
+    auxValues = std::make_unique<vector<ProgrammedValue>>();
     valuesByFunction = new vector<ProgrammedValue>[numFunctions];
     unsigned int initStateSize = prepTask->task->init.size();
     for (unsigned int i = 0; i < initStateSize; i++)
@@ -367,9 +365,9 @@ void Grounder::swapLevels() {
         ProgrammedValue &pv = auxValues->at(i);
         valuesByFunction[gTask->variables[pv.varIndex].fncIndex].push_back(pv);
     }
-    vector<ProgrammedValue> *aux = newValues;
-    newValues = auxValues;
-    auxValues = aux;
+    std::unique_ptr<vector<ProgrammedValue>> aux = std::move(newValues);
+    newValues = std::move(auxValues);
+    auxValues = std::move(aux);
     auxValues->clear();
 }
 

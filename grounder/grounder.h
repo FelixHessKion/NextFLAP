@@ -69,8 +69,8 @@ private:
     std::vector<GrounderOperator*> *opRequireFunction;
     std::unordered_map<std::string,unsigned int> variableIndex;
     std::unordered_map<std::string,unsigned int> preferenceIndex;
-    std::vector<ProgrammedValue> *newValues;
-    std::vector<ProgrammedValue> *auxValues;
+    std::unique_ptr<std::vector<ProgrammedValue>> newValues;
+    std::unique_ptr<std::vector<ProgrammedValue>> auxValues;
     std::vector<ProgrammedValue> *valuesByFunction;
 	std::unordered_map<std::string, unsigned int> groundedActions;
 	unsigned int numValues;
