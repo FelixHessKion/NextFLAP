@@ -68,11 +68,11 @@ PreprocessedTask* preprocessStage(ParsedTask* parsedTask, PlannerParameters* par
 }
 
 // Grounder stage of the preprocessed task
-GroundedTask* groundingStage(PreprocessedTask* prepTask,
-    PlannerParameters* parameters) {
+void groundingStage(PreprocessedTask* prepTask,
+    PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask) {
     clock_t t = clock();
     Grounder grounder;
-    GroundedTask* gTask = grounder.groundTask(prepTask, parameters->keepStaticData);
+    grounder.groundTask(prepTask, parameters->keepStaticData, gTask);
     float time = toSeconds(t);
     parameters->total_time += time;
     //cout << gTask->toString() << endl;
@@ -82,11 +82,11 @@ GroundedTask* groundingStage(PreprocessedTask* prepTask,
         gTask->writePDDLDomain();
         gTask->writePDDLProblem();
     }
-    return gTask;
+    return;
 }
 
 // SAS translation stage
-SASTask* sasTranslationStage(GroundedTask* gTask, PlannerParameters* parameters) {
+SASTask* sasTranslationStage(std::unique_ptr<GroundedTask> &gTask, PlannerParameters* parameters) {
     clock_t t = clock();
     SASTranslator translator;
     SASTask* sasTask = translator.translate(gTask, parameters->noSAS,
@@ -102,7 +102,7 @@ SASTask* sasTranslationStage(GroundedTask* gTask, PlannerParameters* parameters)
 }
 
 // Sequential calls to the preprocess stages
-SASTask* doPreprocess(PlannerParameters* parameters) {
+SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask) {
     parameters->total_time = 0;
     SASTask* sTask = nullptr;
     ParsedTask* parsedTask = parseStage(parameters);
@@ -110,11 +110,11 @@ SASTask* doPreprocess(PlannerParameters* parameters) {
         //cout << parsedTask->toString() << endl;
         PreprocessedTask* prepTask = preprocessStage(parsedTask, parameters);
         if (prepTask != nullptr) {
-            GroundedTask* gTask = groundingStage(prepTask, parameters);
+           groundingStage(prepTask, parameters, gTask);
             if (gTask != nullptr) {
                 //cout << gTask->toString() << endl;
                 sTask = sasTranslationStage(gTask, parameters);
-                delete gTask;
+                // delete gTask;
             }
             delete prepTask;
         }
@@ -125,7 +125,8 @@ SASTask* doPreprocess(PlannerParameters* parameters) {
 
 // Sequential calls to the main planning stages
 void startPlanning(PlannerParameters* parameters) {
-    SASTask* sTask = doPreprocess(parameters);
+    std::unique_ptr<GroundedTask> gTask;
+    SASTask* sTask = doPreprocess(parameters, gTask);
     if (sTask == nullptr)
         return;
     clock_t t = clock();

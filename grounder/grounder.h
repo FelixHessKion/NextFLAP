@@ -12,6 +12,8 @@
 #include "../preprocess/preprocessedTask.h"
 #include "groundedTask.h"
 
+#include <memory>
+
 // EPSILON for temporal scheduling
 #define EPSILON 0.001f
 
@@ -31,13 +33,12 @@ public:
     int index;
     Operator *op;
     unsigned int numParams;
-    std::vector<unsigned int> *paramValues;
-    std::vector<unsigned int> *compatibleObjectsWithParam;
+    std::unique_ptr<std::vector<unsigned int>[]> paramValues;  
+    std::unique_ptr<std::vector<unsigned int>[]> compatibleObjectsWithParam;  
     unsigned int newValueIndex;
     std::vector<GrounderAssignment> preconditions;
     
     void initialize(Operator &o);
-    ~GrounderOperator();
 };
 
 // Class to program facts in the initial state
@@ -61,7 +62,7 @@ public:
 class Grounder {
 private:
     PreprocessedTask *prepTask;
-    GroundedTask* gTask;
+    std::unique_ptr<GroundedTask> gTask;
     bool **typesMatrix;
     unsigned int numOps;
     GrounderOperator *ops;
@@ -158,7 +159,7 @@ private:
     bool isBoolean(unsigned int value) { return value == gTask->task->CONSTANT_TRUE || value == gTask->task->CONSTANT_FALSE; }
 
 public:
-    GroundedTask* groundTask(PreprocessedTask *prepTask, bool keepStaticData);
+ void groundTask(PreprocessedTask *prepTask, bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut);
 };
 
 #endif

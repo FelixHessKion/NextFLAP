@@ -13,6 +13,8 @@
 #include "sasTask.h"
 #include "mutexGraph.h"
 
+#include <memory>
+
 class LiteralTranslation {
 public:
 	unsigned int* numericVariables;						// New indexes for numeric variables
@@ -24,7 +26,7 @@ public:
 
 class SASTranslator {
 private:
-    GroundedTask* gTask;
+    std::unique_ptr<GroundedTask> gTask;
     bool** mutex;
     bool* actions;
     bool* isLiteral;
@@ -120,7 +122,7 @@ private:
 		std::vector<unsigned int>& del);
 
 public:
-    SASTask* translate(GroundedTask* gTask, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData);
+    SASTask* translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData);
 };
 
 #endif

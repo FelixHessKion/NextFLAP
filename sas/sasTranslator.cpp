@@ -32,8 +32,8 @@ LiteralTranslation::~LiteralTranslation() {
 /* CLASS: SASTranslator                                 */
 /********************************************************/
 
-SASTask* SASTranslator::translate(GroundedTask* gTask, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData) {
-    this->gTask = gTask;
+SASTask* SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData) {
+    this->gTask = std::move(gTaskIn);
     numVars = gTask->variables.size();
     numActions = gTask->actions.size();
     getInitialStateLiterals();
