@@ -316,8 +316,8 @@ public:
 	SASMetric metric;
 	bool metricDependsOnDuration;					// True if the metric depends on the plan duration
 	std::vector<SASAction*>** requirers;
-	std::vector<SASAction*>* numRequirers;
-	std::vector<SASAction*>* numGoalRequirers;
+  std::unique_ptr<std::vector<SASAction*>[]> numRequirers;
+	std::unique_ptr<std::vector<SASAction*>[]> numGoalRequirers;
 	std::vector<SASAction*>** producers;
 	std::vector<SASConditionalProducer>** condProducers;
 	std::vector<SASAction*> actionsWithoutConditions;
@@ -328,9 +328,9 @@ public:
 	int numGoalsInPlateau;
 	char domainType;
 	bool tilActions;
-	std::vector<TVariable>* numVarReqAtStart;  // For each action, numeric variables that are required in the start point of the action
-	std::vector<TVariable>* numVarReqAtEnd;	   // For each action, numeric variables that are required in the end point of the action
-	std::vector<TVariable>* numVarReqGoal;		// For each goal, numeric variables that are required in the goal
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqAtStart;  // For each action, numeric variables that are required in the start point of the action
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqAtEnd;	   // For each action, numeric variables that are required in the end point of the action
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqGoal;		// For each goal, numeric variables that are required in the goal
 
     SASTask();
 	~SASTask();

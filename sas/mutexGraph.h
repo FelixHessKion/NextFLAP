@@ -12,6 +12,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 class MutexGraph {
 private:
@@ -20,7 +21,7 @@ private:
     std::vector<unsigned int> variableIndex;                      // Graph vertex -> real variable index
     std::unordered_map<unsigned int, unsigned int> vertexIndex;   // Real variable index -> graph vertex
     std::vector< std::vector<unsigned int> > adjacent;            // Adjacent vertex for each vertex
-    void depthFirstSearch(unsigned int origin, std::vector<unsigned int> &component, bool* visited);
+    void depthFirstSearch(unsigned int origin, std::vector<unsigned int> &component, std::unique_ptr<bool[]> &visited);
     bool isMutuallyExclusive(const std::vector<unsigned int> &component);
     inline bool isAdjacent(unsigned int i, unsigned int j) {
         for (unsigned int a = 0; a < adjacent[i].size(); a++)

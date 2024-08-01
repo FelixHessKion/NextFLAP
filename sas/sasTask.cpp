@@ -494,13 +494,6 @@ SASTask::SASTask() {
 	condProducers = nullptr;
 	staticNumFunctions = nullptr;
 	numGoalsInPlateau = 1;
-	numRequirers = nullptr;
-	numGoalRequirers = nullptr;
-	initialState = nullptr;
-	numInitialState = nullptr;
-	numVarReqAtStart = nullptr;
-	numVarReqAtEnd = nullptr;
-	numVarReqGoal = nullptr;
 }
 
 SASTask::~SASTask() {
@@ -523,11 +516,6 @@ SASTask::~SASTask() {
 		delete[] condProducers;
 	}
 	if (staticNumFunctions != nullptr) delete[] staticNumFunctions;
-	if (numRequirers != nullptr) delete[] numRequirers;
-	if (numGoalRequirers != nullptr) delete[] numGoalRequirers;
-	if (numVarReqAtStart != nullptr) delete[] numVarReqAtStart;
-	if (numVarReqAtEnd != nullptr) delete[] numVarReqAtEnd;
-	if (numVarReqGoal != nullptr) delete[] numVarReqGoal;
 }
 
 // Adds a mutex relationship between (var1, value1) and (var2, value2)
@@ -633,7 +621,6 @@ void SASTask::computeInitialState() {
 		initialState[i] = variables[i].getInitialStateValue();
 	}
 	numInitialState = std::make_unique<float[]>(numVariables.size());
-	// numInitialState = new float[numVariables.size()];
 	for (unsigned int i = 0; i < numVariables.size(); i++) {
 		numInitialState[i] = numVariables[i].getInitialStateValue();
 	}
@@ -702,11 +689,12 @@ void SASTask::computeProducers() {
 
 void SASTask::computeNumericVariablesInActions()
 {
-	this->numVarReqAtStart = new std::vector<TVariable>[actions.size()];
-	this->numVarReqAtEnd = new std::vector<TVariable>[actions.size()];
-	this->numRequirers = new std::vector<SASAction*>[numVariables.size()];
-	this->numVarReqGoal = new std::vector<TVariable>[goals.size()];
-	this->numGoalRequirers = new std::vector<SASAction*>[numVariables.size()];
+	this->numVarReqAtStart = std::make_unique<std::vector<TVariable>[]>(actions.size());
+	this->numVarReqAtEnd = std::make_unique<std::vector<TVariable>[]>(actions.size());
+	this->numRequirers = std::make_unique<std::vector<SASAction*>[]>(numVariables.size());
+	this->numVarReqGoal = std::make_unique<std::vector<TVariable>[]>(goals.size());
+	// this->numGoalRequirers = new std::vector<SASAction*>[numVariables.size()];
+	this->numGoalRequirers = std::make_unique<std::vector<SASAction*>[]>(numVariables.size());
 	for (SASAction& a : actions) {
 		computeNumericVariablesInActions(a);
 	}
@@ -802,7 +790,7 @@ void SASTask::checkEffectReached(SASCondition* c, std::unordered_map<TVarValue,b
 
 void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>* goals) {
 	unsigned int numActions = actions.size();
-	bool *visited = new bool[numActions];
+  std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(numActions);
 	for (unsigned int i = 0; i < numActions; i++) visited[i] = false;
 	std::vector<TVarValue> state;
 	std::unordered_map<TVarValue, bool> visitedVarValue;
@@ -827,7 +815,6 @@ void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>
 			}
 		}
 	}
-	delete[] visited;
 }
 
 void SASTask::computePermanentMutex() {

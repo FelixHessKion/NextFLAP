@@ -38,7 +38,8 @@ void MutexGraph::addAdjacent(unsigned int v1, unsigned int v2) {
 // Splits the graph in mutually exclusive connected components
 void MutexGraph::split() {
     if (numVertex <= 0) return;
-    bool* visited = new bool[numVertex] {false};
+    std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(numVertex);
+    std::fill(visited.get(), visited.get()+numVertex, false);
     for (unsigned int v = 0; v < numVertex; v++) {
         if (!visited[v]) {
             mutexComponents.emplace_back();
@@ -48,15 +49,15 @@ void MutexGraph::split() {
             	visited[(*component)[i]] = true;
         }
     }
-    delete [] visited;
 }
 
 void MutexGraph::computeMutexComponent(unsigned int origin, std::vector<unsigned int>* component) {
-	bool* visited = new bool[numVertex] {false};
-    vector<unsigned int> newVertex;
-    newVertex.push_back(origin);
-    component->push_back(origin);
-    visited[origin] = true;
+  std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(numVertex);
+  std::fill(visited.get(), visited.get()+numVertex, false);
+  vector<unsigned int> newVertex;
+  newVertex.push_back(origin);
+  component->push_back(origin);
+  visited[origin] = true;
 	unsigned int v, a;
     while (newVertex.size() > 0) {
         v = newVertex.back();
@@ -78,11 +79,10 @@ void MutexGraph::computeMutexComponent(unsigned int origin, std::vector<unsigned
             }
         }
     }
-    delete [] visited;
 }
 
 // Recursive DFS. The result is stored in the component vector
-void MutexGraph::depthFirstSearch(unsigned int origin, vector<unsigned int> &component, bool* visited) {
+void MutexGraph::depthFirstSearch(unsigned int origin, vector<unsigned int> &component, std::unique_ptr<bool[]> &visited) {
     component.push_back(origin);
     visited[origin] = true;
     for (unsigned int i = 0; i < adjacent[origin].size(); i++) {
@@ -116,7 +116,8 @@ void MutexGraph::processNonMutexComponent(const std::vector<unsigned int> &compo
         computeMutexSubcomponent(v, a, subcomponents[0]);
         removeLinks(subcomponents[0]);
         subcomponents.clear();
-        bool* visited = new bool[adjacent.size()] {false};
+        std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(adjacent.size());
+        std::fill(visited.get(), visited.get()+adjacent.size(), false);
         for (unsigned int i = 0; i < component.size(); i++) {
             v = component[i];
             if (!visited[v]) {
@@ -124,7 +125,6 @@ void MutexGraph::processNonMutexComponent(const std::vector<unsigned int> &compo
                depthFirstSearch(v, subcomponents.back(), visited);
             }
         }
-        delete [] visited;
     } while (subcomponents.size() == 1);
     for (unsigned int i = 0; i < subcomponents.size(); i++) {
         if (isMutuallyExclusive(subcomponents[i]))
@@ -146,7 +146,8 @@ unsigned int MutexGraph::highestDegreeVertex(const std::vector<unsigned int> &co
 
 // Computes a mutually exclusive subcomponent which contains vertex v1 and v2
 void MutexGraph::computeMutexSubcomponent(unsigned int v1, unsigned int v2, std::vector<unsigned int> &subcomponent) {
-    bool* visited = new bool[adjacent.size()] {false};
+    std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(adjacent.size());
+    std::fill(visited.get(), visited.get()+adjacent.size(), false);
     subcomponent.push_back(v1);
     subcomponent.push_back(v2);
     vector<unsigned int> newVertex;
@@ -175,7 +176,6 @@ void MutexGraph::computeMutexSubcomponent(unsigned int v1, unsigned int v2, std:
             }
         }
     }
-    delete [] visited;
 }
 
 // Removes the links of the first element in the subcomponent with the other vertex
