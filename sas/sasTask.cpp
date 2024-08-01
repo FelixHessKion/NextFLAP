@@ -522,8 +522,6 @@ SASTask::~SASTask() {
 		}
 		delete[] condProducers;
 	}
-	if (initialState != nullptr) delete[] initialState;
-	if (numInitialState != nullptr) delete[] numInitialState;
 	if (staticNumFunctions != nullptr) delete[] staticNumFunctions;
 	if (numRequirers != nullptr) delete[] numRequirers;
 	if (numGoalRequirers != nullptr) delete[] numGoalRequirers;
@@ -630,11 +628,12 @@ SASAction* SASTask::createNewGoal() {
 
 // Computes the initial state
 void SASTask::computeInitialState() {
-	initialState = new TValue[variables.size()];
+	initialState = std::make_unique<TValue[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
 		initialState[i] = variables[i].getInitialStateValue();
 	}
-	numInitialState = new float[numVariables.size()];
+	numInitialState = std::make_unique<float[]>(numVariables.size());
+	// numInitialState = new float[numVariables.size()];
 	for (unsigned int i = 0; i < numVariables.size(); i++) {
 		numInitialState[i] = numVariables[i].getInitialStateValue();
 	}

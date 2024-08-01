@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include "../utils/utils.h"
 
 #define FICTITIOUS_FUNCTION		999999U
@@ -320,8 +321,9 @@ public:
 	std::vector<SASAction*>** producers;
 	std::vector<SASConditionalProducer>** condProducers;
 	std::vector<SASAction*> actionsWithoutConditions;
-	TValue* initialState;							// Values of the SAS variables in the initial state
-	float* numInitialState;							// Values of the numeric variables in the initial state
+  std::unique_ptr<TValue[]> initialState;							// Values of the SAS variables in the initial state
+	std::unique_ptr<float[]> numInitialState;							// Values of the numeric variables in the initial state
+	// float* numInitialState;							// Values of the numeric variables in the initial state
 	bool variableCosts;								// True if there are actions with a cost that depends on the state
 	int numGoalsInPlateau;
 	char domainType;
