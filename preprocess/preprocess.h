@@ -101,10 +101,10 @@ private:
     std::vector<Operator> buildOperatorPreconditionAnd(GoalDescription &goal, Action &a, Operator *op, unsigned int numTerm);
     std::vector<Operator> buildOperatorPreconditionAnd(GoalDescription &goal, DurativeAction &a, Operator *op, unsigned int numTerm);
     bool checkValidOperator(Operator &op, unsigned int numParameters);
-    bool setParameterValues(unsigned int paramValues[], unsigned int equivalences[], const std::vector<OpEquality> &equality);
-    bool checkEqualities(unsigned int paramValues[], unsigned int equivalences[], 
+    bool setParameterValues(std::unique_ptr<unsigned int[]> &paramVaues, std::unique_ptr<unsigned int[]> &equivalences, const std::vector<OpEquality> &equality);
+    bool checkEqualities(std::unique_ptr<unsigned int[]> &paramVaues, std::unique_ptr<unsigned int[]> &equivalences, 
         std::vector<OpEquality> &equality, unsigned int numParameters);
-    bool checkPreconditions(unsigned int paramValues[], std::vector<OpFluent> &precs);
+    bool checkPreconditions(std::unique_ptr<unsigned int[]> &paramVaues, std::vector<OpFluent> &precs);
     void terminateBuildingOperator(Operator &op, Action &a, std::string name);
     void terminateBuildingOperator(Operator &op, DurativeAction &a, std::string name);
     void buildOperatorEffect(Operator &op, Effect &effect);

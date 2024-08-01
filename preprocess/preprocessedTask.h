@@ -27,7 +27,7 @@ public:
     Literal variable;
     Term value;
     std::string toString(const std::vector<Function>& functions, const std::vector<Object>& objects);
-    inline std::string getVarName(unsigned int paramValues[]) {
+    inline std::string getVarName(std::unique_ptr<unsigned int[]> &paramValues) {
         unsigned int index;
         std::string name(std::to_string(variable.fncIndex));
         for (unsigned int i = 0; i < variable.params.size(); i++) {
@@ -40,7 +40,7 @@ public:
         }
         return name;
     }
-    inline std::string getValueName(unsigned int paramValues[]) {
+    inline std::string getValueName(std::unique_ptr<unsigned int[]> &paramValues) {
         if (value.type == TERM_PARAMETER) {
             if (paramValues[value.index] == MAX_UNSIGNED_INT) return "?" + std::to_string(value.index);
             else return std::to_string(paramValues[value.index]);

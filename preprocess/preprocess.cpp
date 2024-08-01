@@ -1514,8 +1514,8 @@ vector<Operator> Preprocess::buildOperatorPreconditionAnd(GoalDescription &goal,
 // Checks if the operator is valid, i.e. it has no contradictory preconditions
 bool Preprocess::checkValidOperator(Operator &op, unsigned int numParameters) {
     bool ok = true;
-    unsigned int* paramValues = new unsigned int[numParameters];
-    unsigned int* equivalences = new unsigned int[numParameters];
+    std::unique_ptr<unsigned int[]> paramValues =  std::make_unique<unsigned int[]>(numParameters);
+    std::unique_ptr<unsigned int[]> equivalences = std::make_unique<unsigned int[]>(numParameters);
     for (unsigned int i = 0; i < numParameters; i++) {
         paramValues[i] = MAX_UNSIGNED_INT;
         equivalences[i] = i;
@@ -1525,13 +1525,11 @@ bool Preprocess::checkValidOperator(Operator &op, unsigned int numParameters) {
     else if (!checkPreconditions(paramValues, op.atStart.prec)) ok = false;
     else if (!checkPreconditions(paramValues, op.overAllPrec)) ok = false;
     else if (!checkPreconditions(paramValues, op.atEnd.prec)) ok = false;
-    delete [] paramValues;
-    delete [] equivalences;
     return ok;
 }
 
 // Sets the values of the parameters according to the equality constraints
-bool Preprocess::setParameterValues(unsigned int paramValues[], unsigned int equivalences[], const std::vector<OpEquality> &equality) {
+bool Preprocess::setParameterValues(std::unique_ptr<unsigned int[]> &paramValues, std::unique_ptr<unsigned int[]> &equivalences, const std::vector<OpEquality> &equality) {
     unsigned int p1, p2;
     for (unsigned int i = 0; i < equality.size(); i++) {
         if (equality[i].equal) {
@@ -1555,7 +1553,7 @@ bool Preprocess::setParameterValues(unsigned int paramValues[], unsigned int equ
 }
 
 // Checks if equalities hold in the operator
-bool Preprocess::checkEqualities(unsigned int paramValues[], unsigned int equivalences[], 
+bool Preprocess::checkEqualities(std::unique_ptr<unsigned int[]> &paramValues, std::unique_ptr<unsigned int[]> &equivalences, 
     std::vector<OpEquality> &equality, unsigned int numParameters) {
     unsigned int p1, p2;
     for (unsigned int i = 0; i < numParameters; i++) {
@@ -1591,7 +1589,7 @@ bool Preprocess::checkEqualities(unsigned int paramValues[], unsigned int equiva
 }
 
 // Checks if preconditions hold in the operator
-bool Preprocess::checkPreconditions(unsigned int paramValues[], vector<OpFluent> &precs) {
+bool Preprocess::checkPreconditions(std::unique_ptr<unsigned int[]> &paramValues, vector<OpFluent> &precs) {
     if (precs.size() != 0) {
         unordered_map<string,string> map(32);
         for (unsigned int i = 0; i < precs.size(); i++) {
