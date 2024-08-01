@@ -693,7 +693,6 @@ void SASTask::computeNumericVariablesInActions()
 	this->numVarReqAtEnd = std::make_unique<std::vector<TVariable>[]>(actions.size());
 	this->numRequirers = std::make_unique<std::vector<SASAction*>[]>(numVariables.size());
 	this->numVarReqGoal = std::make_unique<std::vector<TVariable>[]>(goals.size());
-	// this->numGoalRequirers = new std::vector<SASAction*>[numVariables.size()];
 	this->numGoalRequirers = std::make_unique<std::vector<SASAction*>[]>(numVariables.size());
 	for (SASAction& a : actions) {
 		computeNumericVariablesInActions(a);
@@ -769,7 +768,7 @@ void SASTask::computeMutexWithVarValues() {
 		vv1 = (uint32_t) (n >> 32);
 		it = mutexWithVarValue.find(vv1);
 		if (it == mutexWithVarValue.end()) {
-			std::vector<uint32_t>* item = new std::vector<uint32_t>();
+      std::vector<uint32_t> *item = new std::vector<uint32_t>();
 			item->push_back(vv2);
 			mutexWithVarValue[vv1] = item;
 		} else {
