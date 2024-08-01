@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <time.h>
 #include "syntaxAnalyzer.h"
+#include <memory>
 
 /********************************************************/
 /* Oscar Sapena Vercher - DSIC - UPV                    */
@@ -99,7 +100,7 @@ public:
     NumericExpression();
     NumericExpression(float value);
     NumericExpression(unsigned int fncIndex, const std::vector<Term>& fncParams);
-    NumericExpression(Symbol s, const std::vector<NumericExpression>& operands, SyntaxAnalyzer* syn);
+    NumericExpression(Symbol s, const std::vector<NumericExpression>& operands, std::shared_ptr<SyntaxAnalyzer>  syn);
     std::string toString(const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars,
         const std::vector<Function>& functions, const std::vector<Object>& objects);
 };
@@ -395,16 +396,16 @@ public:
     void setProblemName(std::string name);
     void setRequirement(std::string name);
     unsigned int getTypeIndex(std::string const& name);
-    unsigned int addType(std::string name, std::vector<unsigned int>& parentTypes, SyntaxAnalyzer* syn);
+    unsigned int addType(std::string name, std::vector<unsigned int>& parentTypes, std::shared_ptr<SyntaxAnalyzer>  syn);
     unsigned int getObjectIndex(std::string const& name);
-    unsigned int addConstant(std::string name, std::vector<unsigned int>& types, SyntaxAnalyzer* syn);
-    unsigned int addObject(std::string name, std::vector<unsigned int>& types, SyntaxAnalyzer* syn);
+    unsigned int addConstant(std::string name, std::vector<unsigned int>& types, std::shared_ptr<SyntaxAnalyzer>  syn);
+    unsigned int addObject(std::string name, std::vector<unsigned int>& types, std::shared_ptr<SyntaxAnalyzer>  syn);
     unsigned int getFunctionIndex(std::string const& name);
-    unsigned int addPredicate(Function fnc, SyntaxAnalyzer* syn);
-    unsigned int addFunction(Function fnc, const std::vector<unsigned int>& valueTypes, SyntaxAnalyzer* syn);
-    unsigned int addFunction(Function fnc, SyntaxAnalyzer* syn);
-    unsigned int addPreference(std::string name, const GoalDescription& goal, SyntaxAnalyzer* syn);
-    unsigned int addPreference(const Constraint& c, SyntaxAnalyzer* syn);
+    unsigned int addPredicate(Function fnc, std::shared_ptr<SyntaxAnalyzer>  syn);
+    unsigned int addFunction(Function fnc, const std::vector<unsigned int>& valueTypes, std::shared_ptr<SyntaxAnalyzer>  syn);
+    unsigned int addFunction(Function fnc, std::shared_ptr<SyntaxAnalyzer>  syn);
+    unsigned int addPreference(std::string name, const GoalDescription& goal, std::shared_ptr<SyntaxAnalyzer>  syn);
+    unsigned int addPreference(const Constraint& c, std::shared_ptr<SyntaxAnalyzer>  syn);
     unsigned int getPreferenceIndex(std::string const& name);
     bool isNumericFunction(unsigned int fncIndex);
     bool isBooleanFunction(unsigned int fncIndex);
@@ -412,9 +413,9 @@ public:
     bool compatibleTypes(unsigned int t1, unsigned int t2);
     unsigned int addAction(std::string name, const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars,
         const std::vector<Duration>& duration, const DurativeCondition& condition,
-        const DurativeEffect& effect, SyntaxAnalyzer* syn);
+        const DurativeEffect& effect, std::shared_ptr<SyntaxAnalyzer>  syn);
     unsigned int addAction(std::string name, const std::vector<Variable>& parameters,
-        const Precondition& precondition, const Effect& effect, SyntaxAnalyzer* syn);
+        const Precondition& precondition, const Effect& effect, std::shared_ptr<SyntaxAnalyzer>  syn);
     std::string toString();
     float ellapsedTime();
 

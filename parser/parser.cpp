@@ -14,7 +14,7 @@ using namespace std;
 // Creates a new parser
 Parser::Parser() {
     // task = nullptr;
-    syn = nullptr;
+    // syn = nullptr;
 }
 
 // Disposes the parser
@@ -27,7 +27,7 @@ Parser::~Parser() {
 //  [<constraints>] <structure-def>*)
 void Parser::parseDomain(char* domainFileName) {
     task = std::make_unique<ParsedTask>();
-    syn = new SyntaxAnalyzer(domainFileName);
+    syn =std::make_shared<SyntaxAnalyzer>(domainFileName);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
     syn->openPar();
@@ -55,12 +55,12 @@ void Parser::parseDomain(char* domainFileName) {
         }
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
-    delete syn;
+    // delete syn;
     return;
 }
 void Parser::parseDomain(std::string &domainStr) {
     task = std::make_unique<ParsedTask>();
-    syn = new SyntaxAnalyzer(domainStr);
+    syn =std::make_shared<SyntaxAnalyzer>(domainStr);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
     syn->openPar();
@@ -88,7 +88,7 @@ void Parser::parseDomain(std::string &domainStr) {
         }
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
-    delete syn;
+    // delete syn;
     return;
 }
 
@@ -103,7 +103,7 @@ void Parser::parseProblem(char* problemFileName, std::unique_ptr<ParsedTask> &ta
     task->metricType = MT_NONE;
     task->serialLength = -1;
     task->parallelLength = -1;
-    syn = new SyntaxAnalyzer(problemFileName);
+    syn =std::make_shared<SyntaxAnalyzer>(problemFileName);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
     syn->openPar();
@@ -133,7 +133,7 @@ void Parser::parseProblem(char* problemFileName, std::unique_ptr<ParsedTask> &ta
         }
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
-    delete syn;
+    // delete syn;
     taskOut = std::move(task);
     return;
 }
@@ -141,7 +141,7 @@ void Parser::parseProblem(std::string &problemStr, std::unique_ptr<ParsedTask> &
     task->metricType = MT_NONE;
     task->serialLength = -1;
     task->parallelLength = -1;
-    syn = new SyntaxAnalyzer(problemStr);
+    syn =std::make_shared<SyntaxAnalyzer>(problemStr);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
     syn->openPar();
@@ -171,7 +171,7 @@ void Parser::parseProblem(std::string &problemStr, std::unique_ptr<ParsedTask> &
         }
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
-    delete syn;
+    // delete syn;
     taskOut = std::move(task);
     return;
 }

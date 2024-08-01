@@ -15,7 +15,7 @@
 
 class Parser {
 private:
-    SyntaxAnalyzer* syn;
+    std::shared_ptr<SyntaxAnalyzer> syn;
     std::unique_ptr<ParsedTask> task;
     void parseRequirements();
     void parseTypes();
