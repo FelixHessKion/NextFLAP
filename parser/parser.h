@@ -11,11 +11,12 @@
 
 #include "syntaxAnalyzer.h"
 #include "parsedTask.h"
+#include <memory>
 
 class Parser {
 private:
     SyntaxAnalyzer* syn;
-    ParsedTask* task;
+    std::unique_ptr<ParsedTask> task;
     void parseRequirements();
     void parseTypes();
     void parseParentTypes(std::vector<unsigned int>& types, bool allowNumber);
@@ -69,10 +70,10 @@ private:
 public:
     Parser();
     ~Parser();
-    ParsedTask* parseDomain(char* domainFileName);
-    ParsedTask* parseDomain(std::string &domainPddlStr);
-    ParsedTask* parseProblem(char* problemFileName);
-    ParsedTask* parseProblem(std::string &problemPddlStr);
+    void parseDomain(char* domainFileName);
+    void parseDomain(std::string &domainPddlStr);
+    void parseProblem(char* problemFileName, std::unique_ptr<ParsedTask> &taskOut);
+    void parseProblem(std::string &problemPddlStr, std::unique_ptr<ParsedTask> &taskOut);
 };
 
 #endif

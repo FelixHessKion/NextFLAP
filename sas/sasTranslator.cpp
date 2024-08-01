@@ -1221,7 +1221,7 @@ SASConstraint SASTranslator::createConstraint(GroundedConstraint* gc, SASTask* s
 
 // Writes the file with the list of static mutex
 void SASTranslator::writeMutexFile() {
-	ParsedTask* task = gTask->task;
+	std::unique_ptr<ParsedTask> & task = gTask->task;
 	ofstream f;
     f.open("mutex.txt");
     for (unsigned int v1 = 0; v1 < numVars; v1++) {

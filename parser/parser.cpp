@@ -13,7 +13,7 @@ using namespace std;
 
 // Creates a new parser
 Parser::Parser() {
-    task = nullptr;
+    // task = nullptr;
     syn = nullptr;
 }
 
@@ -25,8 +25,8 @@ Parser::~Parser() {
 // <domain> ::= (define (domain <name>) [<require-def>] [<types-def>]:typing
 //  [<constants-def>] [<predicates-def>] [<functions-def>]:fluents
 //  [<constraints>] <structure-def>*)
-ParsedTask* Parser::parseDomain(char* domainFileName) {
-    task = new ParsedTask();
+void Parser::parseDomain(char* domainFileName) {
+    task = std::make_unique<ParsedTask>();
     syn = new SyntaxAnalyzer(domainFileName);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
@@ -56,10 +56,10 @@ ParsedTask* Parser::parseDomain(char* domainFileName) {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
     delete syn;
-    return task;
+    return;
 }
-ParsedTask* Parser::parseDomain(std::string &domainStr) {
-    task = new ParsedTask();
+void Parser::parseDomain(std::string &domainStr) {
+    task = std::make_unique<ParsedTask>();
     syn = new SyntaxAnalyzer(domainStr);
     syn->openPar();
     syn->readSymbol(Symbol::DEFINE);
@@ -89,7 +89,7 @@ ParsedTask* Parser::parseDomain(std::string &domainStr) {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
     delete syn;
-    return task;
+    return;
 }
 
 // <problem> ::= (define (problem <name>)
@@ -99,7 +99,7 @@ ParsedTask* Parser::parseDomain(std::string &domainStr) {
 //              [<constraints>]:constraints
 //              [<metric-spec>]:numeric-fluents
 //              [<length-spec>])
-ParsedTask* Parser::parseProblem(char* problemFileName) {
+void Parser::parseProblem(char* problemFileName, std::unique_ptr<ParsedTask> &taskOut) {
     task->metricType = MT_NONE;
     task->serialLength = -1;
     task->parallelLength = -1;
@@ -134,9 +134,10 @@ ParsedTask* Parser::parseProblem(char* problemFileName) {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
     delete syn;
-    return task;
+    taskOut = std::move(task);
+    return;
 }
-ParsedTask* Parser::parseProblem(std::string &problemStr) {
+void Parser::parseProblem(std::string &problemStr, std::unique_ptr<ParsedTask> &taskOut) {
     task->metricType = MT_NONE;
     task->serialLength = -1;
     task->parallelLength = -1;
@@ -171,7 +172,8 @@ ParsedTask* Parser::parseProblem(std::string &problemStr) {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     }
     delete syn;
-    return task;
+    taskOut = std::move(task);
+    return;
 }
 
 // <require-def> ::= (:requirements <require-key>+)

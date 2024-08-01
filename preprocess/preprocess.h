@@ -12,6 +12,7 @@
 
 #include "../parser/parsedTask.h"
 #include "preprocessedTask.h"
+#include <memory>
 
 struct FeatureList {
     int universalQuantifierPrec; 
@@ -27,7 +28,7 @@ struct FeatureList {
 
 class Preprocess {
 private:
-    ParsedTask* task;
+    std::unique_ptr<ParsedTask> &task;
     PreprocessedTask* prepTask;
     void preprocessOperators();
     void checkPreconditionFeatures(Precondition &prec, FeatureList* features);
@@ -122,9 +123,9 @@ private:
     void conjuctionOptimization(DurativeEffect* eff);
 
 public:
-    Preprocess();
+    Preprocess(std::unique_ptr<ParsedTask> &parsedTask);
     ~Preprocess();
-    PreprocessedTask* preprocessTask(ParsedTask* parsedTask);
+    PreprocessedTask* preprocessTask();
 };
 
 #endif

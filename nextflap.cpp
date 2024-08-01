@@ -44,22 +44,22 @@ void printUsage() {
 }
 
 // Parses the domain and problem files
-ParsedTask* parseStage(PlannerParameters* parameters) {
+void parseStage(PlannerParameters* parameters, std::unique_ptr<ParsedTask> &parsedTask) {
     clock_t t = clock();
     Parser parser;
-    ParsedTask* parsedTask = parser.parseDomain(parameters->domainFileName);
-    parser.parseProblem(parameters->problemFileName);
+    parser.parseDomain(parameters->domainFileName);
+    parser.parseProblem(parameters->problemFileName, parsedTask);
     float time = toSeconds(t);
     parameters->total_time += time;
     cout << ";Parsing time: " << time << endl;
-    return parsedTask;
+    return;
 }
 
 // Preprocesses the parsed task
-PreprocessedTask* preprocessStage(ParsedTask* parsedTask, PlannerParameters* parameters) {
+PreprocessedTask* preprocessStage(std::unique_ptr<ParsedTask> & parsedTask, PlannerParameters* parameters) {
     clock_t t = clock();
-    Preprocess preprocess;
-    PreprocessedTask* prepTask = preprocess.preprocessTask(parsedTask);
+    Preprocess preprocess(parsedTask);
+    PreprocessedTask* prepTask = preprocess.preprocessTask();
     float time = toSeconds(t);
     parameters->total_time += time;
     //cout << prepTask->toString() << endl;
@@ -105,7 +105,8 @@ SASTask* sasTranslationStage(std::unique_ptr<GroundedTask> &gTask, PlannerParame
 SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask) {
     parameters->total_time = 0;
     SASTask* sTask = nullptr;
-    ParsedTask* parsedTask = parseStage(parameters);
+    std::unique_ptr<ParsedTask> parsedTask;
+    parseStage(parameters, parsedTask);
     if (parsedTask != nullptr) {
         //cout << parsedTask->toString() << endl;
         PreprocessedTask* prepTask = preprocessStage(parsedTask, parameters);
@@ -118,7 +119,6 @@ SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTas
             }
             delete prepTask;
         }
-        delete parsedTask;
     }
     return sTask;
 }

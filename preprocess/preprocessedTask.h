@@ -12,6 +12,8 @@
 #include "../parser/parsedTask.h"
 #include "../utils/utils.h"
 
+#include <memory>
+
 class OpEquality {
 public:
     bool equal;
@@ -51,7 +53,7 @@ class OpPreference {
 public:
     std::string name;
     GoalDescription preference;
-    std::string toString(const std::vector<Variable>& opParameters, const std::vector<Variable>& controlVars, ParsedTask* task);
+    std::string toString(const std::vector<Variable>& opParameters, const std::vector<Variable>& controlVars, std::unique_ptr<ParsedTask> &task);
 };
 
 enum OpEffectExpressionType {
@@ -153,16 +155,16 @@ public:
     void addNumericPrecondition(GoalDescription goal, TimeSpecifier time);
     void addLiteralToEffects(Literal var, Term& value, TimeSpecifier time);
     void addNumericEffect(OpEffect eff, TimeSpecifier time);
-    std::string toString(ParsedTask* task);
+    std::string toString(std::unique_ptr<ParsedTask> &task);
 };
 
 class PreprocessedTask {
 private:
         
 public:
-    ParsedTask* task;
+    std::unique_ptr<ParsedTask> &task;
     std::vector<Operator> operators;
-    PreprocessedTask(ParsedTask* parsedTask);
+    PreprocessedTask(std::unique_ptr<ParsedTask> &parsedTask);
     ~PreprocessedTask();
     std::string toString();
 };

@@ -12,7 +12,7 @@
 using namespace std;
 
 // Creates a new preprocessor
-Preprocess::Preprocess() {
+Preprocess::Preprocess(std::unique_ptr<ParsedTask> &parsedTask): task(parsedTask) {
 }
 
 // Disposes the preprocessor
@@ -20,9 +20,10 @@ Preprocess::~Preprocess() {
 }
 
 // Starts the preprocess and returns the preprocessed task
-PreprocessedTask* Preprocess::preprocessTask(ParsedTask* parsedTask) {
-    task = parsedTask;
-    prepTask = new PreprocessedTask(parsedTask);
+PreprocessedTask* Preprocess::preprocessTask()
+{
+    // task = parsedTask;
+    prepTask = new PreprocessedTask(task);
     preprocessOperators();
     //cout << prepTask->toString() << endl;
     //throwError(prepTask->toString());
