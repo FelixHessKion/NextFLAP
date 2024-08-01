@@ -18,14 +18,12 @@ using namespace std;
 /********************************************************/
 
 LiteralTranslation::LiteralTranslation(unsigned int numVars) {
-	numericVariables = new unsigned int[numVars];
-	sasVariables = new unsigned int[numVars];
+	numericVariables = std::make_unique<unsigned int[]>(numVars);
+	sasVariables = std::make_unique<unsigned int[]>(numVars);
 	literals.resize(numVars);
 }
 
 LiteralTranslation::~LiteralTranslation() {
-	delete [] numericVariables;
-	delete [] sasVariables;
 }
                                   
 /********************************************************/

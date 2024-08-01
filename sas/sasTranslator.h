@@ -17,8 +17,8 @@
 
 class LiteralTranslation {
 public:
-	unsigned int* numericVariables;						// New indexes for numeric variables
-	unsigned int* sasVariables;							// Already defined SAS variables
+	std::unique_ptr<unsigned int[]> numericVariables;						// New indexes for numeric variables
+	std::unique_ptr<unsigned int[]> sasVariables;							// Already defined SAS variables
 	std::vector< std::vector<unsigned int> > literals;	// literal -> <sasVariable, sasValue>
 	LiteralTranslation(unsigned int numVars);
 	~LiteralTranslation();
