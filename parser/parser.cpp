@@ -34,7 +34,7 @@ void Parser::parseDomain(char* domainFileName) {
     syn->readSymbol(Symbol::PDDLDOMAIN);
     task->setDomainName(syn->readName());
     syn->closePar();
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         syn->readColon();
         token = syn->readSymbol(9, Symbol::REQUIREMENTS, Symbol::TYPES,
@@ -67,7 +67,7 @@ void Parser::parseDomain(std::string &domainStr) {
     syn->readSymbol(Symbol::PDDLDOMAIN);
     task->setDomainName(syn->readName());
     syn->closePar();
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         syn->readColon();
         token = syn->readSymbol(9, Symbol::REQUIREMENTS, Symbol::TYPES,
@@ -115,7 +115,7 @@ void Parser::parseProblem(char* problemFileName, std::unique_ptr<ParsedTask> &ta
     syn->readSymbol(Symbol::PDDLDOMAIN);
     syn->readName();
     syn->closePar();
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         syn->readColon();
         token = syn->readSymbol(7, Symbol::REQUIREMENTS, Symbol::OBJECTS,
@@ -153,7 +153,7 @@ void Parser::parseProblem(std::string &problemStr, std::unique_ptr<ParsedTask> &
     syn->readSymbol(Symbol::PDDLDOMAIN);
     syn->readName();
     syn->closePar();
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         syn->readColon();
         token = syn->readSymbol(7, Symbol::REQUIREMENTS, Symbol::OBJECTS,
@@ -178,7 +178,7 @@ void Parser::parseProblem(std::string &problemStr, std::unique_ptr<ParsedTask> &
 
 // <require-def> ::= (:requirements <require-key>+)
 void Parser::parseRequirements() {
-    Token* token = syn->readSymbol(2, Symbol::COLON, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::COLON, Symbol::CLOSE_PAR);
     while (syn->isSym(token, Symbol::COLON)) {
         task->setRequirement(syn->readName());
         token = syn->readSymbol(2, Symbol::COLON, Symbol::CLOSE_PAR);
@@ -191,7 +191,7 @@ void Parser::parseRequirements() {
 // <primitive-type> ::= <name>
 // <primitive-type> ::= object
 void Parser::parseTypes() {
-    Token* token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::NAME);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::NAME);
     vector<string> typeNames;
     vector<unsigned int> parentTypes;
     while (!syn->isSym(token, Symbol::CLOSE_PAR)) {
@@ -214,7 +214,7 @@ void Parser::parseTypes() {
 // <type> ::= (either <primitive-type>+)
 // <type> ::= <primitive-type>
 void Parser::parseParentTypes(std::vector<unsigned int>& types, bool allowNumber) {
-    Token* token = !allowNumber ? syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::NAME)
+    std::shared_ptr<Token> token = !allowNumber ? syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::NAME)
         : syn->readSymbol(3, Symbol::OPEN_PAR, Symbol::NUMBER_TYPE, Symbol::NAME);
     unsigned int index;
     if (syn->isSym(token, Symbol::NAME)) {
@@ -254,7 +254,7 @@ void Parser::parseParentTypes(std::vector<unsigned int>& types, bool allowNumber
 
 // <constants-def> ::= (:constants <typed list (name)>)
 void Parser::parseConstants() {
-    Token* token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::NAME);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::NAME);
     vector<string> constNames;
     vector<unsigned int> types;
     while (!syn->isSym(token, Symbol::CLOSE_PAR)) {
@@ -277,7 +277,7 @@ void Parser::parseConstants() {
 
 // (:predicates <atomic formula skeleton>+)
 void Parser::parsePredicates() {
-    Token* token;
+    std::shared_ptr<Token> token;
     do {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
         if (syn->isSym(token, Symbol::OPEN_PAR)) {
@@ -307,7 +307,7 @@ Function Parser::parsePredicate() {
 void Parser::parseVariableList(std::vector<Variable>& parameters) {
     vector<string> varNames;
     vector<unsigned int> types;
-    Token* token;
+    std::shared_ptr<Token> token;
     do {
         token = syn->readSymbol(2, Symbol::VARIABLE, Symbol::CLOSE_PAR);
         if (!syn->isSym(token, Symbol::CLOSE_PAR)) {
@@ -333,7 +333,7 @@ void Parser::parseVariableList(std::vector<Variable>& parameters) {
 void Parser::parseControlVariableList(std::vector<Variable>& parameters) {
     vector<string> varNames;
     vector<unsigned int> types;
-    Token* token;
+    std::shared_ptr<Token> token;
     do {
         token = syn->readSymbol(2, Symbol::VARIABLE, Symbol::CLOSE_PAR);
         if (!syn->isSym(token, Symbol::CLOSE_PAR)) {
@@ -342,7 +342,7 @@ void Parser::parseControlVariableList(std::vector<Variable>& parameters) {
                 token = syn->readSymbol(3, Symbol::VARIABLE, Symbol::MINUS, Symbol::CLOSE_PAR);
             } while (syn->isSym(token, Symbol::VARIABLE));
             if (syn->isSym(token, Symbol::MINUS)) {
-                Token* token = syn->readSymbol(2, Symbol::NUMBER_TYPE, Symbol::INTEGER_TYPE);
+                std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::NUMBER_TYPE, Symbol::INTEGER_TYPE);
                 if (syn->isSym(token, Symbol::NUMBER_TYPE)) types.push_back(task->NUMBER_TYPE);
                 else types.push_back(task->INTEGER_TYPE);
             }
@@ -366,7 +366,9 @@ void Parser::parseControlVariableList(std::vector<Variable>& parameters) {
 void Parser::parseFunctions() {
     vector<Function> functions;
     vector<unsigned int> types;
-    Token* token, * aux;
+    std::shared_ptr<Token> token;
+    std::shared_ptr<Token> aux;
+
     do {
         token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
         if (syn->isSym(token, Symbol::OPEN_PAR)) {
@@ -403,7 +405,7 @@ void Parser::parseDurativeAction() {
     parseVariableList(parameters);
     syn->closePar();
     syn->readColon();
-    Token* token = syn->readSymbol(2, Symbol::DURATION, Symbol::CONTROL);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::DURATION, Symbol::CONTROL);
     if (syn->isSym(token, Symbol::CONTROL)) { // Control variables
         syn->openPar();
         parseControlVariableList(controlVars);
@@ -438,7 +440,7 @@ void Parser::parseDurativeAction() {
 void Parser::parseDurationConstraint(vector<Duration>& duration, const vector<Variable>& parameters,
     const std::vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(8, Symbol::AND, Symbol::CLOSE_PAR, Symbol::LESS_EQ, Symbol::LESS, Symbol::GREATER,
+    std::shared_ptr<Token> token = syn->readSymbol(8, Symbol::AND, Symbol::CLOSE_PAR, Symbol::LESS_EQ, Symbol::LESS, Symbol::GREATER,
         Symbol::GREATER_EQ, Symbol::EQUAL, Symbol::AT);
     if (syn->isSym(token, Symbol::CLOSE_PAR)) return;
     if (syn->isSym(token, Symbol::AT)) {
@@ -459,7 +461,7 @@ void Parser::parseDurationConstraint(vector<Duration>& duration, const vector<Va
         }
     }
     else {    // =, <= or >=
-        Token* aux = syn->readSymbol(Symbol::VARIABLE);
+        std::shared_ptr<Token> aux = syn->readSymbol(Symbol::VARIABLE);
         if (aux->description.compare("?duration") != 0)
             syn->notifyError("Variable ?duration expected");
         NumericExpression exp = parseNumericExpression(parameters, controlVars);
@@ -474,7 +476,7 @@ void Parser::parseDurationConstraint(vector<Duration>& duration, const vector<Va
 // <f-exp> ::=:numeric-fluents (- <f-exp>)
 // <f-exp> ::=:numeric-fluents <f-head>
 NumericExpression Parser::parseNumericExpression(const vector<Variable>& parameters, const vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(5, Symbol::NUMBER, Symbol::OPEN_PAR,
+    std::shared_ptr<Token> token = syn->readSymbol(5, Symbol::NUMBER, Symbol::OPEN_PAR,
         Symbol::AT, Symbol::VARIABLE, Symbol::NAME);
     if (syn->isSym(token, Symbol::NUMBER))
         return NumericExpression(token->value);
@@ -514,7 +516,7 @@ NumericExpression Parser::parseNumericExpression(const vector<Variable>& paramet
         vector<NumericExpression> operands;
         bool moreOperands;
         do {
-            Token* aux = syn->nextToken();
+            std::shared_ptr<Token> aux = syn->nextToken();
             moreOperands = syn->isSym(aux, Symbol::NUMBER) || syn->isSym(aux, Symbol::OPEN_PAR)
                 || syn->isSym(aux, Symbol::NAME) || syn->isSym(aux, Symbol::VARIABLE);
             if (moreOperands) {
@@ -530,7 +532,7 @@ NumericExpression Parser::parseNumericExpression(const vector<Variable>& paramet
 // <f-head> ::= (<function-symbol> <term>*)
 // <f-head> ::= <function-symbol>
 unsigned int Parser::parseFunctionHead(vector<Term>& fncParams, const vector<Variable>& parameters) {
-    Token* token = syn->readSymbol(2, Symbol::NAME, Symbol::OPEN_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::NAME, Symbol::OPEN_PAR);
     unsigned int fncIndex;
     if (syn->isSym(token, Symbol::NAME)) {
         fncIndex = task->getFunctionIndex(token->description);
@@ -574,7 +576,7 @@ Term Parser::parseTerm(const vector<unsigned int>& validTypes, const vector<Vari
 // <term> ::= <name>
 // <term> ::= <variable>
 Term Parser::parseTerm(const vector<Variable>& parameters, const vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(2, Symbol::VARIABLE, Symbol::NAME);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::VARIABLE, Symbol::NAME);
     if (syn->isSym(token, Symbol::VARIABLE)) {
         unsigned int paramIndex = MAX_UNSIGNED_INT;
         for (unsigned int i = 0; i < parameters.size(); i++)
@@ -614,7 +616,7 @@ Term Parser::parseTerm(const vector<Variable>& parameters, const vector<Variable
 // <timed-GD> ::= (over <interval> <GD>)
 DurativeCondition Parser::parseDurativeCondition(const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(6, Symbol::CLOSE_PAR, Symbol::AND,
+    std::shared_ptr<Token> token = syn->readSymbol(6, Symbol::CLOSE_PAR, Symbol::AND,
         Symbol::FORALL, Symbol::PREFERENCE, Symbol::AT, Symbol::OVER);
     DurativeCondition condition;
     if (syn->isSym(token, Symbol::CLOSE_PAR)) condition.type = ConditionType::CT_AND;
@@ -699,7 +701,7 @@ void Parser::mergeVariables(std::vector<Variable>& mergedParameters, const std::
 void Parser::parseGoalDescription(GoalDescription& goal, const std::vector<Variable>& parameters,
     const std::vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(12, Symbol::NOT, Symbol::AND, Symbol::OR,
+    std::shared_ptr<Token> token = syn->readSymbol(12, Symbol::NOT, Symbol::AND, Symbol::OR,
         Symbol::IMPLY, Symbol::EXISTS, Symbol::FORALL, Symbol::EQUAL,
         Symbol::LESS, Symbol::GREATER, Symbol::GREATER_EQ, Symbol::LESS_EQ,
         Symbol::NAME);
@@ -782,7 +784,7 @@ Literal Parser::parseLiteral(const std::vector<Variable>& parameters) {
 // <GD> ::=:universal-preconditions forall (<typed list(variable)>) <GD>
 void Parser::parseADLGoalDescription(GoalDescription& goal, const std::vector<Variable>& parameters,
     const std::vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(2, Symbol::EXISTS, Symbol::FORALL);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::EXISTS, Symbol::FORALL);
     goal.type = syn->isSym(token, Symbol::EXISTS) ? GD_EXISTS : GD_FORALL;
     syn->openPar();
     parseVariableList(goal.parameters);
@@ -799,7 +801,7 @@ void Parser::parseADLGoalDescription(GoalDescription& goal, const std::vector<Va
 // <f-comp> ::= <binary-comp> <f-exp> <f-exp>
 void Parser::parseGoalDescriptionComparison(GoalDescription& goal, const std::vector<Variable>& parameters,
     const std::vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(5, Symbol::EQUAL, Symbol::LESS, Symbol::GREATER,
+    std::shared_ptr<Token> token = syn->readSymbol(5, Symbol::EQUAL, Symbol::LESS, Symbol::GREATER,
         Symbol::GREATER_EQ, Symbol::LESS_EQ);
     switch (token->symbol) {
     case Symbol::EQUAL:
@@ -833,7 +835,7 @@ void Parser::parseGoalDescriptionComparison(GoalDescription& goal, const std::ve
 // <da-effect> ::=:conditional-effects (when <da-GD> <timed-effect>)
 DurativeEffect Parser::parseDurativeEffect(const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(6, Symbol::AND, Symbol::FORALL, Symbol::WHEN,
+    std::shared_ptr<Token> token = syn->readSymbol(6, Symbol::AND, Symbol::FORALL, Symbol::WHEN,
         Symbol::AT, Symbol::INCREASE, Symbol::DECREASE);
     DurativeEffect effect;
     vector<Variable> mergedParameters;
@@ -881,7 +883,7 @@ DurativeEffect Parser::parseDurativeEffect(const std::vector<Variable>& paramete
 // <assign-op-t> ::= decrease
 AssignmentContinuousEffect Parser::parseAssignmentContinuousEffect(const std::vector<Variable>& parameters,
     const std::vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(2, Symbol::INCREASE, Symbol::DECREASE);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::INCREASE, Symbol::DECREASE);
     AssignmentContinuousEffect effect;
     effect.type = syn->isSym(token, Symbol::INCREASE) ? AS_INCREASE : AS_DECREASE;
     syn->openPar();
@@ -896,7 +898,7 @@ AssignmentContinuousEffect Parser::parseAssignmentContinuousEffect(const std::ve
 // <f-exp-t> ::= #t
 ContinuousEffect Parser::parseContinuousEffect(const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars) {
     ContinuousEffect eff;
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::SHARP_T);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::SHARP_T);
     if (syn->isSym(token, Symbol::SHARP_T)) eff.product = false;
     else {
         eff.product = true;
@@ -928,7 +930,7 @@ ContinuousEffect Parser::parseContinuousEffect(const std::vector<Variable>& para
 // <p-effect> ::=:object-fluents (assign <function-term> undefined)
 void Parser::parseTimedEffect(TimedEffect& timedEffect, const std::vector<Variable>& parameters, const vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(9, Symbol::AND, Symbol::NOT,
+    std::shared_ptr<Token> token = syn->readSymbol(9, Symbol::AND, Symbol::NOT,
         Symbol::INCREASE, Symbol::DECREASE, Symbol::ASSIGN, Symbol::SCALE_UP,
         Symbol::SCALE_DOWN, Symbol::AT, Symbol::NAME);
     switch (token->symbol) {
@@ -988,7 +990,7 @@ void Parser::parseTimedEffect(TimedEffect& timedEffect, const std::vector<Variab
 // <p-effect> ::=:object-fluents assign <function-term> <term>
 // <p-effect> ::=:object-fluents assign <function-term> undefined
 FluentAssignment Parser::parseFluentAssignment(const vector<Variable>& parameters, const vector<Variable>& controlVars) {
-    Token* token = syn->readSymbol(5, Symbol::INCREASE, Symbol::DECREASE,
+    std::shared_ptr<Token> token = syn->readSymbol(5, Symbol::INCREASE, Symbol::DECREASE,
         Symbol::ASSIGN, Symbol::SCALE_UP, Symbol::SCALE_DOWN);
     FluentAssignment assignment;
     switch (token->symbol) {
@@ -1009,7 +1011,7 @@ FluentAssignment Parser::parseFluentAssignment(const vector<Variable>& parameter
 
 // <f-exp-da> | <f-exp-t> | <f-exp> | <term> (if isAssign) | undefined (if isAssign)
 EffectExpression Parser::parseEffectExpression(const vector<Variable>& parameters, const vector<Variable>& controlVars, bool isAssign) {
-    Token* token = syn->readSymbol(5, Symbol::NUMBER, Symbol::OPEN_PAR,
+    std::shared_ptr<Token> token = syn->readSymbol(5, Symbol::NUMBER, Symbol::OPEN_PAR,
         Symbol::VARIABLE, Symbol::SHARP_T, Symbol::NAME);
     EffectExpression exp;
     switch (token->symbol) {
@@ -1046,7 +1048,7 @@ EffectExpression Parser::parseEffectExpression(const vector<Variable>& parameter
 // <f-exp-t> ::= * #t <f-exp>
 void Parser::parseEffectOperation(EffectExpression& exp, const vector<Variable>& parameters, const vector<Variable>& controlVars,
     bool isAssign) {
-    Token* token = syn->readSymbol(5, Symbol::MINUS, Symbol::PLUS, Symbol::PROD,
+    std::shared_ptr<Token> token = syn->readSymbol(5, Symbol::MINUS, Symbol::PLUS, Symbol::PROD,
         Symbol::DIV, Symbol::NAME);
     if (syn->isSym(token, Symbol::NAME)) {
         exp.type = EE_FLUENT;
@@ -1063,7 +1065,7 @@ void Parser::parseEffectOperation(EffectExpression& exp, const vector<Variable>&
         }
         bool moreOperands;
         do {
-            Token* aux = syn->nextToken();
+            std::shared_ptr<Token> aux = syn->nextToken();
             moreOperands = syn->isSym(aux, Symbol::NUMBER) || syn->isSym(aux, Symbol::OPEN_PAR)
                 || syn->isSym(aux, Symbol::NAME) || syn->isSym(aux, Symbol::VARIABLE) ||
                 syn->isSym(aux, Symbol::SHARP_T);
@@ -1091,7 +1093,7 @@ void Parser::parseAction() {
     syn->closePar();
     Precondition precondition;
     Effect effect;
-    Token* token = syn->readSymbol(2, Symbol::COLON, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::COLON, Symbol::CLOSE_PAR);
     if (syn->isSym(token, Symbol::COLON)) {
         token = syn->readSymbol(2, Symbol::PRECONDITION, Symbol::EFFECT);
         if (syn->isSym(token, Symbol::PRECONDITION)) {
@@ -1120,7 +1122,7 @@ void Parser::parseAction() {
 Precondition Parser::parsePrecondition(const vector<Variable>& parameters, const std::vector<Variable>& controlVars) {
     Precondition prec;
     syn->openPar();
-    Token* token = syn->readSymbol(13, Symbol::NOT, Symbol::AND,
+    std::shared_ptr<Token> token = syn->readSymbol(13, Symbol::NOT, Symbol::AND,
         Symbol::OR, Symbol::IMPLY, Symbol::EXISTS, Symbol::FORALL, Symbol::EQUAL,
         Symbol::LESS, Symbol::GREATER, Symbol::GREATER_EQ, Symbol::LESS_EQ,
         Symbol::PREFERENCE, Symbol::NAME);
@@ -1210,7 +1212,7 @@ Precondition Parser::parsePrecondition(const vector<Variable>& parameters, const
 Effect Parser::parseEffect(const std::vector<Variable>& parameters, const std::vector<Variable>& controlVars) {
     Effect eff;
     syn->openPar();
-    Token* token = syn->readSymbol(10, Symbol::AND, Symbol::NOT,
+    std::shared_ptr<Token> token = syn->readSymbol(10, Symbol::AND, Symbol::NOT,
         Symbol::INCREASE, Symbol::DECREASE, Symbol::ASSIGN, Symbol::SCALE_UP,
         Symbol::SCALE_DOWN, Symbol::FORALL, Symbol::WHEN, Symbol::NAME);
     switch (token->symbol) {
@@ -1261,7 +1263,7 @@ Effect Parser::parseEffect(const std::vector<Variable>& parameters, const std::v
 
 // <object declaration> ::= (:objects <typed list (name)>)
 void Parser::parseObjects() {
-    Token* token = syn->readSymbol(2, Symbol::NAME, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::NAME, Symbol::CLOSE_PAR);
     vector<string> objNames;
     vector<unsigned int> types;
     while (!syn->isSym(token, Symbol::CLOSE_PAR)) {
@@ -1289,7 +1291,7 @@ void Parser::parseObjects() {
 // <basic-function-term> ::= <function-symbol>
 // <basic-function-term> ::= (<function-symbol> <name>*)
 void Parser::parseInit() {
-    Token* token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::OPEN_PAR, Symbol::CLOSE_PAR);
     float time;
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         token = syn->readSymbol(4, Symbol::EQUAL, Symbol::AT, Symbol::OVER, Symbol::NAME);
@@ -1301,7 +1303,7 @@ void Parser::parseInit() {
         else {
             bool til = false;
             if (syn->isSym(token, Symbol::AT)) {
-                Token* aux = syn->nextToken();
+                std::shared_ptr<Token> aux = syn->nextToken();
                 if (syn->isSym(aux, Symbol::NUMBER)) {
                     til = true;
                 }
@@ -1341,7 +1343,7 @@ Fact Parser::parseFact() {
     fact.time = 0;
     fact.valueIsNumeric = false;
     bool closePar = false;
-    Token* token = syn->readSymbol(4, Symbol::OPEN_PAR, Symbol::AT, Symbol::OVER, Symbol::NAME);
+    std::shared_ptr<Token> token = syn->readSymbol(4, Symbol::OPEN_PAR, Symbol::AT, Symbol::OVER, Symbol::NAME);
     if (syn->isSym(token, Symbol::OPEN_PAR)) {
         closePar = true;
         token = syn->readSymbol(3, Symbol::AT, Symbol::OVER, Symbol::NAME);
@@ -1400,7 +1402,7 @@ void Parser::parseGoal() {
 // <optimization> ::= minimize
 // <optimization> ::= maximize
 void Parser::parseMetric() {
-    Token* token = syn->readSymbol(2, Symbol::MINIMIZE, Symbol::MAXIMIZE);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::MINIMIZE, Symbol::MAXIMIZE);
     task->metricType = syn->isSym(token, Symbol::MINIMIZE) ? MT_MINIMIZE : MT_MAXIMIZE;
     task->metric = parseMetricExpression();
     syn->closePar();
@@ -1416,7 +1418,7 @@ void Parser::parseMetric() {
 // <metric-f-exp> ::=:preferences (is-violated <pref-name>)
 Metric Parser::parseMetricExpression() {
     Metric metric;
-    Token* token = syn->readSymbol(9, Symbol::OPEN_PAR, Symbol::MINUS, Symbol::DIV,
+    std::shared_ptr<Token> token = syn->readSymbol(9, Symbol::OPEN_PAR, Symbol::MINUS, Symbol::DIV,
         Symbol::PROD, Symbol::PLUS, Symbol::NUMBER, Symbol::TOTAL_TIME,
         Symbol::IS_VIOLATED, Symbol::NAME);
     switch (token->symbol) {
@@ -1522,7 +1524,7 @@ void Parser::parseConstraints() {
 // <con-GD> ::= (hold-after <number> <GD>)
 Constraint Parser::parseConstraint(const vector<Variable>& parameters, const vector<Variable>& controlVars) {
     syn->openPar();
-    Token* token = syn->readSymbol(13, Symbol::AND, Symbol::FORALL, Symbol::PREFERENCE,
+    std::shared_ptr<Token> token = syn->readSymbol(13, Symbol::AND, Symbol::FORALL, Symbol::PREFERENCE,
         Symbol::AT, Symbol::ALWAYS, Symbol::SOMETIME, Symbol::WITHIN,
         Symbol::AT_MOST_ONCE, Symbol::SOMETIME_AFTER, Symbol::SOMETIME_BEFORE,
         Symbol::ALWAYS_WITHIN, Symbol::HOLD_DURING, Symbol::HOLD_AFTER);
@@ -1634,7 +1636,7 @@ void Parser::parseDerivedPredicates() {
 
 // <length-spec> ::= (:length [(:serial <integer>)] [(:parallel <integer>)])
 void Parser::parseLength() {
-    Token* token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::OPEN_PAR);
+    std::shared_ptr<Token> token = syn->readSymbol(2, Symbol::CLOSE_PAR, Symbol::OPEN_PAR);
     while (syn->isSym(token, Symbol::OPEN_PAR)) {
         syn->readColon();
         string key = syn->readName();

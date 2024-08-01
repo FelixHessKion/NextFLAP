@@ -95,14 +95,12 @@ SyntaxAnalyzer::SyntaxAnalyzer(std::string &pddlStr){
 
 // Disposes the syntatic analyzer
 SyntaxAnalyzer::~SyntaxAnalyzer() {
-    for (unsigned int i = 0; i < tokens.size(); i++)
-        delete tokens[i];
     tokens.clear();
     symbols.clear();
 }
 
 // Returns the next token in the file
-Token* SyntaxAnalyzer::nextToken() {
+std::shared_ptr<Token> SyntaxAnalyzer::nextToken() {
     if (tokenIndex < 0) {
         tokenIndex++;
         return tokens[tokens.size() + tokenIndex - 1];
@@ -117,7 +115,7 @@ Token* SyntaxAnalyzer::nextToken() {
             }
             else break;
         }
-        Token* token;
+        std::shared_ptr<Token> token;
         if (position < bufferLength) token = matchToken();
         else token = nullptr;
         if (token == nullptr)
@@ -128,34 +126,34 @@ Token* SyntaxAnalyzer::nextToken() {
 }
 
 // Computes the type of the next token
-Token* SyntaxAnalyzer::matchToken() {
-    Token* token = nullptr;
+std::shared_ptr<Token> SyntaxAnalyzer::matchToken() {
+    std::shared_ptr<Token> token = nullptr;
     switch (buffer[position]) {
-    case '(': token = new Token(Symbol::OPEN_PAR);  break;
-    case ')': token = new Token(Symbol::CLOSE_PAR); break;
-    case ':': token = new Token(Symbol::COLON);     break;
-    case '-': token = new Token(Symbol::MINUS);     break;
-    case '+': token = new Token(Symbol::PLUS);      break;
-    case '/': token = new Token(Symbol::DIV);       break;
-    case '*': token = new Token(Symbol::PROD);      break;
-    case '=': token = new Token(Symbol::EQUAL);     break;
+    case '(': token = std::make_shared<Token>(Symbol::OPEN_PAR);  break;
+    case ')': token = std::make_shared<Token>(Symbol::CLOSE_PAR); break;
+    case ':': token = std::make_shared<Token>(Symbol::COLON);     break;
+    case '-': token = std::make_shared<Token>(Symbol::MINUS);     break;
+    case '+': token = std::make_shared<Token>(Symbol::PLUS);      break;
+    case '/': token = std::make_shared<Token>(Symbol::DIV);       break;
+    case '*': token = std::make_shared<Token>(Symbol::PROD);      break;
+    case '=': token = std::make_shared<Token>(Symbol::EQUAL);     break;
     case '>':
         if (buffer[position + 1] == '=') {
-            token = new Token(Symbol::GREATER_EQ);
+            token = std::make_shared<Token>(Symbol::GREATER_EQ);
             position++;
         }
-        else token = new Token(Symbol::GREATER);
+        else token = std::make_shared<Token>(Symbol::GREATER);
         break;
     case '<':
         if (buffer[position + 1] == '=') {
-            token = new Token(Symbol::LESS_EQ);
+            token = std::make_shared<Token>(Symbol::LESS_EQ);
             position++;
         }
-        else token = new Token(Symbol::LESS);
+        else token = std::make_shared<Token>(Symbol::LESS);
         break;
     case '#':
         if (buffer[position + 1] == 't') {
-            token = new Token(Symbol::SHARP_T);
+            token = std::make_shared<Token>(Symbol::SHARP_T);
             position++;
         }
         else notifyError("#t variable expected");
@@ -164,11 +162,11 @@ Token* SyntaxAnalyzer::matchToken() {
     if (token != nullptr) {
         position++;
         float value;
-        if (matchNumber(&value)) token = new Token(-value);
+        if (matchNumber(&value)) token = std::make_shared<Token>(-value);
     }
     else {
         float value;
-        if (matchNumber(&value)) token = new Token(value);
+        if (matchNumber(&value)) token = std::make_shared<Token>(value);
         else {
             int start = position++;
             while (position < bufferLength &&
@@ -177,14 +175,14 @@ Token* SyntaxAnalyzer::matchToken() {
                     buffer[position] == '-' || buffer[position] == '_'))
                 position++;
             string description(&buffer[start], position - start);
-            if (description.at(0) == '?') token = new Token(Symbol::VARIABLE, description);
+            if (description.at(0) == '?') token = std::make_shared<Token>(Symbol::VARIABLE, description);
             else {
                 unordered_map<string, Symbol>::const_iterator index = symbols.find(description);
                 if (index == symbols.end()) {
-                    token = new Token(Symbol::NAME, description);
+                    token = std::make_shared<Token>(Symbol::NAME, description);
                 }
                 else {
-                    token = new Token(index->second, description);
+                    token = std::make_shared<Token>(index->second, description);
                 }
             }
         }
@@ -224,21 +222,21 @@ void SyntaxAnalyzer::skipSpaces() {
 
 // Reads an open parenthesis
 void SyntaxAnalyzer::openPar() {
-    Token* res = nextToken();
+    std::shared_ptr<Token> res = nextToken();
     if (!isSym(res, Symbol::OPEN_PAR))
         notifyError("Open parenthesis expected");
 }
 
 // Reads a close parenthesis
 void SyntaxAnalyzer::closePar() {
-    Token* res = nextToken();
+    std::shared_ptr<Token> res = nextToken();
     if (!isSym(res, Symbol::CLOSE_PAR))
         notifyError("Close parenthesis expected");
 }
 
 // Reads a colon
 void SyntaxAnalyzer::readColon() {
-    Token* res = nextToken();
+    std::shared_ptr<Token> res = nextToken();
     if (!isSym(res, Symbol::COLON))
         notifyError("Colon expected but token '" + res->toString() + "' found");
 }
@@ -249,13 +247,13 @@ void SyntaxAnalyzer::notifyError(const std::string& msg) {
 }
 
 // Returns the next token if its type is equal to the given one
-Token* SyntaxAnalyzer::readSymbol(Symbol s) {
+std::shared_ptr<Token> SyntaxAnalyzer::readSymbol(Symbol s) {
     return readSymbol(1, s);
 }
 
 // Returns the next token if its type is equal to one in the given list of types
-Token* SyntaxAnalyzer::readSymbol(int numSymbols, ...) {
-    Token* res = nextToken();
+std::shared_ptr<Token> SyntaxAnalyzer::readSymbol(int numSymbols, ...) {
+    std::shared_ptr<Token> res = nextToken();
     va_list list;
     va_start(list, numSymbols);
     bool valid = false;
@@ -272,7 +270,7 @@ Token* SyntaxAnalyzer::readSymbol(int numSymbols, ...) {
 
 // Returns the description of the next token if it is a name
 string SyntaxAnalyzer::readName() {
-    Token* res = nextToken();
+    std::shared_ptr<Token> res = nextToken();
     if (!isSym(res, Symbol::NAME) && !isSym(res, Symbol::AT) && !isSym(res, Symbol::OVER)
         && !isSym(res, Symbol::OBJECTS) && !isSym(res, Symbol::CONSTRAINTS)) {
         notifyError("Name expected, but token '" + res->toString() + "' found");
