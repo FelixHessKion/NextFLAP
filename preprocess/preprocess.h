@@ -29,7 +29,7 @@ struct FeatureList {
 class Preprocess {
 private:
     std::unique_ptr<ParsedTask> &task;
-    PreprocessedTask* prepTask;
+    std::unique_ptr<PreprocessedTask> prepTask;
     void preprocessOperators();
     void checkPreconditionFeatures(Precondition &prec, FeatureList* features);
     void checkPreconditionFeatures(DurativeCondition &prec, FeatureList* features);
@@ -125,7 +125,7 @@ private:
 public:
     Preprocess(std::unique_ptr<ParsedTask> &parsedTask);
     ~Preprocess();
-    PreprocessedTask* preprocessTask();
+    void preprocessTask(std::unique_ptr<PreprocessedTask> &prepTaskOut);
 };
 
 #endif

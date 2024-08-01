@@ -61,7 +61,7 @@ public:
 // Class for task grounding
 class Grounder {
 private:
-    PreprocessedTask *prepTask;
+    std::unique_ptr<PreprocessedTask> &prepTask;
     std::unique_ptr<GroundedTask> gTask;
     std::unique_ptr<std::unique_ptr<bool[]>[]> typesMatrix;  
     unsigned int numOps;
@@ -159,7 +159,8 @@ private:
     bool isBoolean(unsigned int value) { return value == gTask->task->CONSTANT_TRUE || value == gTask->task->CONSTANT_FALSE; }
 
 public:
- void groundTask(PreprocessedTask *prepTask, bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut);
+ Grounder(std::unique_ptr<PreprocessedTask> &prepTask);
+ void groundTask(bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut);
 };
 
 #endif

@@ -20,14 +20,14 @@ Preprocess::~Preprocess() {
 }
 
 // Starts the preprocess and returns the preprocessed task
-PreprocessedTask* Preprocess::preprocessTask()
+void Preprocess::preprocessTask(std::unique_ptr<PreprocessedTask> &prepTaskOut)
 {
-    // task = parsedTask;
-    prepTask = new PreprocessedTask(task);
+    prepTask = std::make_unique<PreprocessedTask>(task);
     preprocessOperators();
     //cout << prepTask->toString() << endl;
     //throwError(prepTask->toString());
-    return prepTask;
+    prepTaskOut = std::move(prepTask);
+    return;
 }
 
 // Operators preprocessing

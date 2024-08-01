@@ -52,11 +52,12 @@ ProgrammedValue::ProgrammedValue(unsigned int index, unsigned int varIndex, unsi
 /********************************************************/
 /* CLASS: Grounder                                      */
 /********************************************************/
+Grounder::Grounder(std::unique_ptr<PreprocessedTask> &prepTask): prepTask(prepTask){
+}
 
 // Grounding process
-void Grounder::groundTask(PreprocessedTask *prepTask, bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut) {
+void Grounder::groundTask(bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut) {
     currentLevel = 0;
-    this->prepTask = prepTask;
     gTask = std::make_unique<GroundedTask>(prepTask->task);
     initTypesMatrix();
     initOperators();

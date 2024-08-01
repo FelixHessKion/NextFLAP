@@ -56,23 +56,23 @@ void parseStage(PlannerParameters* parameters, std::unique_ptr<ParsedTask> &pars
 }
 
 // Preprocesses the parsed task
-PreprocessedTask* preprocessStage(std::unique_ptr<ParsedTask> & parsedTask, PlannerParameters* parameters) {
+void preprocessStage(std::unique_ptr<ParsedTask> & parsedTask, PlannerParameters* parameters, std::unique_ptr<PreprocessedTask> &prepTask) {
     clock_t t = clock();
     Preprocess preprocess(parsedTask);
-    PreprocessedTask* prepTask = preprocess.preprocessTask();
+    preprocess.preprocessTask(prepTask);
     float time = toSeconds(t);
     parameters->total_time += time;
     //cout << prepTask->toString() << endl;
     cout << ";Preprocessing time: " << time << endl;
-    return prepTask;
+    return;
 }
 
 // Grounder stage of the preprocessed task
-void groundingStage(PreprocessedTask* prepTask,
+void groundingStage(std::unique_ptr<PreprocessedTask> & prepTask,
     PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask) {
     clock_t t = clock();
-    Grounder grounder;
-    grounder.groundTask(prepTask, parameters->keepStaticData, gTask);
+    Grounder grounder(prepTask);
+    grounder.groundTask(parameters->keepStaticData, gTask);
     float time = toSeconds(t);
     parameters->total_time += time;
     //cout << gTask->toString() << endl;
@@ -106,10 +106,11 @@ SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTas
     parameters->total_time = 0;
     SASTask* sTask = nullptr;
     std::unique_ptr<ParsedTask> parsedTask;
+    std::unique_ptr<PreprocessedTask> prepTask;
     parseStage(parameters, parsedTask);
     if (parsedTask != nullptr) {
         //cout << parsedTask->toString() << endl;
-        PreprocessedTask* prepTask = preprocessStage(parsedTask, parameters);
+        preprocessStage(parsedTask, parameters, prepTask);
         if (prepTask != nullptr) {
            groundingStage(prepTask, parameters, gTask);
             if (gTask != nullptr) {
@@ -117,7 +118,7 @@ SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTas
                 sTask = sasTranslationStage(gTask, parameters);
                 // delete gTask;
             }
-            delete prepTask;
+            // delete prepTask;
         }
     }
     return sTask;
