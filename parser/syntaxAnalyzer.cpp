@@ -63,8 +63,8 @@ SyntaxAnalyzer::SyntaxAnalyzer(char* fileName) {
         istreambuf_iterator<char>());
     std::transform(contents.begin(), contents.end(), contents.begin(), ::tolower);
     bufferLength = contents.length() + 1;
-    buffer = new char[bufferLength];
-    strcpy(buffer, contents.c_str());
+    buffer = std::make_unique<char[]>(bufferLength);
+    strcpy(buffer.get(), contents.c_str());
     tokenIndex = 0;
     lineNumber = 1;
     position = 0;
@@ -81,8 +81,8 @@ SyntaxAnalyzer::SyntaxAnalyzer(std::string &pddlStr){
         istreambuf_iterator<char>());
     std::transform(contents.begin(), contents.end(), contents.begin(), ::tolower);
     bufferLength = contents.length() + 1;
-    buffer = new char[bufferLength];
-    strcpy(buffer, contents.c_str());
+    buffer = std::make_unique<char[]>(bufferLength);
+    strcpy(buffer.get(), contents.c_str());
     tokenIndex = 0;
     lineNumber = 1;
     position = 0;
@@ -95,7 +95,6 @@ SyntaxAnalyzer::SyntaxAnalyzer(std::string &pddlStr){
 
 // Disposes the syntatic analyzer
 SyntaxAnalyzer::~SyntaxAnalyzer() {
-    if (buffer != NULL) delete[] buffer;
     for (unsigned int i = 0; i < tokens.size(); i++)
         delete tokens[i];
     tokens.clear();

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 /********************************************************/
 /* Oscar Sapena Vercher - DSIC - UPV                    */
@@ -68,7 +69,8 @@ public:
 class SyntaxAnalyzer {
 private:
     char* fileName;
-    char* buffer;
+    // char* buffer;
+    std::unique_ptr<char[]> buffer;
     int lineNumber;
     int position;
     int bufferLength;
