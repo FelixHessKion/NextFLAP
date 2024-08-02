@@ -35,9 +35,11 @@ void SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyG
     numVars = gTask->variables.size();
     numActions = gTask->actions.size();
     getInitialStateLiterals();
-    mutex = new bool*[numVars];
-    for (unsigned int i = 0; i < numVars; i++)
-        mutex[i] = new bool[numVars] {false};
+    mutex = std::make_unique<std::unique_ptr<bool[]>[]>(numVars);
+    for (unsigned int i = 0; i < numVars; i++){
+        mutex[i] = std::make_unique<bool[]>(numVars);
+        std::fill(mutex[i].get(), mutex[i].get()+numVars, false);
+    }
     actions = std::make_unique<bool[]>(numActions);
     std::fill(actions.get(), actions.get()+numActions, false);
 	
@@ -160,9 +162,6 @@ bool SASTranslator::isMutex(GroundedCondition &c1, GroundedCondition &c2) {
 
 // Disposes the memory
 void SASTranslator::clearMemory() {
-    for (unsigned int i = 0; i < numVars; i++) 
-        delete [] mutex[i];
-    delete [] mutex;
 }
 
 // F* <- I
