@@ -44,8 +44,8 @@ private:
 	std::vector< std::vector<int> > literalLevels;
 	std::vector<int> actionLevels;
 	unsigned int numLevels;
-	std::vector<RPGVarValue>* lastLevel;
-	std::vector<RPGVarValue>* newLevel;
+  std::unique_ptr<std::vector<RPGVarValue>> lastLevel;
+	std::unique_ptr<std::vector<RPGVarValue>> newLevel;
 	std::vector<TVarValue> reachedValues;
 
 	void initialize();

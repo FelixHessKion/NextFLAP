@@ -97,12 +97,10 @@ void RPG::expand() {
 		for (unsigned int i = 0; i < newLevel->size(); i++) {
 			literalLevels[(*newLevel)[i].var][(*newLevel)[i].value] = numLevels;
 		}
-		vector<RPGVarValue>* aux = lastLevel;
-		lastLevel = newLevel;
-		newLevel = aux;
+    std::unique_ptr<vector<RPGVarValue>> aux = std::move(lastLevel);
+		lastLevel = std::move(newLevel);
+		newLevel = std::move(aux);
 	}
-	delete lastLevel;
-	delete newLevel;
 #ifdef DEBUG_RPG_ON
 	cout << "There are " << numLevels << " levels" << endl;
 #endif
@@ -154,8 +152,8 @@ void RPG::initialize() {
 		literalLevels[i].resize(task->values.size(), MAX_INT32);
 	}
 	actionLevels.resize(task->actions.size(), MAX_INT32);
-	lastLevel = new vector<RPGVarValue>();
-	newLevel = new vector<RPGVarValue>();
+	lastLevel = std::make_unique<vector<RPGVarValue>>();
+	newLevel = std::make_unique<vector<RPGVarValue>>();
 }
 
 void RPG::resetReachedValues() {
