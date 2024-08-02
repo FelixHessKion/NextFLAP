@@ -39,7 +39,7 @@ public:
 
 class RPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	bool forceAtEndConditions;
 	std::vector< std::vector<int> > literalLevels;
 	std::vector<int> actionLevels;
@@ -66,9 +66,9 @@ private:
 public:
 	std::vector<SASAction*> relaxedPlan;
 
-	RPG(std::vector< std::vector<TValue> >& varValues, SASTask* task, bool forceAtEndConditions,
+	RPG(std::vector< std::vector<TValue> >& varValues, std::shared_ptr<SASTask> task, bool forceAtEndConditions,
 		std::vector<SASAction*>* tilActions);
-	RPG(TState* state, SASTask* task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions);
+	RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions);
 	bool isExecutable(SASAction* a);
 	uint16_t evaluate(bool mutex);
 	uint16_t evaluate(TVarValue goal, bool mutex);

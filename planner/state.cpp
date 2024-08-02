@@ -16,7 +16,7 @@ TState::TState(unsigned int numSASVars, unsigned int numNumVars) {
 	maxState = new TFloatValue[numNumVars];
 }
 
-TState::TState(SASTask* task) : TState(task->variables.size(), task->numVariables.size()) {	// Create the initial state
+TState::TState(std::shared_ptr<SASTask> task) : TState(task->variables.size(), task->numVariables.size()) {	// Create the initial state
 	for (unsigned int i = 0; i < numSASVars; i++) {
 		this->state[i] = task->initialState[i];
 	}

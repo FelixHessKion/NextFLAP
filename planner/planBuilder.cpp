@@ -34,7 +34,7 @@ PlanBuilderCausalLink::PlanBuilderCausalLink(TVarValue vv, TTimePoint p1, TTimeP
 /********************************************************/
 
 PlanBuilder::PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
-	int numSupportState, PlanEffects* planEffects, SASTask* task)
+	int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task)
 {
 	this->task = task;
 	action = a;

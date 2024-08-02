@@ -9,9 +9,9 @@
 
 using namespace std;
 
-PlannerSetting::PlannerSetting(SASTask* sTask) {
+PlannerSetting::PlannerSetting(std::shared_ptr<SASTask> stask) {
 	initialTime = clock();
-	this->task = sTask;
+  this->task = stask;
 	this->generateTrace = generateTrace;
 	createInitialPlan();
 	forceAtEndConditions = checkForceAtEndConditions();

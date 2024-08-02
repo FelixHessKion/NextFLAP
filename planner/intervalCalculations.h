@@ -44,7 +44,7 @@ private:
     void constrainAtEndFluent(TVariable v);
 
 public:
-    IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, SASTask* task);
+    IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task);
     bool supportedNumericStartConditions(bool* holdCondEff);
     bool supportedNumericEndConditions(bool* holdCondEff);
     bool supportedNumericConditions(SASConditionalEffect* e);

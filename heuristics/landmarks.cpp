@@ -12,7 +12,7 @@ using namespace std;
 /* LandmarkRPG                             */
 /*******************************************/
 
-bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	achievedFluent.erase(SASTask::getVariableValueCode(v, value));
@@ -38,7 +38,7 @@ bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, SASTask* ta
 	return res;
 }
 
-bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	unsigned int n = v->size();
@@ -75,7 +75,7 @@ bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* 
 	return res;
 }
 
-bool LandmarkRPG::verifyActions(std::vector<SASAction*>* actions, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyActions(std::vector<SASAction*>* actions, TState* s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	while (remainingGoals.size() > 0 && lastLevel->size() > 0) {
@@ -273,7 +273,7 @@ void LandmarkRPG::clearMemory() {
 /* LandmarkTree                            */
 /*******************************************/
 
-LandmarkTree::LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
 	this->state = state;
 	this->task = task;
 	rpg.initialize(false, task, tilActions);
@@ -857,7 +857,7 @@ void LandmarkTree::getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFl
 /* Landmarks                               */
 /*******************************************/
 
-Landmarks::Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+Landmarks::Landmarks(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
 	LandmarkTree lt(state, task, tilActions);
 	unordered_map<int, int> mapping;
 	for (unsigned int i = 0; i < lt.nodes.size(); i++) {
@@ -880,7 +880,7 @@ Landmarks::Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilA
 	}
 }
 
-void Landmarks::filterTransitiveOrders(SASTask* task) {
+void Landmarks::filterTransitiveOrders(std::shared_ptr<SASTask> task) {
 	for (unsigned int i = 0; i < nodes.size(); i++) {
 		unsigned int j = 0;
 		int n1 = nodes[i].getIndex();
@@ -916,7 +916,7 @@ bool Landmarks::checkIndirectReachability(int orig, int current, int dst, std::v
 	return false;
 }
 
-std::string Landmarks::toString(SASTask* task) {
+std::string Landmarks::toString(std::shared_ptr<SASTask> task) {
 	std::string res = "LANDMARKS:\n";
 	unsigned int n = nodes.size();
 	for (unsigned int i = 0; i < n; i++) {

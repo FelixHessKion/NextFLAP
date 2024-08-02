@@ -11,7 +11,7 @@ using namespace std;
 
 //#define DEBUG_TEMPORALRPG_ON
 
-void TemporalRPG::initialize(bool untilGoals, SASTask* task, std::vector<SASAction*>* tilActions) {
+void TemporalRPG::initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
 	verifyFluent = false;
 	this->untilGoals = untilGoals;
 	this->task = task;

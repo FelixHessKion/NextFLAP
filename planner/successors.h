@@ -39,7 +39,7 @@ public:
 
 class Successors {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	TState* initialState;
 	bool filterRepeatedStates;
 	unsigned int numVariables;							// Number of variables
@@ -107,7 +107,7 @@ public:
 	std::unordered_map<uint64_t, std::vector<Plan*> > memo;
 	Plan* solution;
 	
-	Successors(TState* state, SASTask* task, bool forceAtEndConditions, bool filterRepeatedStates,
+	Successors(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
 		std::vector<SASAction*>* tilActions);
 	~Successors();
 	void computeSuccessors(Plan* base, std::vector<Plan*>* suc, float bestMakespan);

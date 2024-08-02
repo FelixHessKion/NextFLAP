@@ -18,7 +18,7 @@
 
 class Planner {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	Plan* initialPlan;
 	TState* initialState;
 	bool forceAtEndConditions;
@@ -46,7 +46,7 @@ private:
 	void markChildrenAsInvalid(Plan* p);
 
 public:
-	Planner(SASTask* task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
+	Planner(std::shared_ptr<SASTask> task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
 		bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions);
 	Plan* plan(float bestMakespan, clock_t startTime);
 	void clearSolution();

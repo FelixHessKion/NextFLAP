@@ -18,7 +18,7 @@ bool Planner::emptySearchSpace()
 }
 
 // Constructor
-Planner::Planner(SASTask* task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
+Planner::Planner(std::shared_ptr<SASTask> task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
 	bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions)
 {
 	this->bestH = MAX_INT32;

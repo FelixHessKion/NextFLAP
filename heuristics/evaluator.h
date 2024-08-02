@@ -20,6 +20,7 @@
 #include "../planner/linearizer.h"
 #include "../planner/planComponents.h"
 #include "hLand.h"
+#include <memory>
 
 // Entry of a priority queue to sort the plan timepoints
 class ScheduledPoint : public PriorityQueueItem {
@@ -44,7 +45,7 @@ public:
 // Heuristic evaluator
 class Evaluator {
 private:
-	SASTask* task;
+  std::shared_ptr<SASTask> task;
 	std::vector<SASAction*>* tilActions;
 	PlanComponents planComponents;
 	PriorityQueue pq;
@@ -59,7 +60,7 @@ private:
 public:
 	Evaluator();
 	~Evaluator();
-	void initialize(TState* state, SASTask* task, std::vector<SASAction*>* a, bool forceAtEndConditions);
+	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* a, bool forceAtEndConditions);
 	void calculateFrontierState(Plan* p);
 	void evaluate(Plan* p);
 	void evaluateInitialPlan(Plan* p);

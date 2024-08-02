@@ -63,7 +63,7 @@ public:
 // Plan builder
 class PlanBuilder {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	unsigned int iteration;
 	std::vector< std::vector<unsigned int> >* matrix;
 	std::vector<TTimePoint> prevPoints;	// For internal calculations
@@ -98,7 +98,7 @@ public:
 	bool* condEffHold;
 
 	PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
-		int numSupportState, PlanEffects* planEffects, SASTask* task);
+		int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task);
 	~PlanBuilder();
 	bool addLink(SASCondition* c, TTimePoint p1, TTimePoint p2);
 	bool addNumLink(TVariable v, TTimePoint p1, TTimePoint p2);

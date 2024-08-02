@@ -86,11 +86,11 @@ void groundingStage(std::unique_ptr<PreprocessedTask> & prepTask,
 }
 
 // SAS translation stage
-SASTask* sasTranslationStage(std::unique_ptr<GroundedTask> &gTask, PlannerParameters* parameters) {
+void sasTranslationStage(std::unique_ptr<GroundedTask> &gTask, PlannerParameters* parameters, std::shared_ptr<SASTask> sTask) {
     clock_t t = clock();
     SASTranslator translator;
-    SASTask* sasTask = translator.translate(gTask, parameters->noSAS,
-        parameters->generateMutexFile, parameters->keepStaticData);
+    translator.translate(gTask, parameters->noSAS,
+        parameters->generateMutexFile, parameters->keepStaticData, sTask);
     float time = toSeconds(t);
     parameters->total_time += time;
     cout << ";SAS translation time: " << time << endl;
@@ -98,13 +98,12 @@ SASTask* sasTranslationStage(std::unique_ptr<GroundedTask> &gTask, PlannerParame
     /*for (SASAction& a : sasTask->actions) {
         cout << sasTask->toStringAction(a) << endl;
     }*/
-    return sasTask;
+    return;
 }
 
 // Sequential calls to the preprocess stages
-SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask) {
+void doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTask> &gTask, std::shared_ptr<SASTask> sTask) {
     parameters->total_time = 0;
-    SASTask* sTask = nullptr;
     std::unique_ptr<ParsedTask> parsedTask;
     std::unique_ptr<PreprocessedTask> prepTask;
     parseStage(parameters, parsedTask);
@@ -115,19 +114,20 @@ SASTask* doPreprocess(PlannerParameters* parameters, std::unique_ptr<GroundedTas
            groundingStage(prepTask, parameters, gTask);
             if (gTask != nullptr) {
                 //cout << gTask->toString() << endl;
-                sTask = sasTranslationStage(gTask, parameters);
+                sasTranslationStage(gTask, parameters, sTask);
                 // delete gTask;
             }
             // delete prepTask;
         }
     }
-    return sTask;
+    return;
 }
 
 // Sequential calls to the main planning stages
 void startPlanning(PlannerParameters* parameters) {
     std::unique_ptr<GroundedTask> gTask;
-    SASTask* sTask = doPreprocess(parameters, gTask);
+    std::shared_ptr<SASTask> sTask = std::make_shared<SASTask>();
+    doPreprocess(parameters, gTask, sTask);
     if (sTask == nullptr)
         return;
     clock_t t = clock();

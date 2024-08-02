@@ -14,10 +14,11 @@
 #include "planner.h"
 #include "../heuristics/rpg.h"
 #include <time.h>
+#include <memory>
 
 class PlannerSetting {
 private:
-	SASTask* task;
+  std::shared_ptr<SASTask> task;
 	clock_t initialTime;
 	bool generateTrace;
 	Plan* initialPlan;
@@ -36,7 +37,7 @@ private:
 	bool checkRepeatedStates();
 
 public:
-	PlannerSetting(SASTask* sTask);
+	PlannerSetting(std::shared_ptr<SASTask> task);
 	Plan* plan(float bestMakespan, clock_t startTime);
 };
 

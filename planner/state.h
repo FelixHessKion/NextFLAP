@@ -10,6 +10,7 @@
 
 #include "../utils/utils.h"
 #include "../sas/sasTask.h"
+#include <memory>
 
 class TState {
 public:
@@ -20,7 +21,7 @@ public:
 	TFloatValue* maxState;		// Maximum values of the numeric variables in the state
 
 	TState(unsigned int numSASVars, unsigned int numNumVars);
-	TState(SASTask* task);
+	TState(std::shared_ptr<SASTask> task);
 	~TState();
 	inline uint64_t getCode() {
 		uint64_t code = 0;

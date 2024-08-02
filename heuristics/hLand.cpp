@@ -26,7 +26,7 @@ void LandmarkCheck::addPrev(LandmarkCheck* n) {
 	prev.push_back(n);
 }
 
-string LandmarkCheck::toString(SASTask* task, bool showNext) {
+string LandmarkCheck::toString(std::shared_ptr<SASTask> task, bool showNext) {
 	std::string res = "(";
 	res += task->variables[getVar()].name + "=" + task->values[getValue()].name;
 	if (!single) {
@@ -70,7 +70,7 @@ void LandmarkCheck::removeSuccessor(LandmarkCheck* n) {
 	}
 }
 
-bool LandmarkCheck::isGoal(SASTask* task) {
+bool LandmarkCheck::isGoal(std::shared_ptr<SASTask> task) {
 	if (vars.size() != 1) return false;
 	TVariable v = getVar();
 	TValue value = getValue();
@@ -119,13 +119,13 @@ LandmarkHeuristic::LandmarkHeuristic() {
 LandmarkHeuristic::~LandmarkHeuristic() {
 }
 
-void LandmarkHeuristic::initialize(SASTask* task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
 	this->task = task;
 	TState state(task);
 	initialize(&state, task, tilActions);
 }
 
-void LandmarkHeuristic::initialize(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
 	this->task = task; 
 	Landmarks landmarks(state, task, tilActions);
 	landmarks.filterTransitiveOrders(task);
@@ -244,7 +244,7 @@ void LandmarkHeuristic::copyRootNodes(std::vector<LandmarkCheck*>* v) {
 	v->insert(v->end(), rootNodes.begin(), rootNodes.end());
 }
 
-std::string LandmarkHeuristic::toString(SASTask* task) {
+std::string LandmarkHeuristic::toString(std::shared_ptr<SASTask> task) {
 	std::string res = "LANDMARKS:\n";
 	for (unsigned int i = 0; i < nodes.size(); i++) {
 		res += "* " + nodes[i]->toString(task, true) + "\n";

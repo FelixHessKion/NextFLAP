@@ -42,7 +42,7 @@ void VarChange::add(TValue v, TTimePoint time, unsigned int iteration) {
 /* CLASS: PlanEffects                                   */
 /********************************************************/
 
-PlanEffects::PlanEffects(SASTask* task)
+PlanEffects::PlanEffects(std::shared_ptr<SASTask> task)
 {
 	this->task = task;
 	int numVariables = (int)task->variables.size();

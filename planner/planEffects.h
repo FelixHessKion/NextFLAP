@@ -44,7 +44,7 @@ public:
 
 class PlanEffects : public FluentIntervalData {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 
 	TFloatValue getNumVarMinValue(TVariable var, int stateIndex);
 	TFloatValue getMinActionDuration(TTimePoint timepoint);
@@ -60,7 +60,7 @@ public:
 	unsigned int iteration;
 	PlanComponents* planComponents;
 
-	PlanEffects(SASTask* task);
+	PlanEffects(std::shared_ptr<SASTask> task);
 	~PlanEffects();
 	void setCurrentIteration(unsigned int currentIteration, PlanComponents* planComponents);
 	void addEffect(SASCondition& eff, TTimePoint timePoint);

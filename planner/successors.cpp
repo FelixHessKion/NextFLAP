@@ -277,7 +277,7 @@ bool Successors::supportedConditions(const SASAction* a)
 	return true;
 }
 
-Successors::Successors(TState* state, SASTask* task, bool forceAtEndConditions, bool filterRepeatedStates,
+Successors::Successors(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
 	std::vector<SASAction*>* tilActions) : planEffects(task)
 {
 	this->task = task;

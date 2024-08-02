@@ -14,7 +14,7 @@ RPGVarValue::RPGVarValue(TVariable var, TValue value) {
 	this->value = value;
 }
 
-RPG::RPG(vector< vector<TValue> >& varValues, SASTask* task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions) {
+RPG::RPG(vector< vector<TValue> >& varValues, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions) {
 	this->task = task;
 	this->forceAtEndConditions = forceAtEndConditions;
 	initialize();
@@ -30,7 +30,7 @@ RPG::RPG(vector< vector<TValue> >& varValues, SASTask* task, bool forceAtEndCond
 	expand();
 }
 
-RPG::RPG(TState* state, SASTask* task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions) {
+RPG::RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions) {
 	this->task = task;
 	this->forceAtEndConditions = forceAtEndConditions;
 	initialize();

@@ -143,8 +143,8 @@ Evaluator::~Evaluator()
 }
 
 // Evaluator initialization
-void Evaluator::initialize(TState* state, SASTask* task, std::vector<SASAction*>* a, bool forceAtEndConditions) {
-	this->task = task;
+void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* a, bool forceAtEndConditions) {
+    this->task = task;
 	numericConditionsOrConditionalEffects = false;
 	for (SASAction& a : task->actions) {
 		if (a.startNumCond.size() > 0 || a.overNumCond.size() > 0 || a.endNumCond.size() > 0) {

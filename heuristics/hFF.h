@@ -31,7 +31,7 @@ public:
 
 class FF_RPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::vector< std::vector<int> > literalLevels;
     std::vector<int> actionLevels;
     unsigned int numLevels;
@@ -56,7 +56,7 @@ private:
 public:
 	std::vector<SASAction*> relaxedPlan;
 
-	FF_RPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task);
+	FF_RPG(TState* fs, std::vector<SASAction*>* tilActions, std::shared_ptr<SASTask> task);
 	uint16_t evaluate();
 };
 

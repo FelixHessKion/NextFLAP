@@ -30,7 +30,7 @@ public:
 		else if (level > otherLevel) return 1;
 		else return 0;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		return "(" + task->variables[variable].name + "," + task->values[value].name + ") -> " + std::to_string(level);
 	}
 };
@@ -58,7 +58,7 @@ public:
 		index = i;
 		isGoal = false;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		return "[" + std::to_string(index) + "]: (" + task->variables[variable].name + "," +
 			task->values[value].name + ") -> " + std::to_string(level);
 	}
@@ -66,7 +66,7 @@ public:
 
 class TemporalRPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	int numActions;
 	std::unordered_map<TVarValue, float> firstGenerationTime;
 	PriorityQueue qPNormal;
@@ -99,7 +99,7 @@ private:
 	void programAction(SASAction* a, TState* state);
 
 public:
-	void initialize(bool untilGoals, SASTask* task, std::vector<SASAction*>* tilActions);
+	void initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
 	~TemporalRPG();
 	void build(TState* state);
 	void computeLiteralLevels();

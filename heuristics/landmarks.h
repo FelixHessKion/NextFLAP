@@ -65,7 +65,7 @@ public:
 		}
 		return true;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		std::string res = "[";
 		if (!fluentSet.empty()) res += fluentSet[0]->toString(task);
 		for (unsigned int i = 1; i < fluentSet.size(); i++) {
@@ -100,7 +100,7 @@ public:
 	inline LMFluent* getFluent() { return fluent; }
 	inline USet* getSet() { return disjunction; }
 	inline bool single() { return singleLiteral; }
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		if (singleLiteral) return "Node " + std::to_string(index) + ": " + fluent->toString(task);
 		else return "Node " + std::to_string(index) + ": " + disjunction->toString(task);
 	}
@@ -116,14 +116,14 @@ public:
 		node2 = l2;
 		ordType = t;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		return node1->toString(task) + " -> " + node2->toString(task);
 	}
 };
 
 class LandmarkRPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::unordered_map<TVarValue, bool> achievedFluent;
 	bool* achievedAction;
 	std::vector<TVarValue>* lastLevel;
@@ -147,16 +147,16 @@ private:
 	bool allowedAction(SASAction* a, std::vector<SASAction*>* actions);
 
 public:
-	bool verifyFluent(TVariable v, TValue value, TState* s, SASTask* task);
-	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, SASTask* task);
-	bool verifyActions(std::vector<SASAction*>* actions, TState* s, SASTask* task);
+	bool verifyFluent(TVariable v, TValue value, TState* s, std::shared_ptr<SASTask> task);
+	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, std::shared_ptr<SASTask> task);
+	bool verifyActions(std::vector<SASAction*>* actions, TState* s, std::shared_ptr<SASTask> task);
 };
 
 class LandmarkTree {
 private:
 	TState* state;
 	TemporalRPG rpg;
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::vector<int> fluentNode;
 	std::vector< std::vector< LMFluent* > > objs;
 	std::vector< std::vector< USet* > > disjObjs;
@@ -183,7 +183,7 @@ public:
 	std::vector<LTNode*> nodes;
 	std::vector<LMOrdering> edges;
 
-	LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>* tilActions);
+	LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
 	~LandmarkTree();
 };
 
@@ -215,7 +215,7 @@ public:
 			nextNodes.push_back(nextNode);
 		}
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		std::string res = "Node " + std::to_string(index) + ": (" + task->variables[variables[0]].name
 			+ "," + task->values[values[0]].name + ")";
 		for (unsigned int i = 1; i < variables.size(); i++) {
@@ -254,11 +254,11 @@ private:
 	bool checkIndirectReachability(int orig, int current, int dst, std::vector<bool>* visited);
 
 public:
-	Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilActions);
-	void filterTransitiveOrders(SASTask* task);
+	Landmarks(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
+	void filterTransitiveOrders(std::shared_ptr<SASTask> task);
 	unsigned int numNodes() { return nodes.size(); }
 	LandmarkNode* getNode(unsigned int index) { return &(nodes[index]); }
-	std::string toString(SASTask* task);
+	std::string toString(std::shared_ptr<SASTask> task);
 };
 
 #endif

@@ -84,7 +84,7 @@ public:
 // Numeric relaxed planning graph
 class NumericRPG : public FluentIntervalData {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::vector<SASAction*> remainingGoals;
 	std::vector< std::vector<NumericRPGproducers> > numVarProducers; // For each numeric variable, the actions that updated its value interval
 	std::vector<TInterval> numVarValue;					   // Last value interval for each variable
@@ -124,7 +124,7 @@ private:
 	bool checkCondEffectHold(SASConditionalEffect& e, int level, IntervalCalculations& ic);
 
 public:
-	NumericRPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task, int limit);
+	NumericRPG(TState* fs, std::vector<SASAction*>* tilActions, std::shared_ptr<SASTask> task, int limit);
 	int evaluate();
 	int evaluateInitialPlan(/*bool* usefulActions*/);
 	TFloatValue getMinValue(TVariable v, int numState);

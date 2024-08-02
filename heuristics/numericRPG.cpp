@@ -12,7 +12,7 @@ using namespace std;
 //#define NUMRPG_DEBUG
 
 // Constructor
-NumericRPG::NumericRPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task, int limit)
+NumericRPG::NumericRPG(TState* fs, std::vector<SASAction*>* tilActions, std::shared_ptr<SASTask> task, int limit)
 {
 	this->task = task;
 	this->limit = limit > 100 ? 100 : limit;
