@@ -510,8 +510,8 @@ void SASTranslator::splitMutex(std::shared_ptr<SASTask> sTask, bool onlyGenerate
 }
 
 void SASTranslator::translateMutex(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
-	TVariable* sasVars = new TVariable[numVars];
-	TValue* sasValues = new TValue[numVars];
+  std::unique_ptr<TVariable[]> sasVars = std::make_unique<TVariable[]>(numVars);
+  std::unique_ptr<TVariable[]> sasValues = std::make_unique<TValue[]>(numVars);
 	for (unsigned int i = 0; i < numVars; i++) {
 		if (trans->literals[i].size() == 1) {
 			unsigned int code = trans->literals[i][0];
