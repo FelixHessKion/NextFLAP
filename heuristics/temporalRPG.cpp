@@ -28,16 +28,13 @@ void TemporalRPG::initialize(bool untilGoals, std::shared_ptr<SASTask> task, std
 		}
 	}
 	numActions = task->actions.size();
-	visitedAction = new char[numActions];
+	visitedAction = std::make_unique<char[]>(numActions);
 	for (int i = 0; i < numActions; i++)
 		visitedAction[i] = 0;
 	actionLevels = nullptr;
 }
 
 TemporalRPG::~TemporalRPG() {
-	delete[] visitedAction;
-	if (actionLevels != nullptr)
-		delete[] actionLevels;
 }
 
 void TemporalRPG::addGoalToAchieve(SASCondition& c) {
@@ -323,7 +320,7 @@ void TemporalRPG::computeLiteralLevels() {
 }
 
 void TemporalRPG::computeActionLevels(TState* state) {
-	actionLevels = new float[numActions];
+	actionLevels = std::make_unique<float[]>(numActions);
 	for (int i = 0; i < numActions; i++) {
 		actionLevels[i] = getActionLevel(&(task->actions[i]), state);
 #ifdef DEBUG_TEMPORALRPG_ON

@@ -74,12 +74,12 @@ private:
 	std::vector<TVarValue> goalsToAchieve;
 	bool verifyFluent;
 	LMFluent fluentToVerify;
-	char* visitedAction;
+  std::unique_ptr<char[]> visitedAction;
 	std::vector<LMFluent> fluentList;						// List of fluents (ComputeLiterals)
 	std::unordered_map<TVarValue, int> fluentIndex;			// [variable,value] -> fluent index
 	std::vector< std::vector<TVarValue> > fluentLevels;		// List of fluents at each level
 	std::unordered_map<float, int> fluentLevelIndex;		// Time -> level
-	float* actionLevels;									// Starting time of each action
+  std::unique_ptr<float[]> actionLevels;									// Starting time of each action
 	std::vector<SASAction*>* tilActions;
 
 	void addGoalToAchieve(SASCondition& c);
