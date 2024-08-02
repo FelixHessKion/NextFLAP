@@ -161,14 +161,14 @@ private:
 	std::vector< std::vector< LMFluent* > > objs;
 	std::vector< std::vector< USet* > > disjObjs;
 	bool** reasonableOrderings;
-	bool** matrix;
+  std::unique_ptr<std::unique_ptr<bool[]>[]> matrix;
 	bool** mutexMatrix;
 	std::vector<LMOrdering> reasonableOrderingsGoalsList;
 
 	void addGoalNode(SASCondition* c, TState* state);
 	void exploreRPG();
 	void actionProcessing(std::vector<SASAction*>* a, LTNode* g, int level);
-	void checkPreconditions(SASAction* a, int* common);
+	void checkPreconditions(SASAction* a, std::unique_ptr<int[]> &common);
 	bool verify(LMFluent* p);
 	bool verify(std::vector<LMFluent*>* v);
 	bool verify(std::vector<SASAction*>* a);

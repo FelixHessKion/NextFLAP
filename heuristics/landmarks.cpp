@@ -298,9 +298,9 @@ LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::ve
 	exploreRPG();
 	// Creating the adjacency matrix 
 	unsigned int n = nodes.size();
-	matrix = new bool* [n];
+	matrix = std::make_unique<std::unique_ptr<bool[]>[]>(n);
 	for (unsigned int j = 0; j < n; j++) {
-		matrix[j] = new bool[n];
+		matrix[j] = std::make_unique<bool[]>(n);
 		for (unsigned int i = 0; i < n; i++)
 			matrix[j][i] = false;
 	}
@@ -312,9 +312,6 @@ LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::ve
 }
 
 LandmarkTree::~LandmarkTree() {
-	for (unsigned int i = 0; i < nodes.size(); i++)
-		delete[] matrix[i];
-	delete[] matrix;
 	for (unsigned int i = 0; i < nodes.size(); i++) delete nodes[i];
 }
 
@@ -390,7 +387,7 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 	std::vector<LMFluent*> i;	// are common to all the actions in A
 	std::vector<LMFluent*> u;
 	unsigned int numFluents = rpg.getFluentListSize();
-	int* common = new int[numFluents];
+  std::unique_ptr<int[]> common = std::make_unique<int[]>(numFluents);
 	for (unsigned int n = 0; n < numFluents; n++) common[n] = 0;
 	for (unsigned int n = 0; n < a->size(); n++) {
 #ifdef DEBUG_LANDMARKS_ON
@@ -476,7 +473,6 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 			edges.back().initialize(d1->node, g, NECESSARY);
 		}
 	}
-	delete[] common;
 }
 
 USet* LandmarkTree::findDisjObject(USet* u, int level) {
@@ -676,7 +672,7 @@ bool LandmarkTree::verify(std::vector<SASAction*>* a) {
 	return r.verifyActions(a, state, task);
 }
 
-void LandmarkTree::checkPreconditions(SASAction* a, int* common) {
+void LandmarkTree::checkPreconditions(SASAction* a, std::unique_ptr<int[]> &common) {
 	std::vector<int> changed;
 	for (SASCondition &c : a->startCond) {
 		int index = rpg.getFluentIndex(c.var, c.value);
