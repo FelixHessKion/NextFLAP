@@ -68,7 +68,7 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 			}
 		}
 	}
-	LandmarkCheck* l, * al;
+	std::shared_ptr<LandmarkCheck> l, al;
 	while (pq.size() > 0) {
 		ScheduledPoint* p = (ScheduledPoint*)pq.poll();
 		SASAction* a = p->plan->action;
@@ -122,7 +122,7 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 	*/
 }
 
-bool Evaluator::findOpenNode(LandmarkCheck* l)
+bool Evaluator::findOpenNode(std::shared_ptr<LandmarkCheck> l)
 {
 	for (unsigned int i = 0; i < openNodes.size(); i++) {
 		if (openNodes[i] == l) return true;

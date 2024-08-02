@@ -51,11 +51,11 @@ private:
 	PriorityQueue pq;
 	//bool* usefulActions;
 	LandmarkHeuristic* landmarks;
-	std::vector<LandmarkCheck*> openNodes;				// For hLand calculation
+	std::vector<std::shared_ptr<LandmarkCheck>> openNodes;				// For hLand calculation
 	bool numericConditionsOrConditionalEffects;
 
 	void calculateFrontierState(TState* fs, Plan* currentPlan);
-	bool findOpenNode(LandmarkCheck* l);
+	bool findOpenNode(std::shared_ptr<LandmarkCheck> l);
 
 public:
 	Evaluator();
