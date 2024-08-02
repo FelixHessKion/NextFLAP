@@ -29,10 +29,10 @@ private:
     std::unique_ptr<GroundedTask> gTask;
     bool** mutex;
     std::unique_ptr<bool[]> actions;
-    bool* isLiteral;
-    bool* literalInFNA;
-	bool* literalInF;
-	bool* negatedLiteral;
+    std::unique_ptr<bool[]> isLiteral;
+    std::unique_ptr<bool[]> literalInFNA;
+	  std::unique_ptr<bool[]> literalInF;
+	  std::unique_ptr<bool[]> negatedLiteral;
     bool negatedPrecs;
 	unsigned int numNewLiterals;
     unsigned int numVars;

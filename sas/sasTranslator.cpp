@@ -41,7 +41,7 @@ void SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyG
     actions = std::make_unique<bool[]>(numActions);
     std::fill(actions.get(), actions.get()+numActions, false);
 	
-	literalInFNA = new bool[numVars];
+	literalInFNA = std::make_unique<bool[]>(numVars);
 	for (unsigned int i = 0; i < numVars; i++) literalInFNA[i] = literalInF[i];
 
 	while (numNewLiterals > 0 || mutexChanges.size() > 0) {
@@ -69,7 +69,6 @@ void SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyG
 
 		for (unsigned int i = 0; i < numVars; i++) literalInFNA[i] = literalInF[i];
 	}
-	delete[] literalInFNA;
     if (generateMutexFile) {
     	writeMutexFile();
 	}
@@ -164,14 +163,14 @@ void SASTranslator::clearMemory() {
     for (unsigned int i = 0; i < numVars; i++) 
         delete [] mutex[i];
     delete [] mutex;
-    delete [] literalInF;
-    delete [] isLiteral;
 }
 
 // F* <- I
 void SASTranslator::getInitialStateLiterals() {
-    literalInF = new bool[numVars] {false}; 
-    isLiteral = new bool[numVars] {false};
+    literalInF = std::make_unique<bool[]>(numVars);
+    std::fill(literalInF.get(), literalInF.get()+numVars, false);
+    isLiteral = std::make_unique<bool[]>(numVars);
+    std::fill(isLiteral.get(), isLiteral.get()+numVars, false);
     numNewLiterals = 0;
     for (unsigned int i = 0; i < numVars; i++) {
         GroundedVar &v = gTask->variables[i];
@@ -483,7 +482,7 @@ void SASTranslator::splitMutex(std::shared_ptr<SASTask> sTask, bool onlyGenerate
         }
     }
     negatedPrecs = false;									// Check if there are negative preconditions
-	negatedLiteral = new bool[numVars];
+	negatedLiteral = std::make_unique<bool[]>(numVars);
     for (unsigned int i = 0; i < numVars; i++)
     	negatedLiteral[i] = false;
     for (unsigned int i = 0; i < numActions; i++)
@@ -509,7 +508,6 @@ void SASTranslator::splitMutex(std::shared_ptr<SASTask> sTask, bool onlyGenerate
 	if (sTask->metricType != 'X')
 		sTask->metric = createMetric(&(gTask->metric), &trans);
 	translateMutex(sTask, &trans);									// Mutex processing
-	delete [] negatedLiteral;
 }
 
 void SASTranslator::translateMutex(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
