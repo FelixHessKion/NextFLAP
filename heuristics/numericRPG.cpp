@@ -100,7 +100,7 @@ void NumericRPG::createFirstActionLevel()
 		SASAction* a = remainingGoals[i];
 		if (isApplicable(a, 0)) {
 			IntervalCalculations ic(a, 0, this, task);
-			bool* hold = calculateCondEffHold(a, 0, ic);
+      std::shared_ptr<bool[]> hold = calculateCondEffHold(a, 0, ic);
 			if (ic.supportedNumericStartConditions(hold)) {
 #ifdef NUMRPG_DEBUG
 				cout << a->name << endl;
@@ -110,7 +110,6 @@ void NumericRPG::createFirstActionLevel()
 				remainingGoals.erase(remainingGoals.begin() + i);
 			}
 			else i++;
-			if (hold != nullptr) delete[] hold;
 		}
 		else i++;
 	}
@@ -139,10 +138,10 @@ bool NumericRPG::isApplicable(SASAction* a, int level)
 	return true;
 }
 
-bool* NumericRPG::calculateCondEffHold(SASAction* a, int level, IntervalCalculations& ic) {
+std::shared_ptr<bool[]> NumericRPG::calculateCondEffHold(SASAction* a, int level, IntervalCalculations& ic) {
 	int size = a->conditionalEff.size();
 	if (size == 0) return nullptr;
-	bool* hold = new bool[size];
+	std::shared_ptr<bool[]> hold = std::make_shared<bool[]>(size);
 	for (int i = 0; i < size; i++) {
 		hold[i] = checkCondEffectHold(a->conditionalEff[i], level, ic);
 	}
@@ -175,11 +174,10 @@ void NumericRPG::programActionEffects(SASAction* a, int level)
 	std::vector<TNumVarChange> svc, evc;
 	IntervalCalculations ic(a, level, this, task);
 	if (!ic.supportedNumericStartConditions(nullptr)) return;
-	bool* holdCondPrec = calculateCondEffHold(a, level, ic);
+	std::shared_ptr<bool[]> holdCondPrec = calculateCondEffHold(a, level, ic);
 	ic.applyStartEffects(&svc, holdCondPrec);
 	ic.applyEndEffects(&evc, holdCondPrec);
 	if (!ic.supportedNumericEndConditions(nullptr)) {
-		if (holdCondPrec != nullptr) delete[] holdCondPrec;
 		return;
 	}
 	bool newEffects = false;
@@ -239,7 +237,6 @@ void NumericRPG::programActionEffects(SASAction* a, int level)
 				}
 			}
 		}
-		delete[] holdCondPrec;
 	}
 	if (newEffects) { // Action generates new values
 		if (actionLevel[a->index].empty() && (a->endNumEff.size() > 0 || a->startNumEff.size() > 0))

@@ -45,14 +45,14 @@ private:
 
 public:
     IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task);
-    bool supportedNumericStartConditions(bool* holdCondEff);
-    bool supportedNumericEndConditions(bool* holdCondEff);
+    bool supportedNumericStartConditions(std::shared_ptr<bool[]> holdCondEff);
+    bool supportedNumericEndConditions(std::shared_ptr<bool[]> holdCondEff);
     bool supportedNumericConditions(SASConditionalEffect* e);
     void constrainAtStartFluents();
-    void applyStartEffects(Plan *p, bool* holdCondEff);
-    void applyStartEffects(std::vector<TNumVarChange>* v, bool* holdCondEff);
-    void applyEndEffects(Plan* p, bool* holdCondEff);
-    void applyEndEffects(std::vector<TNumVarChange>* v, bool* holdCondEff);
+    void applyStartEffects(Plan *p, std::shared_ptr<bool[]> holdCondEff);
+    void applyStartEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
+    void applyEndEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff);
+    void applyEndEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
     void copyControlVars(Plan* p);
     void copyDuration(Plan* p);
     bool supportedCondition(SASNumericCondition* c);

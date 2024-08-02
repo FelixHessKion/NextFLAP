@@ -48,15 +48,13 @@ PlanBuilder::PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<
 	if (a->conditionalEff.empty()) this->condEffHold = nullptr;
 	else {
 		int size = a->conditionalEff.size();
-		this->condEffHold = new bool[size];
+		this->condEffHold = std::make_shared<bool[]>(size);
 		//for (int i = 0; i < size; i++) this->condEffHold[i] = false;
 	}
 }
 
 PlanBuilder::~PlanBuilder()
 {
-	if (condEffHold != nullptr)
-		delete[] condEffHold;
 }
 
 // Deletes the las inserted causal link

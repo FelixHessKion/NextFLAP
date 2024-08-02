@@ -153,7 +153,7 @@ IntervalCalculations::IntervalCalculations(SASAction* a, int numState, FluentInt
 }
 
 // Checks if the start numeric conditions are supported
-bool IntervalCalculations::supportedNumericStartConditions(bool* holdCondEff)
+bool IntervalCalculations::supportedNumericStartConditions(std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericCondition& c : a->startNumCond)
 		if (!supportedCondition(&c))
@@ -174,7 +174,7 @@ bool IntervalCalculations::supportedNumericStartConditions(bool* holdCondEff)
 }
 
 // Checks if the end numeric conditions are supported
-bool IntervalCalculations::supportedNumericEndConditions(bool* holdCondEff)
+bool IntervalCalculations::supportedNumericEndConditions(std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericCondition& c : a->overNumCond)
 		if (!supportedCondition(&c))
@@ -271,7 +271,7 @@ void IntervalCalculations::constrainAtEndFluent(TVariable v)
 }
 
 // Updates the variables intervals with the start effects
-void IntervalCalculations::applyStartEffects(Plan* p, bool* holdCondEff)
+void IntervalCalculations::applyStartEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->startNumEff) {
 		applyEffect(&e);
@@ -290,7 +290,7 @@ void IntervalCalculations::applyStartEffects(Plan* p, bool* holdCondEff)
 }
 
 // Updates the variables intervals with the start effects
-void IntervalCalculations::applyStartEffects(std::vector<TNumVarChange>* v, bool* holdCondEff)
+void IntervalCalculations::applyStartEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->startNumEff) {
 		applyEffect(&e);
@@ -311,7 +311,7 @@ void IntervalCalculations::applyStartEffects(std::vector<TNumVarChange>* v, bool
 }
 
 // Updates the variables intervals with the end effects
-void IntervalCalculations::applyEndEffects(Plan* p, bool* holdCondEff)
+void IntervalCalculations::applyEndEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->endNumEff) {
 		applyEffect(&e);
@@ -330,7 +330,7 @@ void IntervalCalculations::applyEndEffects(Plan* p, bool* holdCondEff)
 }
 
 // Updates the variables intervals with the end effects
-void IntervalCalculations::applyEndEffects(std::vector<TNumVarChange>* v, bool* holdCondEff)
+void IntervalCalculations::applyEndEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->endNumEff) {
 		applyEffect(&e);

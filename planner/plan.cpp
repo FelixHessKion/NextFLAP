@@ -12,7 +12,7 @@ using namespace std;
 /* CLASS: Plan                                          */
 /********************************************************/
 
-Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEff) {
+Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
 	this->parentPlan = parentPlan;
 	this->action = action;
 	this->childPlans = nullptr;

@@ -16,6 +16,8 @@
 #include "../planner/state.h"
 #include "../planner/intervalCalculations.h"
 
+#include <memory>
+
 // #define NUMRPG_DEBUG true
 
 // Numeric effect of an action
@@ -120,7 +122,7 @@ private:
 	void addMinValueSubgoal(SASAction* a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond);
 	void addMaxValueSubgoal(SASAction* a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond);
 	void addNumericSubgoal(TVariable v, int level, bool max, std::vector<NumericRPGCondition*>* numCond);
-	bool* calculateCondEffHold(SASAction* a, int level, IntervalCalculations& ic);
+  std::shared_ptr<bool[]> calculateCondEffHold(SASAction* a, int level, IntervalCalculations& ic);
 	bool checkCondEffectHold(SASConditionalEffect& e, int level, IntervalCalculations& ic);
 
 public:

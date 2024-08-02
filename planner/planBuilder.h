@@ -95,7 +95,7 @@ public:
 	std::vector<TOrdering> orderings;
 	std::vector<unsigned int> openCond;
 	int numSupportState;
-	bool* condEffHold;
+	std::shared_ptr<bool[]> condEffHold;
 
 	PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
 		int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task);
