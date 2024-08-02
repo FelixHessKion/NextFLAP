@@ -83,12 +83,10 @@ void FF_RPG::expand() {
 		for (unsigned int i = 0; i < newLevel->size(); i++) {
 			literalLevels[(*newLevel)[i].var][(*newLevel)[i].value] = numLevels;
 		}
-		vector<FF_RPGVarValue>* aux = lastLevel;
-		lastLevel = newLevel;
-		newLevel = aux;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> aux = std::move(lastLevel);
+		lastLevel = std::move(newLevel);
+		newLevel = std::move(aux);
 	}
-	delete lastLevel;
-	delete newLevel;
 #ifdef DEBUG_RPG_ON
 	cout << "There are " << numLevels << " levels" << endl;
 #endif
@@ -141,8 +139,8 @@ void FF_RPG::initialize() {
 		literalLevels[i].resize(task->values.size(), MAX_INT32);
 	}
 	actionLevels.resize(task->actions.size(), MAX_INT32);
-	lastLevel = new vector<FF_RPGVarValue>();
-	newLevel = new vector<FF_RPGVarValue>();
+	lastLevel = std::make_unique<vector<FF_RPGVarValue>>();
+	newLevel = std::make_unique<vector<FF_RPGVarValue>>();
 }
 
 void FF_RPG::resetReachedValues() {

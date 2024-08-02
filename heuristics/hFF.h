@@ -6,6 +6,8 @@
 #include "../sas/sasTask.h"
 #include "../planner/state.h"
 
+#include <memory>
+
 class FF_RPGCondition : public PriorityQueueItem {
 public:
 	TVariable var;
@@ -35,8 +37,8 @@ private:
 	std::vector< std::vector<int> > literalLevels;
     std::vector<int> actionLevels;
     unsigned int numLevels;
-    std::vector<FF_RPGVarValue>* lastLevel;
-    std::vector<FF_RPGVarValue>* newLevel;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> lastLevel;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> newLevel;
     std::vector<TVarValue> reachedValues;
     
     void initialize();
