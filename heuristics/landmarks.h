@@ -125,9 +125,9 @@ class LandmarkRPG {
 private:
 	std::shared_ptr<SASTask> task;
 	std::unordered_map<TVarValue, bool> achievedFluent;
-	bool* achievedAction;
-	std::vector<TVarValue>* lastLevel;
-	std::vector<TVarValue>* newLevel;
+  std::unique_ptr<bool[]> achievedAction;
+	std::unique_ptr<std::vector<TVarValue>> lastLevel;
+	std::unique_ptr<std::vector<TVarValue>> newLevel;
 	std::vector<TVarValue> remainingGoals;
 
 	void initialize(TState* s);

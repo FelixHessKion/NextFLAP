@@ -234,11 +234,11 @@ void LandmarkRPG::addActionEffects(SASAction* a) {
 
 void LandmarkRPG::initialize(TState* s) {
 	unsigned int numActions = task->actions.size();
-	achievedAction = new bool[numActions];
+	achievedAction = std::make_unique<bool[]>(numActions);
 	for (unsigned int i = 0; i < numActions; i++) achievedAction[i] = false;
-	lastLevel = new std::vector<TVarValue>();
+	lastLevel = std::make_unique<std::vector<TVarValue>>();
 	lastLevel->reserve((s->numSASVars) << 1);
-	newLevel = new std::vector<TVarValue>();
+	newLevel = std::make_unique<std::vector<TVarValue>>();
 	newLevel->reserve((s->numSASVars) << 1);
 	remainingGoals.reserve(s->numSASVars);
 	for (unsigned int i = 0; i < s->numSASVars; i++) {
@@ -261,9 +261,6 @@ void LandmarkRPG::addGoal(SASCondition* c) {
 }
 
 void LandmarkRPG::clearMemory() {
-	delete newLevel;
-	delete lastLevel;
-	delete[] achievedAction;
 	achievedFluent.clear();
 	remainingGoals.clear();
 }
