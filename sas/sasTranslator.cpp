@@ -38,7 +38,8 @@ void SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyG
     mutex = new bool*[numVars];
     for (unsigned int i = 0; i < numVars; i++)
         mutex[i] = new bool[numVars] {false};
-    actions = new bool[numActions] {false};
+    actions = std::make_unique<bool[]>(numActions);
+    std::fill(actions.get(), actions.get()+numActions, false);
 	
 	literalInFNA = new bool[numVars];
 	for (unsigned int i = 0; i < numVars; i++) literalInFNA[i] = literalInF[i];
@@ -165,7 +166,6 @@ void SASTranslator::clearMemory() {
     delete [] mutex;
     delete [] literalInF;
     delete [] isLiteral;
-    delete [] actions;
 }
 
 // F* <- I

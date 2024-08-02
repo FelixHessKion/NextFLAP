@@ -28,7 +28,7 @@ class SASTranslator {
 private:
     std::unique_ptr<GroundedTask> gTask;
     bool** mutex;
-    bool* actions;
+    std::unique_ptr<bool[]> actions;
     bool* isLiteral;
     bool* literalInFNA;
 	bool* literalInF;
