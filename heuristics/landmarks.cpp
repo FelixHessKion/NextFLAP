@@ -312,7 +312,6 @@ LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::ve
 }
 
 LandmarkTree::~LandmarkTree() {
-	for (unsigned int i = 0; i < nodes.size(); i++) delete nodes[i];
 }
 
 void LandmarkTree::addGoalNode(SASCondition* c, TState* state) {
@@ -321,7 +320,8 @@ void LandmarkTree::addGoalNode(SASCondition* c, TState* state) {
 	if (index >= 0) {
 		LMFluent* goal = rpg.getFluentByIndex(index);
 		goal->isGoal = true;
-		LTNode* n = new LTNode(goal, nodes.size());
+		// std::unique_ptr<LTNode> n = new LTNode(goal, nodes.size());
+    std::shared_ptr<LTNode> n = std::make_shared<LTNode>(goal, nodes.size());
 		nodes.push_back(n);
 		fluentNode[index] = n->getIndex();
 		int levelIndex = rpg.getLevelIndex(goal->level);
@@ -381,7 +381,7 @@ void LandmarkTree::exploreRPG() {
 	}
 }
 
-void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int level) {
+void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, std::shared_ptr<LTNode> g, int level) {
 	if (a->size() == 0) return;
 	std::vector<USet*> d;		// Calculating I set: preconditions that
 	std::vector<LMFluent*> i;	// are common to all the actions in A
@@ -408,9 +408,9 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 		if (verify(p)) {
 			// Adding landmark p to N, and transition p->g in E
 			// The literal is stored only if it hasn't appeared before (it is ensured by checking literalNode) 
-			LTNode* node;
+			std::shared_ptr<LTNode> node;
 			if (fluentNode[p->index] == -1) {
-				node = new LTNode(p, nodes.size());
+				node = std::make_shared<LTNode>(p, nodes.size());
 				nodes.push_back(node);
 				fluentNode[p->index] = node->getIndex();
 #ifdef DEBUG_LANDMARKS_ON		
@@ -453,7 +453,7 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 		USet* d1 = findDisjObject(d2, level);
 		if (d1 == nullptr) {
 			if (verify(&(d2->fluentSet))) {
-				d2->node = new LTNode(d2, nodes.size());
+				d2->node = std::make_shared<LTNode>(d2, nodes.size());
 				nodes.push_back(d2->node);
 				edges.emplace_back();
 				edges.back().initialize(d2->node, g, NECESSARY);

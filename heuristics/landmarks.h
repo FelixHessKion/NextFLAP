@@ -13,7 +13,7 @@ class USet {				// Disjunctive landmark
 public:
 	int id;
 	std::vector<LMFluent*> fluentSet;
-	LTNode* node;
+	std::shared_ptr<LTNode> node;
 	int value;
 
 	USet() { }
@@ -108,10 +108,10 @@ public:
 
 class LMOrdering {			// Landmark ordering
 public:
-	LTNode* node1;
-	LTNode* node2;
+	std::shared_ptr<LTNode> node1;
+	std::shared_ptr<LTNode> node2;
 	int ordType;
-	void initialize(LTNode* l1, LTNode* l2, int t) {
+	void initialize(std::shared_ptr<LTNode> l1, std::shared_ptr<LTNode> l2, int t) {
 		node1 = l1;
 		node2 = l2;
 		ordType = t;
@@ -167,7 +167,7 @@ private:
 
 	void addGoalNode(SASCondition* c, TState* state);
 	void exploreRPG();
-	void actionProcessing(std::vector<SASAction*>* a, LTNode* g, int level);
+	void actionProcessing(std::vector<SASAction*>* a, std::shared_ptr<LTNode> g, int level);
 	void checkPreconditions(SASAction* a, std::unique_ptr<int[]> &common);
 	bool verify(LMFluent* p);
 	bool verify(std::vector<LMFluent*>* v);
@@ -180,7 +180,7 @@ private:
 	void getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFluent* l2);
 
 public:
-	std::vector<LTNode*> nodes;
+	std::vector<std::shared_ptr<LTNode>> nodes;
 	std::vector<LMOrdering> edges;
 
 	LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
@@ -195,7 +195,7 @@ private:
 	std::vector<LandmarkNode*> nextNodes;
 
 public:
-	LandmarkNode(int index, LTNode* n) {
+	LandmarkNode(int index, std::shared_ptr<LTNode> n) {
 		this->index = index;
 		if (n->single()) {
 			variables.push_back(n->getFluent()->variable);
