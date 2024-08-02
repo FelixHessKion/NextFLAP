@@ -50,7 +50,7 @@ private:
 	PlanComponents planComponents;
 	PriorityQueue pq;
 	//bool* usefulActions;
-	LandmarkHeuristic* landmarks;
+  std::unique_ptr<LandmarkHeuristic> landmarks;
 	std::vector<std::shared_ptr<LandmarkCheck>> openNodes;				// For hLand calculation
 	bool numericConditionsOrConditionalEffects;
 

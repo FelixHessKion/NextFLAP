@@ -132,14 +132,12 @@ bool Evaluator::findOpenNode(std::shared_ptr<LandmarkCheck> l)
 
 Evaluator::Evaluator()
 {
-	landmarks = nullptr;
 }
 
 // Destroyer
 Evaluator::~Evaluator()
 {
 	//delete[] usefulActions;
-	if (landmarks != nullptr) delete landmarks;
 }
 
 // Evaluator initialization
@@ -157,12 +155,11 @@ void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::ve
 		}
 	}
 	tilActions = a;
-	landmarks = new LandmarkHeuristic();
+	landmarks = std::make_unique<LandmarkHeuristic>();
 	if (state == nullptr) landmarks->initialize(task, a);
 	else landmarks->initialize(state, task, a);
 	//cout << ";" << landmarks->getNumNodes() << " landmarks (" << landmarks->getNumInformativeNodes() << " informative)" << endl;
 	if (landmarks->getNumInformativeNodes() <= 0) {
-		delete landmarks;
 		landmarks = nullptr;
 		SIGNIFICATIVE_LANDMARKS = false;
 	}
