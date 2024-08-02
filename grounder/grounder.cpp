@@ -120,8 +120,6 @@ void Grounder::initTypesMatrix() {
 
 // Deletes the allocated memory
 void Grounder::clearMemory() {
-    delete[] opRequireFunction;
-    delete[] valuesByFunction;
 }
 
 // Recursively initializes the matrix of types
@@ -147,7 +145,7 @@ void Grounder::initOperators() {
                     g.compatibleObjectsWithParam[j].push_back(k);
     }
     unsigned int numFunctions = prepTask->task->functions.size();
-    opRequireFunction = new vector<GrounderOperator*>[numFunctions];
+    opRequireFunction = std::make_unique<vector<GrounderOperator*>[]>(numFunctions);
     for (unsigned int i = 0; i < numOps; i++) {
         Operator* op = ops[i].op;
         vector<OpFluent> &atStart = op->atStart.prec;
@@ -180,7 +178,7 @@ void Grounder::initInitialState() {
     unsigned int numFunctions = prepTask->task->functions.size();
     newValues = std::make_unique<vector<ProgrammedValue>>();
     auxValues = std::make_unique<vector<ProgrammedValue>>();
-    valuesByFunction = new vector<ProgrammedValue>[numFunctions];
+    valuesByFunction = std::make_unique<vector<ProgrammedValue>[]>(numFunctions);
     unsigned int initStateSize = prepTask->task->init.size();
     for (unsigned int i = 0; i < initStateSize; i++)
         createVariable(prepTask->task->init[i]);

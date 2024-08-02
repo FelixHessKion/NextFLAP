@@ -66,12 +66,12 @@ private:
     std::unique_ptr<std::unique_ptr<bool[]>[]> typesMatrix;  
     unsigned int numOps;
     std::unique_ptr<GrounderOperator[]> ops;
-    std::vector<GrounderOperator*> *opRequireFunction;
+    std::unique_ptr<std::vector<GrounderOperator*>[]> opRequireFunction;
     std::unordered_map<std::string,unsigned int> variableIndex;
     std::unordered_map<std::string,unsigned int> preferenceIndex;
     std::unique_ptr<std::vector<ProgrammedValue>> newValues;
     std::unique_ptr<std::vector<ProgrammedValue>> auxValues;
-    std::vector<ProgrammedValue> *valuesByFunction;
+    std::unique_ptr<std::vector<ProgrammedValue>[]> valuesByFunction;
 	std::unordered_map<std::string, unsigned int> groundedActions;
 	unsigned int numValues;
     unsigned int startNewValues;
