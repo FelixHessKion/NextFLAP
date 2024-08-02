@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "../planner/state.h"
 #include "temporalRPG.h"
+#include <memory>
 
 class LTNode;
 
@@ -17,7 +18,7 @@ public:
 	int value;
 
 	USet() { }
-	USet(USet* s) {
+	USet(std::shared_ptr<USet> s) {
 		id = s->id;
 		for (unsigned int i = 0; i < s->fluentSet.size(); i++)
 			fluentSet.push_back(s->fluentSet[i]);
@@ -56,7 +57,7 @@ public:
 		}
 		return false;
 	}
-	bool isEqual(USet* u) {
+	bool isEqual(std::shared_ptr<USet> u) {
 		if (id != u->id || fluentSet.size() != u->fluentSet.size()) return false;
 		for (unsigned int i = 0; i < fluentSet.size(); i++) {
 			if (fluentSet[i]->variable != u->fluentSet[i]->variable ||
@@ -78,7 +79,7 @@ public:
 class LTNode {				// Landmark node
 private:
 	LMFluent* fluent;
-	USet* disjunction;
+	std::shared_ptr<USet> disjunction;
 	bool singleLiteral;
 	unsigned int index;
 
@@ -90,7 +91,7 @@ public:
 		singleLiteral = true;
 		index = i;
 	}
-	LTNode(USet* u, unsigned int i) {
+	LTNode(std::shared_ptr<USet> u, unsigned int i) {
 		fluent = nullptr;
 		disjunction = u;
 		singleLiteral = false;
@@ -98,7 +99,7 @@ public:
 	}
 	inline unsigned int getIndex() { return index; }
 	inline LMFluent* getFluent() { return fluent; }
-	inline USet* getSet() { return disjunction; }
+	inline std::shared_ptr<USet> getSet() { return disjunction; }
 	inline bool single() { return singleLiteral; }
 	std::string toString(std::shared_ptr<SASTask> task) {
 		if (singleLiteral) return "Node " + std::to_string(index) + ": " + fluent->toString(task);
@@ -159,7 +160,7 @@ private:
 	std::shared_ptr<SASTask> task;
 	std::vector<int> fluentNode;
 	std::vector< std::vector< LMFluent* > > objs;
-	std::vector< std::vector< USet* > > disjObjs;
+	std::vector< std::vector< std::shared_ptr<USet> > > disjObjs;
 	bool** reasonableOrderings;
   std::unique_ptr<std::unique_ptr<bool[]>[]> matrix;
 	bool** mutexMatrix;
@@ -172,10 +173,10 @@ private:
 	bool verify(LMFluent* p);
 	bool verify(std::vector<LMFluent*>* v);
 	bool verify(std::vector<SASAction*>* a);
-	void groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a);
-	void analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<USet*>* u1);
+	void groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a);
+	void analyzeSet(std::shared_ptr<USet> s, std::vector<SASAction*>* a, std::vector<std::shared_ptr<USet>>* u1);
 	int equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFluents);
-	USet* findDisjObject(USet* u, int level);
+	std::shared_ptr<USet> findDisjObject(std::shared_ptr<USet> u, int level);
 	void postProcessing();
 	void getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFluent* l2);
 

@@ -351,7 +351,7 @@ void LandmarkTree::exploreRPG() {
 			actionProcessing(&(obj->producers), nodes[fluentNode[obj->index]], level);
 		}
 		for (unsigned int i = 0; i < disjObjs[level].size(); i++) {
-			USet* disjObj = disjObjs[level][i];
+			std::shared_ptr<USet> disjObj = disjObjs[level][i];
 #ifdef DEBUG_LANDMARKS_ON
 			cout << "* Dobj: " << disjObj->toString(task) << endl;
 #endif
@@ -383,7 +383,7 @@ void LandmarkTree::exploreRPG() {
 
 void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, std::shared_ptr<LTNode> g, int level) {
 	if (a->size() == 0) return;
-	std::vector<USet*> d;		// Calculating I set: preconditions that
+	std::vector<std::shared_ptr<USet>> d;		// Calculating I set: preconditions that
 	std::vector<LMFluent*> i;	// are common to all the actions in A
 	std::vector<LMFluent*> u;
 	unsigned int numFluents = rpg.getFluentListSize();
@@ -449,8 +449,8 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, std::shared_ptr<
 	// Exploring candidate disjunctive landmarks in D 
 	groupUSet(&d, &u, a);
 	for (unsigned int n = 0; n < d.size(); n++) {
-		USet* d2 = d[n];
-		USet* d1 = findDisjObject(d2, level);
+		std::shared_ptr<USet> d2 = d[n];
+		std::shared_ptr<USet> d1 = findDisjObject(d2, level);
 		if (d1 == nullptr) {
 			if (verify(&(d2->fluentSet))) {
 				d2->node = std::make_shared<LTNode>(d2, nodes.size());
@@ -475,7 +475,7 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, std::shared_ptr<
 	}
 }
 
-USet* LandmarkTree::findDisjObject(USet* u, int level) {
+std::shared_ptr<USet> LandmarkTree::findDisjObject(std::shared_ptr<USet> u, int level) {
 	//cout << "Searching for " << u->toString(task) << endl;
 	for (int i = level; i >= 0; i--) {
 		for (int j = 0; j < (int)disjObjs[i].size(); j++) {
@@ -487,10 +487,10 @@ USet* LandmarkTree::findDisjObject(USet* u, int level) {
 	return nullptr;
 }
 
-void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a) {
+void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a) {
 	res->clear();
-	std::vector<USet*> hashU;
-	std::vector<USet*> aux;
+	std::vector<std::shared_ptr<USet>> hashU;
+	std::vector<std::shared_ptr<USet>> aux;
 #ifdef DEBUG_LANDMARKS_ON		
 	cout << "U size: " << u->size() << endl;
 #endif
@@ -503,7 +503,7 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 		if (f != FICTITIOUS_FUNCTION) {
 			while (hashU.size() <= f) hashU.push_back(nullptr);
 			if (hashU[f] == nullptr) {
-				hashU[f] = new USet();
+				hashU[f] = std::make_shared<USet>();
 				hashU[f]->initialize(l, (int)f);
 				aux.push_back(hashU[f]);
 			}
@@ -518,7 +518,7 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 	// Verify if the uSets are correct 
 	// All the actions must have provided the uSet with at least a precondition of each type 
 	for (unsigned int i = 0; i < aux.size(); i++) {
-		USet* s = aux[i];
+		std::shared_ptr<USet> s = aux[i];
 		int instances = 0;
 		int actions = 0;
 		if (s->fluentSet.size() != 1) {
@@ -578,17 +578,16 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 #ifdef DEBUG_LANDMARKS_ON		
 				cout << "Set added: " << s->toString(task) << endl;
 #endif
-				res->push_back(new USet(s));
+				res->push_back(std::make_shared<USet>(s));
 			}
 			else if (actions == (int)a->size() && instances > (int)a->size()) {
 				analyzeSet(s, a, res);
 			}
 		}
-		delete s;
 	}
 }
 
-void LandmarkTree::analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<USet*>* u1) {
+void LandmarkTree::analyzeSet(std::shared_ptr<USet> s, std::vector<SASAction*>* a, std::vector<std::shared_ptr<USet>>* u1) {
 	std::vector< std::vector<LMFluent*> > fluentProducers(a->size());
 	// Grouping the literals in the set according to the actions that generated them
 	for (unsigned int i = 0; i < a->size(); i++) {
@@ -630,8 +629,8 @@ void LandmarkTree::analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<U
 	bool finish = false;
 	for (unsigned int i = 0; i < fluentProducers[0].size() && !finish; i++) {
 		LMFluent* l = fluentProducers[0][i];
-		USet u;
-		u.initialize(l, s->id);
+    std::shared_ptr<USet> u = std::make_shared<USet>();
+		u->initialize(l, s->id);
 		for (unsigned int j = 1; j < fluentProducers.size(); j++) {
 			std::vector<LMFluent*>* actionFluents = &(fluentProducers[j]);
 			if (actionFluents->size() == 0) {
@@ -641,9 +640,9 @@ void LandmarkTree::analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<U
 			int k = equalParameters(l, actionFluents);
 			LMFluent* similar = actionFluents->at(k);
 			actionFluents->erase(actionFluents->begin() + k);
-			u.addElement(similar);
+			u->addElement(similar);
 		}
-		u1->push_back(new USet(&u));
+		u1->push_back(std::make_shared<USet>(u));
 	}
 }
 
