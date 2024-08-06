@@ -64,7 +64,7 @@ void Successors::computeBasePlanEffects(std::vector<TTimePoint>& linearOrder)
 	for (int i = 1; i < linearOrder.size(); i++) {
 		TTimePoint timePoint = linearOrder[i];
 		TStep step = timePointToStep(timePoint);
-		Plan* plan = planComponents.get(step);
+		std::shared_ptr<Plan> plan = planComponents.get(step);
 		bool atStart = (timePoint & 1) == 0;
 		if (atStart) {
 			planPoint = &(plan->startPoint);
@@ -517,7 +517,7 @@ void Successors::checkCondEffCondition(int numEff, int numCond, SASCondition* c,
 void Successors::generateSuccessor(PlanBuilder* pb)
 {
 	pb->addOrdering(pb->lastTimePoint - 1, pb->lastTimePoint);		// Ordering from the begining to the end of the new step
-	Plan* p = pb->generatePlan(basePlan, ++idPlan);
+	std::shared_ptr<Plan> p = pb->generatePlan(basePlan, ++idPlan);
 	if (p != nullptr) {
 		addSuccessor(p);
 	}
@@ -531,12 +531,9 @@ void Successors::generateSuccessor(PlanBuilder* pb)
 Successors::~Successors() {
 }
 
-void Successors::addSuccessor(Plan* p)
+void Successors::addSuccessor(std::shared_ptr<Plan> p)
 {
-	if (PrintPlan::getMakespan(p) > bestMakespan) {
-		delete p;
-	}
-	else {
+	if (PrintPlan::getMakespan(p) <= bestMakespan) {
 		evaluator.calculateFrontierState(p);
 		evaluator.evaluate(p);
 		
@@ -553,7 +550,7 @@ void Successors::addSuccessor(Plan* p)
 }
 
 // Fills vector suc with the possible successor plans of the given base plan
-void Successors::computeSuccessors(Plan* base, std::vector<Plan*>* suc, float bestMakespan)
+void Successors::computeSuccessors(std::shared_ptr<Plan> base, std::vector<std::shared_ptr<Plan>>* suc, float bestMakespan)
 {
 	//PrintPlan::rawPrint(base, task);
 
@@ -578,13 +575,13 @@ void Successors::computeSuccessors(Plan* base, std::vector<Plan*>* suc, float be
 	}
 }
 
-bool Successors::repeatedState(Plan* p)
+bool Successors::repeatedState(std::shared_ptr<Plan> p)
 {
 	if (!filterRepeatedStates) return false;
 	uint64_t code = p->fs->getCode();
-	std::unordered_map<uint64_t, std::vector<Plan*> >::const_iterator got = memo.find(code);
+	std::unordered_map<uint64_t, std::vector<std::shared_ptr<Plan>> >::const_iterator got = memo.find(code);
 	if (got != memo.end()) {
-		for (Plan* op : got->second) {
+		for (std::shared_ptr<Plan> op : got->second) {
 			if (p->fs->compareTo(op->fs)) {
 				return true;	// Repeated state
 			}
@@ -592,7 +589,7 @@ bool Successors::repeatedState(Plan* p)
 		memo[code].push_back(p);
 	}
 	else {
-		std::vector<Plan*> v;
+		std::vector<std::shared_ptr<Plan>> v;
 		v.push_back(p);
 		memo[code] = v;
 	}
@@ -685,10 +682,10 @@ unsigned int Successors::addActionSupport(PlanBuilder* pb, TVariable var, TValue
 
 void Successors::computeSuccessorsThroughBrotherPlans()
 {
-	Plan* parentPlan = basePlan->parentPlan;
-	vector<Plan*>* brotherPlans = parentPlan->childPlans;
+	std::shared_ptr<Plan> parentPlan = basePlan->parentPlan;
+	vector<std::shared_ptr<Plan>>* brotherPlans = parentPlan->childPlans;
 	for (unsigned int i = 0; i < brotherPlans->size(); i++) {
-		Plan* brotherPlan = (*brotherPlans)[i];
+		std::shared_ptr<Plan> brotherPlan = (*brotherPlans)[i];
 		if (brotherPlan != basePlan && !brotherPlan->expanded() && !visitedAction(brotherPlan->action)) {
 			setVisitedAction(brotherPlan->action);
 			fullActionCheck(brotherPlan->action, MAX_UINT16, 0, 0, 0);
@@ -755,7 +752,7 @@ void Successors::fullConditionSupportCheck(PlanBuilder* pb, SASCondition* c, TTi
 void Successors::checkThreatsBetweenCausalLinksInBasePlanAndNewActionEffects(PlanBuilder* pb, std::vector<Threat>* threats) {
 	TTimePoint p2 = 0;
 	for (TStep i = 0; i < planComponents.size(); i++) {
-		Plan* planComp = planComponents.get(i);
+		std::shared_ptr<Plan> planComp = planComponents.get(i);
 		for (TCausalLink& cl : planComp->startPoint.causalLinks) {
 			checkThreatBetweenCausalLinkInBasePlanAndNewActionEffects(pb, threats, cl, p2);
 		}

@@ -19,7 +19,7 @@ std::string PrintPlan::actionName(SASAction* a)
 	return a->name;
 }
 
-void PrintPlan::print(Plan* p, TControVarValues* cvarValues)
+void PrintPlan::print(std::shared_ptr<Plan> p, TControVarValues* cvarValues)
 {
 	PlanComponents planComponents;
 	planComponents.calculate(p);
@@ -27,7 +27,7 @@ void PrintPlan::print(Plan* p, TControVarValues* cvarValues)
 	linearizer.linearize(planComponents);
 	float makespan = 0;
 	for (TTimePoint tp : linearizer.linearOrder) {
-		Plan* pc = planComponents.get(timePointToStep(tp));
+		std::shared_ptr<Plan> pc = planComponents.get(timePointToStep(tp));
 		if ((tp & 1) == 0 && !pc->isRoot() && !pc->action->isGoal) {
 			float duration = round3d(pc->endPoint.updatedTime) - round3d(pc->startPoint.updatedTime);
 			cout << fixed << setprecision(3) << round3d(pc->startPoint.updatedTime - 0.001) << ": ("
@@ -48,7 +48,7 @@ void PrintPlan::print(Plan* p, TControVarValues* cvarValues)
 	cout << ";Makespan: " << (int) (1000 * makespan - 1) << endl;
 }
 
-float PrintPlan::getMakespan(Plan* p)
+float PrintPlan::getMakespan(std::shared_ptr<Plan> p)
 {
 	PlanComponents planComponents;
 	planComponents.calculate(p);
@@ -56,17 +56,17 @@ float PrintPlan::getMakespan(Plan* p)
 	linearizer.linearize(planComponents);
 	float makespan = 0;
 	for (TTimePoint tp : linearizer.linearOrder) {
-		Plan* pc = planComponents.get(timePointToStep(tp));
+		std::shared_ptr<Plan> pc = planComponents.get(timePointToStep(tp));
 		if ((tp & 1) == 0 && !pc->isRoot() && !pc->action->isGoal && pc->endPoint.updatedTime > makespan)
 			makespan = pc->endPoint.updatedTime;
 	}
 	return makespan;
 }
 
-void PrintPlan::rawPrint(Plan* p, SASTask* task)
+void PrintPlan::rawPrint(std::shared_ptr<Plan> p, SASTask* task)
 {
-	std::vector<Plan*> planComponents;
-	Plan* current = p;
+	std::vector<std::shared_ptr<Plan>> planComponents;
+	std::shared_ptr<Plan> current = p;
 	while (current != nullptr) {
 		planComponents.insert(planComponents.begin(), current);
 		current = current->parentPlan;

@@ -21,7 +21,7 @@ private:
   std::shared_ptr<SASTask> task;
 	clock_t initialTime;
 	bool generateTrace;
-	Plan* initialPlan;
+  std::shared_ptr<Plan> initialPlan;
 	std::vector<SASAction*> tilActions;
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
@@ -32,13 +32,13 @@ private:
 	SASAction* createInitialAction();
 	SASAction* createFictitiousAction(float actionDuration, std::vector<unsigned int>& varList,
 		float timePoint, std::string name, bool isTIL, bool isGoal);
-	Plan* createTILactions(Plan* parentPlan);
+	void createTILactions(std::shared_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultPlan);
 	bool checkForceAtEndConditions();	// Check if it's required to leave at-end conditions not supported for some actions
 	bool checkRepeatedStates();
 
 public:
 	PlannerSetting(std::shared_ptr<SASTask> task);
-	Plan* plan(float bestMakespan, clock_t startTime);
+	std::shared_ptr<Plan> plan(float bestMakespan, clock_t startTime);
 };
 
 #endif

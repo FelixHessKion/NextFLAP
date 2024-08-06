@@ -14,12 +14,12 @@
 class PlanComponents {
 private:
 	TStep numSteps;
-	std::vector<Plan*> basePlanComponents;	// The base plan is made up by incremental components, which are stored in this vector
+	std::vector<std::shared_ptr<Plan>> basePlanComponents;	// The base plan is made up by incremental components, which are stored in this vector
 
 public:
-	void calculate(Plan* base);
+	void calculate(std::shared_ptr<Plan> base);
 	inline TStep size() { return numSteps; }
-	inline Plan* get(TStep index) { return basePlanComponents[index]; }
+	inline std::shared_ptr<Plan> get(TStep index) { return basePlanComponents[index]; }
 	void removeLast() { basePlanComponents.pop_back(); numSteps--; }
 };
 

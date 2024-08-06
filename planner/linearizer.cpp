@@ -16,7 +16,7 @@ void Linearizer::linearize(PlanComponents& planComponents)
 	PriorityQueue timePoints((unsigned int)linearOrder.capacity());
 	TTimePoint p = 0;
 	for (unsigned int i = 0; i < numActions; i++) {
-		Plan* comp = planComponents.get(i);
+		std::shared_ptr<Plan> comp = planComponents.get(i);
 		timePoints.add(new ScheduledTimepoint(p++, comp->startPoint.updatedTime));
 		timePoints.add(new ScheduledTimepoint(p++, comp->endPoint.updatedTime));
 	}

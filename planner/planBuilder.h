@@ -73,15 +73,15 @@ private:
 	inline bool existOrder(TTimePoint t1, TTimePoint t2) { return (*matrix)[t1][t2] == iteration; }
 	inline void setOrder(TTimePoint t1, TTimePoint t2) { (*matrix)[t1][t2] = iteration; }
 	inline void clearOrder(TTimePoint t1, TTimePoint t2) { (*matrix)[t1][t2] = 0; }
-	void addCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVarValue varValue);
-	void addNumericCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVariable var);
-	void setActionStartTime(Plan* p);
-	bool checkFollowingSteps(Plan* p, std::vector<TTimePoint>& linearOrder);
+	void addCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVarValue varValue);
+	void addNumericCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVariable var);
+	void setActionStartTime(std::shared_ptr<Plan> p);
+	bool checkFollowingSteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& linearOrder);
 	bool invalidTILorder(TTimePoint p1, TTimePoint p2);
 	void topologicalOrder(std::vector<TTimePoint>* linearOrder);
 	unsigned int topologicalOrder(TTimePoint orig, std::vector<TTimePoint>* linearOrder, unsigned int pos,
 		std::vector<bool>* visited);
-	bool delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
+	bool delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
 		std::vector<TTimePoint>& linearOrder);
 
 public:
@@ -105,7 +105,7 @@ public:
 	bool addOrdering(TTimePoint p1, TTimePoint p2);
 	void removeLastLink();
 	void removeLastOrdering();
-	Plan* generatePlan(Plan* basePlan, TPlanId idPlan);
+	std::shared_ptr<Plan> generatePlan(std::shared_ptr<Plan> basePlan, TPlanId idPlan);
 };
 
 #endif

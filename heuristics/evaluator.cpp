@@ -16,7 +16,7 @@ using namespace std;
 /********************************************************/
 
 // Evaluates a plan. Its heuristic value is stored in the plan (p->h)
-void Evaluator::evaluate(Plan* p) {
+void Evaluator::evaluate(std::shared_ptr<Plan> p) {
 	int limit = p->parentPlan->h;
 	if (numericConditionsOrConditionalEffects) {
 		NumericRPG rpg(p->fs, tilActions, task, limit);
@@ -31,7 +31,7 @@ void Evaluator::evaluate(Plan* p) {
 }
 
 // Evaluates the initial plan. Its heuristic value is stored in the plan (p->h)
-void Evaluator::evaluateInitialPlan(Plan* p)
+void Evaluator::evaluateInitialPlan(std::shared_ptr<Plan> p)
 {
 	int numActions = (int)task->actions.size(), limit = 100;
 	//usefulActions = new bool[numActions];
@@ -46,7 +46,7 @@ bool Evaluator::informativeLandmarks()
 }
 
 // Calculates the frontier state of a given plan. It also computes the number of useful actions included in the plan
-void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
+void Evaluator::calculateFrontierState(TState* fs, std::shared_ptr<Plan> currentPlan)
 {
 	if (landmarks != nullptr) {
 		landmarks->uncheckNodes();
@@ -55,7 +55,7 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 	std::unordered_set<int> visitedActions;
 	pq.clear();
 	for (unsigned int i = 1; i < planComponents.size(); i++) {
-		Plan* p = planComponents.get(i);
+		std::shared_ptr<Plan> p = planComponents.get(i);
 		pq.add(new ScheduledPoint(stepToStartPoint(i), p->startPoint.updatedTime, p));
 		pq.add(new ScheduledPoint(stepToEndPoint(i), p->endPoint.updatedTime, p));
 		if (!p->action->isTIL && !p->action->isGoal) {
@@ -169,7 +169,7 @@ void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::ve
 }
 
 // Calculates the frontier state of a given plan. This state is stored in the plan (p->fs)
-void Evaluator::calculateFrontierState(Plan* p)
+void Evaluator::calculateFrontierState(std::shared_ptr<Plan> p)
 {
 	//p->numUsefulActions = 0;
 	planComponents.calculate(p);

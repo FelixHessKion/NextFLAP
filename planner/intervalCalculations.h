@@ -49,12 +49,12 @@ public:
     bool supportedNumericEndConditions(std::shared_ptr<bool[]> holdCondEff);
     bool supportedNumericConditions(SASConditionalEffect* e);
     void constrainAtStartFluents();
-    void applyStartEffects(Plan *p, std::shared_ptr<bool[]> holdCondEff);
+    void applyStartEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff);
     void applyStartEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
-    void applyEndEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff);
+    void applyEndEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff);
     void applyEndEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
-    void copyControlVars(Plan* p);
-    void copyDuration(Plan* p);
+    void copyControlVars(std::shared_ptr<Plan> p);
+    void copyDuration(std::shared_ptr<Plan> p);
     bool supportedCondition(SASNumericCondition* c);
 };
 

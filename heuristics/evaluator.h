@@ -27,9 +27,9 @@ class ScheduledPoint : public PriorityQueueItem {
 public:
 	TTimePoint p;
 	float time;
-	Plan* plan;
+	std::shared_ptr<Plan> plan;
 
-	ScheduledPoint(TTimePoint tp, float t, Plan* pl) {
+	ScheduledPoint(TTimePoint tp, float t, std::shared_ptr<Plan> pl) {
 		p = tp;
 		time = t;
 		plan = pl;
@@ -54,16 +54,16 @@ private:
 	std::vector<std::shared_ptr<LandmarkCheck>> openNodes;				// For hLand calculation
 	bool numericConditionsOrConditionalEffects;
 
-	void calculateFrontierState(TState* fs, Plan* currentPlan);
+	void calculateFrontierState(TState* fs, std::shared_ptr<Plan> currentPlan);
 	bool findOpenNode(std::shared_ptr<LandmarkCheck> l);
 
 public:
 	Evaluator();
 	~Evaluator();
 	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* a, bool forceAtEndConditions);
-	void calculateFrontierState(Plan* p);
-	void evaluate(Plan* p);
-	void evaluateInitialPlan(Plan* p);
+	void calculateFrontierState(std::shared_ptr<Plan> p);
+	void evaluate(std::shared_ptr<Plan> p);
+	void evaluateInitialPlan(std::shared_ptr<Plan> p);
 	std::vector<SASAction*>* getTILActions() { return tilActions; }
 	bool informativeLandmarks();
 };

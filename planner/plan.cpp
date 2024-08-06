@@ -12,7 +12,7 @@ using namespace std;
 /* CLASS: Plan                                          */
 /********************************************************/
 
-Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
+Plan::Plan(SASAction* action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
 	this->parentPlan = parentPlan;
 	this->action = action;
 	this->childPlans = nullptr;
@@ -78,7 +78,7 @@ void Plan::setTime(TTime init,  TTime end, bool fixed) {
 
 // Compares this plan with the given one. Returns a negative number if this is better, 
 // 0 if both are equally good or a positive number if p is better
-int Plan::compare(Plan* p)
+int Plan::compare(std::shared_ptr<Plan> p)
 {
 	if (SIGNIFICATIVE_LANDMARKS) {
 		int v1 = g + h + 2 * hLand, v2 = p->g + p->h + 2 * p->hLand;
@@ -105,9 +105,9 @@ void Plan::addFluentIntervals()
 	addFluentIntervals(this->endPoint, this->action->endNumEff);
 }
 
-void Plan::addChildren(std::vector<Plan*>& suc)
+void Plan::addChildren(std::vector<std::shared_ptr<Plan>>& suc)
 {
-	childPlans = new std::vector<Plan*>(suc);
+	childPlans = new std::vector<std::shared_ptr<Plan>>(suc);
 }
 
 void Plan::addPlanUpdate(TTimePoint tp, TFloatValue time)

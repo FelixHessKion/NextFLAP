@@ -14,9 +14,9 @@
 class PrintPlan {
 public:
 	static std::string actionName(SASAction* a);
-	static void print(Plan* p, TControVarValues* cvarValues = nullptr);
-	static float getMakespan(Plan* p);
-	static void rawPrint(Plan* p, SASTask* task);
+	static void print(std::shared_ptr<Plan> p, TControVarValues* cvarValues = nullptr);
+	static float getMakespan(std::shared_ptr<Plan> p);
+	static void rawPrint(std::shared_ptr<Plan> p, SASTask* task);
 };
 
 #endif // !PRINT_PLAN_H

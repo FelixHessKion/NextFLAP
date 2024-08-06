@@ -26,11 +26,11 @@ PlannerSetting::PlannerSetting(std::shared_ptr<SASTask> stask) {
 // Creates the initial empty plan that only contains the initial and the TIL fictitious actions
 void PlannerSetting::createInitialPlan() {
 	SASAction* initialAction = createInitialAction();
-	initialPlan = new Plan(initialAction, nullptr, 0, nullptr);
+	initialPlan = std::make_shared<Plan>(initialAction, nullptr, 0, nullptr);
 	initialPlan->setDuration(EPSILON, EPSILON);
 	initialPlan->setTime(-EPSILON, 0, true);
 	initialPlan->addFluentIntervals();
-	initialPlan = createTILactions(initialPlan);
+	createTILactions(initialPlan, initialPlan);
 }
 
 // Creates and returns the initial fictitious action
@@ -100,8 +100,8 @@ SASAction* PlannerSetting::createFictitiousAction(float actionDuration, vector<u
 }
 
 // Adds the fictitious TIL actions to the initial plan. Returns the resulting plan
-Plan* PlannerSetting::createTILactions(Plan* parentPlan) {
-	Plan* result = parentPlan;
+void PlannerSetting::createTILactions(std::shared_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultplan) {
+	std::shared_ptr<Plan> result = parentPlan;
 	unordered_map<float, vector<unsigned int> > til;			// Time point -> variables modified at that time
 	for (unsigned int i = 0; i < task->variables.size(); i++) {	// Non-numeric effects
 		SASVariable& var = task->variables[i];
@@ -134,12 +134,13 @@ Plan* PlannerSetting::createTILactions(Plan* parentPlan) {
 		SASAction* a = createFictitiousAction(timePoint, it->second, timePoint, 
 			"#til" + to_string(timePoint), true, false);
 		tilActions.push_back(a);
-		result = new Plan(a, result, 0, nullptr);
+		result = std::make_shared<Plan>(a, result, 0, nullptr);
 		result->setDuration(timePoint, timePoint);
 		result->setTime(0, timePoint, true);
 		result->addFluentIntervals();
 	}
-	return result;
+  resultplan = result;
+	return;
 }
 
 bool PlannerSetting::checkForceAtEndConditions() {	// Check if it's required to leave at-end conditions not supported for some actions
@@ -183,7 +184,7 @@ bool PlannerSetting::checkRepeatedStates() {
 	return true;
 }
 
-Plan* PlannerSetting::plan(float bestMakespan, clock_t startTime) {
+std::shared_ptr<Plan> PlannerSetting::plan(float bestMakespan, clock_t startTime) {
 	if (planner == nullptr) {
 		planner = new Planner(task, initialPlan, initialState, forceAtEndConditions, filterRepeatedStates,
 			generateTrace, &tilActions);

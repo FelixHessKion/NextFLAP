@@ -46,8 +46,8 @@ private:
 	unsigned int numActions;							// Number of grounded actions
 	PlanEffects planEffects;							// Plan effects
 	TPlanId idPlan;										// Plan counter
-	std::vector<Plan*>* successors;						// Vector to return the sucessor plans
-	Plan* basePlan;										// Base plan
+	std::vector<std::shared_ptr<Plan>>* successors;						// Vector to return the sucessor plans
+	std::shared_ptr<Plan> basePlan;										// Base plan
 	TStep newStep;										// New step to add as successor
 	std::vector<unsigned int> checkedAction;
 	unsigned int currentIteration;
@@ -87,7 +87,7 @@ private:
 	bool mutexPoints(TTimePoint p1, TTimePoint p2, TVariable var, PlanBuilder* pb);
 	SASCondition* getRequiredValue(TTimePoint p, SASAction* a, TVariable var);
 	SASCondition* getRequiredValue(SASAction* a, TVariable var);
-	void addSuccessor(Plan* p);
+	void addSuccessor(std::shared_ptr<Plan> p);
 	void computeSuccessorsSupportedByLastActions();
 	inline bool visitedAction(SASAction* a) { return checkedAction[a->index] == currentIteration; }
 	inline void setVisitedAction(SASAction* a) { checkedAction[a->index] = currentIteration; }
@@ -104,14 +104,14 @@ private:
 
 public:
 	Evaluator evaluator;
-	std::unordered_map<uint64_t, std::vector<Plan*> > memo;
-	Plan* solution;
+	std::unordered_map<uint64_t, std::vector<std::shared_ptr<Plan>> > memo;
+	std::shared_ptr<Plan> solution;
 	
 	Successors(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
 		std::vector<SASAction*>* tilActions);
 	~Successors();
-	void computeSuccessors(Plan* base, std::vector<Plan*>* suc, float bestMakespan);
-	bool repeatedState(Plan* p);
+	void computeSuccessors(std::shared_ptr<Plan> base, std::vector<std::shared_ptr<Plan>>* suc, float bestMakespan);
+	bool repeatedState(std::shared_ptr<Plan> p);
 };
 
 #endif // !SUCCESSORS_H

@@ -19,7 +19,7 @@
 class Planner {
 private:
 	std::shared_ptr<SASTask> task;
-	Plan* initialPlan;
+	std::shared_ptr<Plan> initialPlan;
 	TState* initialState;
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
@@ -29,8 +29,8 @@ private:
 	Successors* successors;
 	std::vector<SASAction*>* tilActions;
 	float initialH;
-	Plan* solution;
-	std::vector<Plan*> sucPlans;
+	std::shared_ptr<Plan> solution;
+	std::vector<std::shared_ptr<Plan>> sucPlans;
 	SearchQueue* selector;
 	clock_t startTime;
 	float bestMakespan;
@@ -39,16 +39,16 @@ private:
 
 	bool emptySearchSpace();
 	void searchStep();
-	void expandBasePlan(Plan* base);
-	void addSuccessors(Plan* base);
-	bool checkPlan(Plan* p);
-	void markAsInvalid(Plan* p);
-	void markChildrenAsInvalid(Plan* p);
+	void expandBasePlan(std::shared_ptr<Plan> base);
+	void addSuccessors(std::shared_ptr<Plan> base);
+	bool checkPlan(std::shared_ptr<Plan> p);
+	void markAsInvalid(std::shared_ptr<Plan> p);
+	void markChildrenAsInvalid(std::shared_ptr<Plan> p);
 
 public:
-	Planner(std::shared_ptr<SASTask> task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
+	Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, TState* initialState, bool forceAtEndConditions,
 		bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions);
-	Plan* plan(float bestMakespan, clock_t startTime);
+	std::shared_ptr<Plan> plan(float bestMakespan, clock_t startTime);
 	void clearSolution();
 };
 

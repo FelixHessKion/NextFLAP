@@ -10,6 +10,7 @@
 /********************************************************/
 
 #include <vector>
+#include <memory>
 #include "../utils/utils.h"
 #include "../utils/priorityQueue.h"
 #include "planComponents.h"

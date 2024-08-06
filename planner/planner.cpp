@@ -18,7 +18,7 @@ bool Planner::emptySearchSpace()
 }
 
 // Constructor
-Planner::Planner(std::shared_ptr<SASTask> task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
+Planner::Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, TState* initialState, bool forceAtEndConditions,
 	bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions)
 {
 	this->bestH = MAX_INT32;
@@ -47,7 +47,7 @@ Planner::Planner(std::shared_ptr<SASTask> task, Plan* initialPlan, TState* initi
 }
 
 // Starts the search
-Plan* Planner::plan(float bestMakespan, clock_t startTime)
+std::shared_ptr<Plan> Planner::plan(float bestMakespan, clock_t startTime)
 {
 	this->startTime = startTime;
 	this->bestMakespan = bestMakespan;
@@ -66,7 +66,7 @@ void Planner::clearSolution()
 }
 
 // Checks if a plan is valid
-bool Planner::checkPlan(Plan* p) {
+bool Planner::checkPlan(std::shared_ptr<Plan> p) {
 	Z3Checker checker;
 	cout << ".";
 	p->z3Checked = true;
@@ -75,10 +75,10 @@ bool Planner::checkPlan(Plan* p) {
 }
 
 // Marks a plan as invalid
-void Planner::markAsInvalid(Plan* p)
+void Planner::markAsInvalid(std::shared_ptr<Plan> p)
 {
 	markChildrenAsInvalid(p);
-	Plan* parent = p->parentPlan;
+	std::shared_ptr<Plan> parent = p->parentPlan;
 	if (parent != nullptr && !parent->isRoot() && !parent->z3Checked) {
 		if (!checkPlan(parent)) {
 			markAsInvalid(parent);
@@ -87,9 +87,9 @@ void Planner::markAsInvalid(Plan* p)
 }
 
 // Marks a children plan as invalid
-void Planner::markChildrenAsInvalid(Plan* p) {
+void Planner::markChildrenAsInvalid(std::shared_ptr<Plan> p) {
 	if (p->childPlans != nullptr) {
-		for (Plan* child : *(p->childPlans)) {
+		for (std::shared_ptr<Plan> child : *(p->childPlans)) {
 			child->invalid = true;
 			markChildrenAsInvalid(child);
 		}
@@ -98,7 +98,7 @@ void Planner::markChildrenAsInvalid(Plan* p) {
 
 // Makes one search step
 void Planner::searchStep() {
-	Plan* base = selector->poll();
+	std::shared_ptr<Plan> base = selector->poll();
 	float baseMakespan = PrintPlan::getMakespan(base);
 	if (baseMakespan >= bestMakespan)
 		return;
@@ -126,7 +126,7 @@ void Planner::searchStep() {
 }
 
 // Expands the current base plan
-void Planner::expandBasePlan(Plan* base)
+void Planner::expandBasePlan(std::shared_ptr<Plan> base)
 {
 	if (base->expanded()) {
 		sucPlans.clear();
@@ -147,11 +147,11 @@ void Planner::expandBasePlan(Plan* base)
 }
 
 // Adds the successor plans to the selector
-void Planner::addSuccessors(Plan* base)
+void Planner::addSuccessors(std::shared_ptr<Plan> base)
 {
 	base->addChildren(sucPlans);
 	if (solution == nullptr) {
-		for (Plan* p : sucPlans) {
+		for (std::shared_ptr<Plan> p : sucPlans) {
 			//cout << "* Successor: " << p->id << ", " << p->action->name << "(G = " << p->g << ", H=" << p->h << ")" << endl;
 			selector->add(p);
 		}

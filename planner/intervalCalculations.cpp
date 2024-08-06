@@ -271,7 +271,7 @@ void IntervalCalculations::constrainAtEndFluent(TVariable v)
 }
 
 // Updates the variables intervals with the start effects
-void IntervalCalculations::applyStartEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff)
+void IntervalCalculations::applyStartEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->startNumEff) {
 		applyEffect(&e);
@@ -311,7 +311,7 @@ void IntervalCalculations::applyStartEffects(std::vector<TNumVarChange>* v, std:
 }
 
 // Updates the variables intervals with the end effects
-void IntervalCalculations::applyEndEffects(Plan* p, std::shared_ptr<bool[]> holdCondEff)
+void IntervalCalculations::applyEndEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff)
 {
 	for (SASNumericEffect& e : a->endNumEff) {
 		applyEffect(&e);
@@ -351,7 +351,7 @@ void IntervalCalculations::applyEndEffects(std::vector<TNumVarChange>* v, std::s
 }
 
 // Makes a backup of the control parameter intervals
-void IntervalCalculations::copyControlVars(Plan* p)
+void IntervalCalculations::copyControlVars(std::shared_ptr<Plan> p)
 {
 	if (cvarValues.empty()) return;
 	p->cvarValues = new std::vector<TInterval>();
@@ -362,7 +362,7 @@ void IntervalCalculations::copyControlVars(Plan* p)
 }
 
 // Makes a backup of the duration interval
-void IntervalCalculations::copyDuration(Plan* p)
+void IntervalCalculations::copyDuration(std::shared_ptr<Plan> p)
 {
 	p->setDuration(duration.minValue, duration.maxValue);
 }

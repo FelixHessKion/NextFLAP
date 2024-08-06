@@ -12,6 +12,8 @@
 #include "../utils/utils.h"
 #include "state.h"
 
+#include <memory>
+
 /*
 #define SEARCH_NRPG 0
 #define SEARCH_LAND 1
@@ -72,8 +74,8 @@ private:
 
 public:
 	TPlanId id;
-	Plan* parentPlan;						// Pointer to its parent plan
-	std::vector<Plan*>* childPlans;			// Vector of child plans. This vector is nullptr if
+  std::shared_ptr<Plan> parentPlan;						// Pointer to its parent plan
+	std::vector<std::shared_ptr<Plan>>* childPlans;			// Vector of child plans. This vector is nullptr if
 											// the plan has not been expanded yet
 	SASAction* action;						// New action added
 	bool fixedInit;							// True if the initial time is fixed (action cannot be delayed)
@@ -93,16 +95,16 @@ public:
 	//int numUsefulActions;					// Number of useful actions included in the plan
 	std::vector<int>* holdCondEff;
 
-	Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
+	Plan(SASAction* action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
 	~Plan();
 	void setDuration(TFloatValue min, TFloatValue max);
 	void setTime(TTime init, TTime end, bool fixed);
-	int compare(Plan* p);
+	int compare(std::shared_ptr<Plan> p);
 	bool isRoot();
 	inline bool expanded() { return childPlans != nullptr; }
 	void addFluentIntervals();
 	inline bool isSolution() { return action != nullptr && action->isGoal; }
-	void addChildren(std::vector<Plan*>& suc);
+	void addChildren(std::vector<std::shared_ptr<Plan>>& suc);
 	void addPlanUpdate(TTimePoint tp, TFloatValue time);
 	int getCheckDistance();
 	//int getH(int queue);

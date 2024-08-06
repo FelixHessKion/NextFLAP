@@ -132,7 +132,7 @@ void startPlanning(PlannerParameters* parameters) {
         return;
     clock_t t = clock();
     PlannerSetting planner(sTask);
-    Plan* solution;
+    std::shared_ptr<Plan> solution;
     float bestMakespan = FLOAT_INFINITY;
     int bestNumSteps = MAX_UINT16;
     do {
