@@ -26,7 +26,7 @@ private:
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
 	std::shared_ptr<TState> initialState;
-	Planner* planner;
+  std::unique_ptr<Planner> planner;
 
 	void createInitialPlan();
 	std::shared_ptr<SASAction> createInitialAction();

@@ -186,7 +186,7 @@ bool PlannerSetting::checkRepeatedStates() {
 
 std::shared_ptr<Plan> PlannerSetting::plan(float bestMakespan, clock_t startTime) {
 	if (planner == nullptr) {
-		planner = new Planner(task, initialPlan, initialState, forceAtEndConditions, filterRepeatedStates,
+		planner = std::make_unique<Planner>(task, initialPlan, initialState, forceAtEndConditions, filterRepeatedStates,
 			generateTrace, &tilActions);
 	}
 	else {
