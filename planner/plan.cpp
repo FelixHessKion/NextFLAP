@@ -42,7 +42,6 @@ Plan::Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, 
 
 Plan::~Plan()
 {
-	if (fs != nullptr) delete fs;
 	if (holdCondEff != nullptr) delete holdCondEff;
 }
 

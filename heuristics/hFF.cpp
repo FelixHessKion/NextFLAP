@@ -17,7 +17,7 @@ FF_RPGVarValue::FF_RPGVarValue(TVariable var, TValue value) {
 	this->value = value;
 }
 
-FF_RPG::FF_RPG(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task) {
+FF_RPG::FF_RPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize();
 	//cout << "STATE:" << endl;

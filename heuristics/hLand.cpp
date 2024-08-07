@@ -86,7 +86,7 @@ bool LandmarkCheck::isGoal(std::shared_ptr<SASTask> task) {
 	return false;
 }
 
-bool LandmarkCheck::isInitialState(TState* state) {
+bool LandmarkCheck::isInitialState(std::shared_ptr<TState> state) {
 	if (isSingle()) {
 		return state->state[getVar()] == getValue();
 	}
@@ -99,7 +99,7 @@ bool LandmarkCheck::isInitialState(TState* state) {
 	}
 }
 
-bool LandmarkCheck::goOn(TState* s) {
+bool LandmarkCheck::goOn(std::shared_ptr<TState> s) {
 	for (unsigned int i = 0; i < vars.size(); i++) {
 		if (s->state[vars[i]] == values[i])
 			return true;
@@ -121,11 +121,11 @@ LandmarkHeuristic::~LandmarkHeuristic() {
 
 void LandmarkHeuristic::initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task;
-	TState state(task);
-	initialize(&state, task, tilActions);
+  std::shared_ptr<TState> state = std::make_shared<TState>(task);
+	initialize(state, task, tilActions);
 }
 
-void LandmarkHeuristic::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
+void LandmarkHeuristic::initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task; 
   std::shared_ptr<Landmarks> landmarks = std::make_shared<Landmarks>(state, task, tilActions);
 	landmarks->filterTransitiveOrders(task);
@@ -199,7 +199,7 @@ bool LandmarkHeuristic::hasRootPredecessor(std::shared_ptr<LandmarkCheck> n) {
 	return false;
 }
 
-void LandmarkHeuristic::addRootNode(std::shared_ptr<LandmarkCheck> n, TState* state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete) {
+void LandmarkHeuristic::addRootNode(std::shared_ptr<LandmarkCheck> n, std::shared_ptr<TState> state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete) {
 	bool found = false;
 	if (n->goOn(state)) {
 		for (unsigned int i = 0; i < toDelete->size(); i++) {

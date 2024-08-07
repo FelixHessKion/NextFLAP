@@ -40,7 +40,7 @@ public:
 class Successors {
 private:
 	std::shared_ptr<SASTask> task;
-	TState* initialState;
+	std::shared_ptr<TState> initialState;
 	bool filterRepeatedStates;
 	unsigned int numVariables;							// Number of variables
 	unsigned int numActions;							// Number of grounded actions
@@ -107,7 +107,7 @@ public:
 	std::unordered_map<uint64_t, std::vector<std::shared_ptr<Plan>> > memo;
 	std::shared_ptr<Plan> solution;
 	
-	Successors(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
+	Successors(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
 		std::vector<std::shared_ptr<SASAction>>* tilActions);
 	~Successors();
 	void computeSuccessors(std::shared_ptr<Plan> base, std::vector<std::shared_ptr<Plan>>* suc, float bestMakespan);

@@ -83,7 +83,7 @@ private:
 	std::vector<std::shared_ptr<SASAction>>* tilActions;
 
 	void addGoalToAchieve(SASCondition& c);
-	void init(TState* state);
+	void init(std::shared_ptr<TState> state);
 	inline float getFirstGenerationTime(TVariable v, TValue value) {
 		return getFirstGenerationTime(SASTask::getVariableValueCode(v, value));
 	}
@@ -95,15 +95,15 @@ private:
 	bool checkAcheivedGoals();
 	bool actionProducesFluent(std::shared_ptr<SASAction> a);
 	void clearPriorityQueue();
-	float getActionLevel(std::shared_ptr<SASAction> a, TState* state);
-	void programAction(std::shared_ptr<SASAction> a, TState* state);
+	float getActionLevel(std::shared_ptr<SASAction> a, std::shared_ptr<TState> state);
+	void programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TState> state);
 
 public:
 	void initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	~TemporalRPG();
-	void build(TState* state);
+	void build(std::shared_ptr<TState> state);
 	void computeLiteralLevels();
-	void computeActionLevels(TState* state);
+	void computeActionLevels(std::shared_ptr<TState> state);
 	inline unsigned int getFluentListSize() { return (unsigned int)fluentList.size(); }
 	inline unsigned int getNumFluentLevels() { return (unsigned int)fluentLevels.size(); }
 	inline int getFluentIndex(TVariable v, TValue value) {

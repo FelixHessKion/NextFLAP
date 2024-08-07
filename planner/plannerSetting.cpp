@@ -18,7 +18,7 @@ PlannerSetting::PlannerSetting(std::shared_ptr<SASTask> stask) {
 	filterRepeatedStates = checkRepeatedStates();
 	//if (!forceAtEndConditions) cout << "End conditions can be left unsupported" << endl;
 	//if (!filterRepeatedStates) cout << "Repeated states will not be pruned" << endl;
-	initialState = new TState(this->task);
+	initialState = std::make_shared<TState>(this->task);
 	task->tilActions = !tilActions.empty();
 	this->planner = nullptr;
 }

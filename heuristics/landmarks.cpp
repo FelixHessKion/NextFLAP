@@ -12,7 +12,7 @@ using namespace std;
 /* LandmarkRPG                             */
 /*******************************************/
 
-bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, std::shared_ptr<SASTask> task) {
+bool LandmarkRPG::verifyFluent(TVariable v, TValue value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	achievedFluent.erase(SASTask::getVariableValueCode(v, value));
@@ -38,7 +38,7 @@ bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, std::shared
 	return res;
 }
 
-bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, std::shared_ptr<SASTask> task) {
+bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	unsigned int n = v->size();
@@ -75,7 +75,7 @@ bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* 
 	return res;
 }
 
-bool LandmarkRPG::verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, TState* s, std::shared_ptr<SASTask> task) {
+bool LandmarkRPG::verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	while (remainingGoals.size() > 0 && lastLevel->size() > 0) {
@@ -232,7 +232,7 @@ void LandmarkRPG::addActionEffects(std::shared_ptr<SASAction> a) {
 	}
 }
 
-void LandmarkRPG::initialize(TState* s) {
+void LandmarkRPG::initialize(std::shared_ptr<TState> s) {
 	unsigned int numActions = task->actions.size();
 	achievedAction = std::make_unique<bool[]>(numActions);
 	for (unsigned int i = 0; i < numActions; i++) achievedAction[i] = false;
@@ -270,7 +270,7 @@ void LandmarkRPG::clearMemory() {
 /* LandmarkTree                            */
 /*******************************************/
 
-LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
+LandmarkTree::LandmarkTree(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->state = state;
 	this->task = task;
 	rpg.initialize(false, task, tilActions);
@@ -314,7 +314,7 @@ LandmarkTree::LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::ve
 LandmarkTree::~LandmarkTree() {
 }
 
-void LandmarkTree::addGoalNode(SASCondition* c, TState* state) {
+void LandmarkTree::addGoalNode(SASCondition* c, std::shared_ptr<TState> state) {
 	//if (state->state[c->var] == c->value) return;
 	int index = rpg.getFluentIndex(c->var, c->value);
 	if (index >= 0) {
@@ -849,7 +849,7 @@ void LandmarkTree::getActions(std::vector<std::shared_ptr<SASAction>>* aList, LM
 /* Landmarks                               */
 /*******************************************/
 
-Landmarks::Landmarks(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
+Landmarks::Landmarks(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	LandmarkTree lt(state, task, tilActions);
 	unordered_map<int, int> mapping;
 	for (unsigned int i = 0; i < lt.nodes.size(); i++) {

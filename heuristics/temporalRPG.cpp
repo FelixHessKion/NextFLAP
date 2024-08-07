@@ -50,7 +50,7 @@ void TemporalRPG::clearPriorityQueue() {
 	}
 }
 
-void TemporalRPG::build(TState* state) {
+void TemporalRPG::build(std::shared_ptr<TState> state) {
 	init(state);
 	if (untilGoals && checkAcheivedGoals()) {
 		clearPriorityQueue();
@@ -156,7 +156,7 @@ void TemporalRPG::build(TState* state) {
 	}
 }
 
-void TemporalRPG::init(TState* state) {
+void TemporalRPG::init(std::shared_ptr<TState> state) {
 	for (unsigned int i = 0; i < state->numSASVars; i++) {
 		firstGenerationTime[SASTask::getVariableValueCode(i, state->state[i])] = 0;
 	}
@@ -175,7 +175,7 @@ void TemporalRPG::init(TState* state) {
 	}
 }
 
-void TemporalRPG::programAction(std::shared_ptr<SASAction> a, TState* state) {
+void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TState> state) {
 	TVariable v;
 	TValue value;
 	float level, duration;
@@ -319,7 +319,7 @@ void TemporalRPG::computeLiteralLevels() {
 	}
 }
 
-void TemporalRPG::computeActionLevels(TState* state) {
+void TemporalRPG::computeActionLevels(std::shared_ptr<TState> state) {
 	actionLevels = std::make_unique<float[]>(numActions);
 	for (int i = 0; i < numActions; i++) {
 		actionLevels[i] = getActionLevel(task->actions[i], state);
@@ -339,7 +339,7 @@ void TemporalRPG::computeActionLevels(TState* state) {
 	}
 }
 
-float TemporalRPG::getActionLevel(std::shared_ptr<SASAction> a, TState* state) {
+float TemporalRPG::getActionLevel(std::shared_ptr<SASAction> a, std::shared_ptr<TState> state) {
 	float res = 0, level;
 	for (unsigned int i = 0; i < a->startCond.size(); i++) {
 		level = getFirstGenerationTime(a->startCond[i].var, a->startCond[i].value);

@@ -68,7 +68,7 @@ public:
 
 	RPG(std::vector< std::vector<TValue> >& varValues, std::shared_ptr<SASTask> task, bool forceAtEndConditions,
 		std::vector<std::shared_ptr<SASAction>>* tilActions);
-	RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	RPG(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	bool isExecutable(std::shared_ptr<SASAction> a);
 	uint16_t evaluate(bool mutex);
 	uint16_t evaluate(TVarValue goal, bool mutex);

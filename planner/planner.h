@@ -20,7 +20,7 @@ class Planner {
 private:
 	std::shared_ptr<SASTask> task;
 	std::shared_ptr<Plan> initialPlan;
-	TState* initialState;
+	std::shared_ptr<TState> initialState;
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
 	bool generateTrace;
@@ -46,7 +46,7 @@ private:
 	void markChildrenAsInvalid(std::shared_ptr<Plan> p);
 
 public:
-	Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, TState* initialState, bool forceAtEndConditions,
+	Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, std::shared_ptr<TState> initialState, bool forceAtEndConditions,
 		bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	std::shared_ptr<Plan> plan(float bestMakespan, clock_t startTime);
 	void clearSolution();

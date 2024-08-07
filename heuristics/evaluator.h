@@ -54,13 +54,13 @@ private:
 	std::vector<std::shared_ptr<LandmarkCheck>> openNodes;				// For hLand calculation
 	bool numericConditionsOrConditionalEffects;
 
-	void calculateFrontierState(TState* fs, std::shared_ptr<Plan> currentPlan);
+	void calculateFrontierState(std::shared_ptr<TState> fs, std::shared_ptr<Plan> currentPlan);
 	bool findOpenNode(std::shared_ptr<LandmarkCheck> l);
 
 public:
 	Evaluator();
 	~Evaluator();
-	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions);
+	void initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions);
 	void calculateFrontierState(std::shared_ptr<Plan> p);
 	void evaluate(std::shared_ptr<Plan> p);
 	void evaluateInitialPlan(std::shared_ptr<Plan> p);

@@ -12,7 +12,7 @@ using namespace std;
 //#define NUMRPG_DEBUG
 
 // Constructor
-NumericRPG::NumericRPG(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task, int limit)
+NumericRPG::NumericRPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task, int limit)
 {
 	this->task = task;
 	this->limit = limit > 100 ? 100 : limit;
@@ -41,7 +41,7 @@ void NumericRPG::initialize()
 }
 
 // Build the first fluent level of the graph
-void NumericRPG::createFirstFluentLevel(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions)
+void NumericRPG::createFirstFluentLevel(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions)
 {
 #ifdef NUMRPG_DEBUG
 	cout << "L0" << endl;

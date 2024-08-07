@@ -46,7 +46,7 @@ bool Evaluator::informativeLandmarks()
 }
 
 // Calculates the frontier state of a given plan. It also computes the number of useful actions included in the plan
-void Evaluator::calculateFrontierState(TState* fs, std::shared_ptr<Plan> currentPlan)
+void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_ptr<Plan> currentPlan)
 {
 	if (landmarks != nullptr) {
 		landmarks->uncheckNodes();
@@ -141,7 +141,7 @@ Evaluator::~Evaluator()
 }
 
 // Evaluator initialization
-void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions) {
+void Evaluator::initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions) {
     this->task = task;
 	numericConditionsOrConditionalEffects = false;
 	for (std::shared_ptr<SASAction> a : task->actions) {
@@ -173,6 +173,6 @@ void Evaluator::calculateFrontierState(std::shared_ptr<Plan> p)
 {
 	//p->numUsefulActions = 0;
 	planComponents.calculate(p);
-	p->fs = new TState(task);			// Make a copy of the initial state
+	p->fs = std::make_shared<TState>(task);			// Make a copy of the initial state
 	calculateFrontierState(p->fs, p);
 }

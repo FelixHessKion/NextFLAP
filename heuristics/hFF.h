@@ -58,7 +58,7 @@ private:
 public:
 	std::vector<std::shared_ptr<SASAction>> relaxedPlan;
 
-	FF_RPG(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task);
+	FF_RPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task);
 	uint16_t evaluate();
 };
 

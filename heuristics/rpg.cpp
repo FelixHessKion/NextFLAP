@@ -30,7 +30,7 @@ RPG::RPG(vector< vector<TValue> >& varValues, std::shared_ptr<SASTask> task, boo
 	expand();
 }
 
-RPG::RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<std::shared_ptr<SASAction>>* tilActions) {
+RPG::RPG(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task;
 	this->forceAtEndConditions = forceAtEndConditions;
 	initialize();

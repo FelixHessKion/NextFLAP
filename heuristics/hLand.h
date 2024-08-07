@@ -23,8 +23,8 @@ public:
 	void removeSuccessor(std::shared_ptr<LandmarkCheck> n);
 	void removePredecessor(std::shared_ptr<LandmarkCheck> n);
 	bool isGoal(std::shared_ptr<SASTask> task);
-	bool goOn(TState* s);
-	bool isInitialState(TState* state);
+	bool goOn(std::shared_ptr<TState> s);
+	bool isInitialState(std::shared_ptr<TState> state);
 	inline void uncheck() { checked = false; }
 	inline void check() { checked = true; }
 	inline bool isChecked() { return checked; }
@@ -44,14 +44,14 @@ private:
 	std::vector<std::shared_ptr<LandmarkCheck>> nodes;
 	std::vector<std::shared_ptr<LandmarkCheck>> rootNodes;
 
-	void addRootNode(std::shared_ptr<LandmarkCheck> n, TState* state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete);
+	void addRootNode(std::shared_ptr<LandmarkCheck> n, std::shared_ptr<TState> state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete);
 	bool hasRootPredecessor(std::shared_ptr<LandmarkCheck> n);
 
 public:
 	LandmarkHeuristic(); 
 	~LandmarkHeuristic();
 	void initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
-	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	void uncheckNodes();
 	uint16_t evaluate();
 	void copyRootNodes(std::vector<std::shared_ptr<LandmarkCheck>>* v);

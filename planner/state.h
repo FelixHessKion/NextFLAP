@@ -31,7 +31,7 @@ public:
 			code = 31 * code + ((uint64_t)(100 * (minState[i] + maxState[i])));
 		return code;
 	}
-	inline bool compareTo(TState* s) {
+	inline bool compareTo(std::shared_ptr<TState> s) {
 		for (unsigned int i = 0; i < numNumVars; i++) {
 			if (abs(minState[i] - s->minState[i]) >= EPSILON) return false;
 			if (abs(maxState[i] - s->maxState[i]) >= EPSILON) return false;

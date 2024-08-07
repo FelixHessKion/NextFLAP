@@ -25,7 +25,7 @@ private:
 	std::vector<std::shared_ptr<SASAction>> tilActions;
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
-	TState* initialState;
+	std::shared_ptr<TState> initialState;
 	Planner* planner;
 
 	void createInitialPlan();

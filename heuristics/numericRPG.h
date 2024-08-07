@@ -102,7 +102,7 @@ private:
 	int limit;
 
 	void initialize();
-	void createFirstFluentLevel(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void createFirstFluentLevel(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	void updateNumericValueInterval(int var, float minValue, float maxValue);
 	void createFirstActionLevel();
 	bool isApplicable(std::shared_ptr<SASAction> a, int level);
@@ -126,7 +126,7 @@ private:
 	bool checkCondEffectHold(SASConditionalEffect& e, int level, IntervalCalculations& ic);
 
 public:
-	NumericRPG(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task, int limit);
+	NumericRPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task, int limit);
 	int evaluate();
 	int evaluateInitialPlan(/*bool* usefulActions*/);
 	TFloatValue getMinValue(TVariable v, int numState);

@@ -89,7 +89,7 @@ public:
 	int g;									// Plan length
 	int h;									// Heuristic value
 	int hLand;
-	TState* fs;								// Frontier state
+	std::shared_ptr<TState> fs;								// Frontier state
 	bool z3Checked;							// Plan checked by z3 solver?
 	bool invalid;							// Invalid plan (after z3 checking)
 	//int numUsefulActions;					// Number of useful actions included in the plan

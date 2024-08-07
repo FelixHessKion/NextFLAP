@@ -131,7 +131,7 @@ private:
 	std::unique_ptr<std::vector<TVarValue>> newLevel;
 	std::vector<TVarValue> remainingGoals;
 
-	void initialize(TState* s);
+	void initialize(std::shared_ptr<TState> s);
 	void addGoal(SASCondition* c);
 	inline bool fluentAchieved(TVariable v, TValue value) {
 		return fluentAchieved(SASTask::getVariableValueCode(v, value));
@@ -148,14 +148,14 @@ private:
 	bool allowedAction(std::shared_ptr<SASAction> a, std::vector<std::shared_ptr<SASAction>>* actions);
 
 public:
-	bool verifyFluent(TVariable v, TValue value, TState* s, std::shared_ptr<SASTask> task);
-	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, std::shared_ptr<SASTask> task);
-	bool verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, TState* s, std::shared_ptr<SASTask> task);
+	bool verifyFluent(TVariable v, TValue value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
+	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
+	bool verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
 };
 
 class LandmarkTree {
 private:
-	TState* state;
+	std::shared_ptr<TState> state;
 	TemporalRPG rpg;
 	std::shared_ptr<SASTask> task;
 	std::vector<int> fluentNode;
@@ -166,7 +166,7 @@ private:
 	bool** mutexMatrix;
 	std::vector<LMOrdering> reasonableOrderingsGoalsList;
 
-	void addGoalNode(SASCondition* c, TState* state);
+	void addGoalNode(SASCondition* c, std::shared_ptr<TState> state);
 	void exploreRPG();
 	void actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, std::shared_ptr<LTNode> g, int level);
 	void checkPreconditions(std::shared_ptr<SASAction> a, std::unique_ptr<int[]> &common);
@@ -184,7 +184,7 @@ public:
 	std::vector<std::shared_ptr<LTNode>> nodes;
 	std::vector<LMOrdering> edges;
 
-	LandmarkTree(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	LandmarkTree(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	~LandmarkTree();
 };
 
@@ -255,7 +255,7 @@ private:
 	bool checkIndirectReachability(int orig, int current, int dst, std::vector<bool>* visited);
 
 public:
-	Landmarks(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	Landmarks(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	void filterTransitiveOrders(std::shared_ptr<SASTask> task);
 	unsigned int numNodes() { return nodes.size(); }
 	LandmarkNode* getNode(unsigned int index) { return &(nodes[index]); }
