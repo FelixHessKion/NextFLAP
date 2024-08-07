@@ -50,8 +50,8 @@ private:
 public:
 	LandmarkHeuristic(); 
 	~LandmarkHeuristic();
-	void initialize(std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
-	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
+	void initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	void uncheckNodes();
 	uint16_t evaluate();
 	void copyRootNodes(std::vector<std::shared_ptr<LandmarkCheck>>* v);

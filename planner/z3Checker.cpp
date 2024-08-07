@@ -93,7 +93,7 @@ void Z3Checker::defineVariables(std::shared_ptr<Plan> p, TStep s)
 
 void Z3Checker::defineConstraints(std::shared_ptr<Plan> p, TStep s)
 {
-    SASAction* a = p->action;
+    std::shared_ptr<SASAction> a = p->action;
     TTimePoint start = stepToStartPoint(s), end = stepToEndPoint(s);
 
     for (SASNumericCondition& c : a->startNumCond) {    // Fluents and control vars. conditions

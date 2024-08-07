@@ -25,7 +25,7 @@ PlannerSetting::PlannerSetting(std::shared_ptr<SASTask> stask) {
 
 // Creates the initial empty plan that only contains the initial and the TIL fictitious actions
 void PlannerSetting::createInitialPlan() {
-	SASAction* initialAction = createInitialAction();
+	std::shared_ptr<SASAction> initialAction = createInitialAction();
 	initialPlan = std::make_shared<Plan>(initialAction, nullptr, 0, nullptr);
 	initialPlan->setDuration(EPSILON, EPSILON);
 	initialPlan->setTime(-EPSILON, 0, true);
@@ -34,7 +34,7 @@ void PlannerSetting::createInitialPlan() {
 }
 
 // Creates and returns the initial fictitious action
-SASAction* PlannerSetting::createInitialAction() {
+std::shared_ptr<SASAction> PlannerSetting::createInitialAction() {
 	vector<unsigned int> varList;
 	for (unsigned int i = 0; i < task->variables.size(); i++) {	// Non-numeric effects
 		SASVariable& var = task->variables[i];
@@ -58,9 +58,9 @@ SASAction* PlannerSetting::createInitialAction() {
 }
 
 // Create a fictitious action with the given duration and with the effects with the modified variables in the given time point
-SASAction* PlannerSetting::createFictitiousAction(float actionDuration, vector<unsigned int>& varList,
+std::shared_ptr<SASAction> PlannerSetting::createFictitiousAction(float actionDuration, vector<unsigned int>& varList,
 	float timePoint, string name, bool isTIL, bool isGoal) {
-	SASAction* a = new SASAction(true, isTIL, isGoal);
+	std::shared_ptr<SASAction> a = std::make_shared<SASAction>(true, isTIL, isGoal);
 	a->index = MAX_UNSIGNED_INT;
 	a->name = name;
 	SASDurationCondition duration;
@@ -131,7 +131,7 @@ void PlannerSetting::createTILactions(std::shared_ptr<Plan> parentPlan, std::sha
 	}
 	for (auto it = til.begin(); it != til.end(); ++it) {
 		float timePoint = it->first;
-		SASAction* a = createFictitiousAction(timePoint, it->second, timePoint, 
+		std::shared_ptr<SASAction> a = createFictitiousAction(timePoint, it->second, timePoint, 
 			"#til" + to_string(timePoint), true, false);
 		tilActions.push_back(a);
 		result = std::make_shared<Plan>(a, result, 0, nullptr);
@@ -154,7 +154,7 @@ bool PlannerSetting::checkForceAtEndConditions() {	// Check if it's required to 
 	}
 	RPG rpg(varValues, task, true, &tilActions);
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		if (rpg.isExecutable(&(task->goals[i])))
+		if (rpg.isExecutable(task->goals[i]))
 			return true;
 	}
 	return false;
@@ -163,16 +163,16 @@ bool PlannerSetting::checkForceAtEndConditions() {	// Check if it's required to 
 bool PlannerSetting::checkRepeatedStates() {
 	TVariable v;
 	TValue value;
-	for (SASAction& a : task->actions) {
-		for (unsigned int i = 0; i < a.startEff.size(); i++) {
-			v = a.startEff[i].var;
-			value = a.startEff[i].value;
-			for (unsigned int j = 0; j < a.endEff.size(); j++) {
-				if (a.endEff[j].var == v && a.endEff[j].value != value) {
+	for (std::shared_ptr<SASAction> a : task->actions) {
+		for (unsigned int i = 0; i < a->startEff.size(); i++) {
+			v = a->startEff[i].var;
+			value = a->startEff[i].value;
+			for (unsigned int j = 0; j < a->endEff.size(); j++) {
+				if (a->endEff[j].var == v && a->endEff[j].value != value) {
 					// If (v = value) is required by any action, the domain is concurrent
-					vector<SASAction*>& req = task->requirers[v][value];
+					vector<std::shared_ptr<SASAction>>& req = task->requirers[v][value];
 					for (unsigned int k = 0; k < req.size(); k++) {
-						if (req[k] != &a) {
+						if (req[k] != a) {
 							return false;
 						}
 					}

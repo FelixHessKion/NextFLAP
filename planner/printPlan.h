@@ -13,7 +13,7 @@
 
 class PrintPlan {
 public:
-	static std::string actionName(SASAction* a);
+	static std::string actionName(std::shared_ptr<SASAction> a);
 	static void print(std::shared_ptr<Plan> p, TControVarValues* cvarValues = nullptr);
 	static float getMakespan(std::shared_ptr<Plan> p);
 	static void rawPrint(std::shared_ptr<Plan> p, SASTask* task);

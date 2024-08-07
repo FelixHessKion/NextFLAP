@@ -140,7 +140,7 @@ bool IntervalCalculations::supportedCondition(SASNumericCondition* c)
 }
 
 // Constructor
-IntervalCalculations::IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task)
+IntervalCalculations::IntervalCalculations(std::shared_ptr<SASAction> a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task)
 {
 	this->a = a;
 	fluentValues.resize(task->numVariables.size());

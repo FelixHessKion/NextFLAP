@@ -77,7 +77,7 @@ public:
   std::shared_ptr<Plan> parentPlan;						// Pointer to its parent plan
 	std::vector<std::shared_ptr<Plan>>* childPlans;			// Vector of child plans. This vector is nullptr if
 											// the plan has not been expanded yet
-	SASAction* action;						// New action added
+	std::shared_ptr<SASAction> action;						// New action added
 	bool fixedInit;							// True if the initial time is fixed (action cannot be delayed)
 	TInterval actionDuration;				// Action duration
 	std::vector<TInterval>* cvarValues;		// Control var. values. Vector is nullptr if the action has no control vars.
@@ -95,7 +95,7 @@ public:
 	//int numUsefulActions;					// Number of useful actions included in the plan
 	std::vector<int>* holdCondEff;
 
-	Plan(SASAction* action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
+	Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
 	~Plan();
 	void setDuration(TFloatValue min, TFloatValue max);
 	void setTime(TTime init, TTime end, bool fixed);

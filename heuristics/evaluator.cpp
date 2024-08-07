@@ -71,7 +71,7 @@ void Evaluator::calculateFrontierState(TState* fs, std::shared_ptr<Plan> current
 	std::shared_ptr<LandmarkCheck> l, al;
 	while (pq.size() > 0) {
 		ScheduledPoint* p = (ScheduledPoint*)pq.poll();
-		SASAction* a = p->plan->action;
+		std::shared_ptr<SASAction> a = p->plan->action;
 		bool atStart = (p->p & 1) == 0;
 		std::vector<SASCondition>* eff = atStart ? &a->startEff : &a->endEff;
 		std::vector<TFluentInterval>* numEff = atStart ? p->plan->startPoint.numVarValues : p->plan->endPoint.numVarValues;
@@ -141,15 +141,15 @@ Evaluator::~Evaluator()
 }
 
 // Evaluator initialization
-void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* a, bool forceAtEndConditions) {
+void Evaluator::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions) {
     this->task = task;
 	numericConditionsOrConditionalEffects = false;
-	for (SASAction& a : task->actions) {
-		if (a.startNumCond.size() > 0 || a.overNumCond.size() > 0 || a.endNumCond.size() > 0) {
+	for (std::shared_ptr<SASAction> a : task->actions) {
+		if (a->startNumCond.size() > 0 || a->overNumCond.size() > 0 || a->endNumCond.size() > 0) {
 			numericConditionsOrConditionalEffects = true;
 			break;
 		}
-		if (a.conditionalEff.size() > 0) {
+		if (a->conditionalEff.size() > 0) {
 			numericConditionsOrConditionalEffects = true;
 			break;
 		}

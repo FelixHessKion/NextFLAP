@@ -46,7 +46,7 @@ public:
 class Evaluator {
 private:
   std::shared_ptr<SASTask> task;
-	std::vector<SASAction*>* tilActions;
+	std::vector<std::shared_ptr<SASAction>>* tilActions;
 	PlanComponents planComponents;
 	PriorityQueue pq;
 	//bool* usefulActions;
@@ -60,11 +60,11 @@ private:
 public:
 	Evaluator();
 	~Evaluator();
-	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* a, bool forceAtEndConditions);
+	void initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions);
 	void calculateFrontierState(std::shared_ptr<Plan> p);
 	void evaluate(std::shared_ptr<Plan> p);
 	void evaluateInitialPlan(std::shared_ptr<Plan> p);
-	std::vector<SASAction*>* getTILActions() { return tilActions; }
+	std::vector<std::shared_ptr<SASAction>>* getTILActions() { return tilActions; }
 	bool informativeLandmarks();
 };
 

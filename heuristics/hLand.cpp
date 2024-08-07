@@ -75,7 +75,7 @@ bool LandmarkCheck::isGoal(std::shared_ptr<SASTask> task) {
 	TVariable v = getVar();
 	TValue value = getValue();
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		SASAction* g = &(task->goals[i]);
+		std::shared_ptr<SASAction> g = task->goals[i];
 		for (unsigned int j = 0; j < g->startCond.size(); j++)
 			if (v == g->startCond[j].var && value == g->startCond[j].value) return true;
 		for (unsigned int j = 0; j < g->overCond.size(); j++)
@@ -119,27 +119,27 @@ LandmarkHeuristic::LandmarkHeuristic() {
 LandmarkHeuristic::~LandmarkHeuristic() {
 }
 
-void LandmarkHeuristic::initialize(std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task;
 	TState state(task);
 	initialize(&state, task, tilActions);
 }
 
-void LandmarkHeuristic::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(TState* state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task; 
-	Landmarks landmarks(state, task, tilActions);
-	landmarks.filterTransitiveOrders(task);
+  std::shared_ptr<Landmarks> landmarks = std::make_shared<Landmarks>(state, task, tilActions);
+	landmarks->filterTransitiveOrders(task);
 #ifdef DEBUG_HLAND_ON
-	cout << landmarks.toString(task) << endl;
+	cout << landmarks->toString(task) << endl;
 #endif
-	unsigned int numLandNodes = landmarks.numNodes();
+	unsigned int numLandNodes = landmarks->numNodes();
 	//cout << ";" << numLandNodes << " landmarks" << endl;
 	for (unsigned int i = 0; i < numLandNodes; i++) {
-    std::shared_ptr<LandmarkCheck> l = std::make_shared<LandmarkCheck>(landmarks.getNode(i));
+    std::shared_ptr<LandmarkCheck> l = std::make_shared<LandmarkCheck>(landmarks->getNode(i));
 		nodes.push_back(l);
 	}
 	for (unsigned int i = 0; i < numLandNodes; i++) {
-		LandmarkNode* ln = landmarks.getNode(i);
+		LandmarkNode* ln = landmarks->getNode(i);
 		unsigned int numAdj = ln->numAdjacents();
 		for (unsigned int j = 0; j < numAdj; j++) {
 			int adjIndex = ln->getAdjacent(j)->getIndex();

@@ -12,7 +12,7 @@ using namespace std;
 //#define NUMRPG_DEBUG
 
 // Constructor
-NumericRPG::NumericRPG(TState* fs, std::vector<SASAction*>* tilActions, std::shared_ptr<SASTask> task, int limit)
+NumericRPG::NumericRPG(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task, int limit)
 {
 	this->task = task;
 	this->limit = limit > 100 ? 100 : limit;
@@ -35,13 +35,13 @@ void NumericRPG::initialize()
 	actionLevel.resize(task->actions.size());
 	numVarProducers.resize(numNumVars);
 	numVarValue.resize(numNumVars);
-	for (SASAction& a : task->goals)
-		remainingGoals.push_back(&a);
+	for (std::shared_ptr<SASAction> a : task->goals)
+		remainingGoals.push_back(a);
 	goalLevel.resize(task->goals.size(), MAX_INT32);
 }
 
 // Build the first fluent level of the graph
-void NumericRPG::createFirstFluentLevel(TState* fs, std::vector<SASAction*>* tilActions)
+void NumericRPG::createFirstFluentLevel(TState* fs, std::vector<std::shared_ptr<SASAction>>* tilActions)
 {
 #ifdef NUMRPG_DEBUG
 	cout << "L0" << endl;
@@ -64,7 +64,7 @@ void NumericRPG::createFirstFluentLevel(TState* fs, std::vector<SASAction*>* til
 	}
 	// TIL
 	if (tilActions != nullptr) {
-		for (SASAction* a : *tilActions) {
+		for (std::shared_ptr<SASAction> a : *tilActions) {
 			std::vector<TNumVarChange> v;
 			IntervalCalculations ic(a, 0, this, task);
 			ic.applyEndEffects(&v, nullptr);
@@ -97,7 +97,7 @@ void NumericRPG::createFirstActionLevel()
 #endif
 	int i = 0;
 	while (i < remainingGoals.size()) {
-		SASAction* a = remainingGoals[i];
+		std::shared_ptr<SASAction> a = remainingGoals[i];
 		if (isApplicable(a, 0)) {
 			IntervalCalculations ic(a, 0, this, task);
       std::shared_ptr<bool[]> hold = calculateCondEffHold(a, 0, ic);
@@ -113,15 +113,15 @@ void NumericRPG::createFirstActionLevel()
 		}
 		else i++;
 	}
-	for (SASAction& a : task->actions) {
-		if (isApplicable(&a, 0)) {
-			programActionEffects(&a, 1);
+	for (std::shared_ptr<SASAction> a : task->actions) {
+		if (isApplicable(a, 0)) {
+			programActionEffects(a, 1);
 		}
 	}
 }
 
 // Check if an action can be applied in the given level of the graph
-bool NumericRPG::isApplicable(SASAction* a, int level)
+bool NumericRPG::isApplicable(std::shared_ptr<SASAction> a, int level)
 {
 	for (SASCondition& c : a->startCond) {
 		if (literalLevel[c.var][c.value] > level)
@@ -138,7 +138,7 @@ bool NumericRPG::isApplicable(SASAction* a, int level)
 	return true;
 }
 
-std::shared_ptr<bool[]> NumericRPG::calculateCondEffHold(SASAction* a, int level, IntervalCalculations& ic) {
+std::shared_ptr<bool[]> NumericRPG::calculateCondEffHold(std::shared_ptr<SASAction> a, int level, IntervalCalculations& ic) {
 	int size = a->conditionalEff.size();
 	if (size == 0) return nullptr;
 	std::shared_ptr<bool[]> hold = std::make_shared<bool[]>(size);
@@ -169,7 +169,7 @@ bool NumericRPG::checkCondEffectHold(SASConditionalEffect& e, int level, Interva
 }
 
 // Programs the action effects (to be added later in the graph)
-void NumericRPG::programActionEffects(SASAction* a, int level)
+void NumericRPG::programActionEffects(std::shared_ptr<SASAction> a, int level)
 {
 	std::vector<TNumVarChange> svc, evc;
 	IntervalCalculations ic(a, level, this, task);
@@ -259,7 +259,7 @@ void NumericRPG::programActionEffects(SASAction* a, int level)
 }
 
 // Programs a numeric effect
-void NumericRPG::programNumericEffect(TVariable v, int level, TFloatValue min, TFloatValue max, SASAction* a)
+void NumericRPG::programNumericEffect(TVariable v, int level, TFloatValue min, TFloatValue max, std::shared_ptr<SASAction> a)
 {
 	TFloatValue currentMin = numVarValue[v].minValue, currentMax = numVarValue[v].maxValue;
 	if (min < currentMin || max > currentMax) {
@@ -296,13 +296,13 @@ void NumericRPG::expand()
 		cout << "A" << currentLevel << endl;
 #endif
 
-		for (SASAction* a : achievedNumericActions) {
+		for (std::shared_ptr<SASAction> a : achievedNumericActions) {
 			programActionEffects(a, currentLevel + 1);
 			checkedActions.insert(a->index);
 		}
 
 		for (TVarValue vv : reachedValues) {	// Add actions that require this proposition
-			for (SASAction* a : task->requirers[task->getVariableIndex(vv)][task->getValueIndex(vv)]) {
+			for (std::shared_ptr<SASAction> a : task->requirers[task->getVariableIndex(vv)][task->getValueIndex(vv)]) {
 				if (checkedActions.find(a->index) == checkedActions.end()) {
 					checkAction(a, currentLevel);
 					checkedActions.insert(a->index);
@@ -310,7 +310,7 @@ void NumericRPG::expand()
 			}
 		}
 		for (const TVariable& v : reachedNumValues) { // Add actions that need this numeric value
-			for (SASAction* a : task->numRequirers[v]) {
+			for (std::shared_ptr<SASAction> a : task->numRequirers[v]) {
 				if (checkedActions.find(a->index) == checkedActions.end()) {
 					checkAction(a, currentLevel);
 					checkedActions.insert(a->index);
@@ -368,11 +368,11 @@ bool NumericRPG::updateNumericValues(int level)
 		if (--limit <= 0) 
 			return false;
 		for (TVariable v : reachedNumValues) {
-			for (SASAction* a : task->numRequirers[v]) {
+			for (std::shared_ptr<SASAction> a : task->numRequirers[v]) {
 				if (actionLevel[a->index].empty())
 					return true;
 			}
-			for (SASAction* g : task->numGoalRequirers[v]) {
+			for (std::shared_ptr<SASAction> g : task->numGoalRequirers[v]) {
 				if (goalLevel[g->index] == MAX_INT32)
 					return true;
 			}
@@ -383,7 +383,7 @@ bool NumericRPG::updateNumericValues(int level)
 }
 
 // Check if an action can be inserted in the graph
-void NumericRPG::checkAction(SASAction* a, int level)
+void NumericRPG::checkAction(std::shared_ptr<SASAction> a, int level)
 {
 	if (actionLevel[a->index].size() > 0 && a->endNumEff.empty() && a->startNumEff.empty())
 		return;	// Action already in the RPG without numeric effects
@@ -396,7 +396,7 @@ void NumericRPG::checkAction(SASAction* a, int level)
 }
 
 // Checks if a goal is reached
-bool NumericRPG::checkGoal(SASAction* a, int level)
+bool NumericRPG::checkGoal(std::shared_ptr<SASAction> a, int level)
 {
 	if (!isApplicable(a, level))
 		return false;	// Action not applicable
@@ -415,10 +415,10 @@ int NumericRPG::evaluate()
 {
 	if (remainingGoals.size() > 0) return MAX_UINT16;
 	int h = 0, level;
-	for (SASAction& g : task->goals) {
-		addSubgoals(&g, goalLevel[g.index], nullptr);
+	for (std::shared_ptr<SASAction> g : task->goals) {
+		addSubgoals(g, goalLevel[g->index], nullptr);
 	}
-	SASAction* a;
+	std::shared_ptr<SASAction> a;
 	while (openConditions.size() > 0) {
 		NumericRPGCondition* c = (NumericRPGCondition*)openConditions.poll();
 		if (c->type == 'V') {
@@ -445,10 +445,10 @@ int NumericRPG::evaluate()
 int NumericRPG::evaluateInitialPlan(/*bool* usefulActions*/) {
 	if (remainingGoals.size() > 0) return MAX_UINT16;
 	int h = 0, level;
-	for (SASAction& g : task->goals) {
-		addSubgoals(&g, goalLevel[g.index], nullptr);
+	for (std::shared_ptr<SASAction> g : task->goals) {
+		addSubgoals(g, goalLevel[g->index], nullptr);
 	}
-	SASAction* a;
+	std::shared_ptr<SASAction> a;
 	while (openConditions.size() > 0) {
 		NumericRPGCondition* c = (NumericRPGCondition*)openConditions.poll();
 #ifdef NUMRPG_DEBUG
@@ -475,7 +475,7 @@ int NumericRPG::evaluateInitialPlan(/*bool* usefulActions*/) {
 }
 
 // Add the conditions of an action as new subgoals for the relaxed plan
-void NumericRPG::addSubgoals(SASAction* a, int level, NumericRPGCondition* cp)
+void NumericRPG::addSubgoals(std::shared_ptr<SASAction> a, int level, NumericRPGCondition* cp)
 {
 #ifdef NUMRPG_DEBUG
 	cout << "Adding subgoals of action " << a->name << endl;
@@ -531,7 +531,7 @@ void NumericRPG::addSubgoal(SASCondition* c)
 }
 
 // Add the given numeric condition of an action as new subgoal for the relaxed plan
-void NumericRPG::addSubgoal(SASAction* a, SASNumericCondition* c, int level, std::vector<NumericRPGCondition*>* numCond)
+void NumericRPG::addSubgoal(std::shared_ptr<SASAction> a, SASNumericCondition* c, int level, std::vector<NumericRPGCondition*>* numCond)
 {
 	switch (c->comp) {
 	case '-': break;
@@ -554,7 +554,7 @@ void NumericRPG::addSubgoal(SASAction* a, SASNumericCondition* c, int level, std
 }
 
 // Add the given (maximize) numeric condition of an action as new subgoal for the relaxed plan
-void NumericRPG::addMaxValueSubgoal(SASAction* a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond)
+void NumericRPG::addMaxValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond)
 {
 	if (e->type == 'V') {
 		int varLevel = findMaxNumVarLevel(e->var, level);
@@ -570,7 +570,7 @@ void NumericRPG::addMaxValueSubgoal(SASAction* a, SASNumericExpression* e, int l
 }
 
 // Add the given (minimize) numeric condition of an action as new subgoal for the relaxed plan
-void NumericRPG::addMinValueSubgoal(SASAction* a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond)
+void NumericRPG::addMinValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond)
 {
 	if (e->type == 'V') {
 		int varLevel = findMinNumVarLevel(e->var, level);
@@ -591,15 +591,15 @@ void NumericRPG::addNumericSubgoal(TVariable v, int level, bool max, std::vector
 	if (numericSubgoals.find(vv) != numericSubgoals.end()) return;
 	numericSubgoals.insert(vv);
 	NumericRPGproducers& prod = numVarProducers[v][level];
-	SASAction* a = max ? prod.maxProducer : prod.minProducer;
+	std::shared_ptr<SASAction> a = max ? prod.maxProducer : prod.minProducer;
 	numCond->push_back(new NumericRPGCondition(v, max, level, a));
 }
 
 // Searches the best action to support the condition
-SASAction* NumericRPG::searchBestAction(TVariable v, TValue value, int level, int* actionLevel)
+std::shared_ptr<SASAction> NumericRPG::searchBestAction(TVariable v, TValue value, int level, int* actionLevel)
 {
-	SASAction* best = nullptr;
-	for (SASAction* a : task->producers[v][value]) {
+	std::shared_ptr<SASAction> best = nullptr;
+	for (std::shared_ptr<SASAction> a : task->producers[v][value]) {
 		int prodActionLevel = findLevel(a->index, level);
 		if (prodActionLevel != -1) {
 			if (prodActionLevel == 0) {

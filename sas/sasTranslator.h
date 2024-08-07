@@ -92,8 +92,8 @@ private:
 	void createNumericAndFiniteDomainVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
 	void setInitialValuesForVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
 	void createAction(GroundedAction* ga, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, bool isGoal);
-	void generateControlVar(SASAction* a, GroundedControlVar* cv);
-	void generateDuration(SASAction* a, GroundedDuration* gd, LiteralTranslation* trans);
+	void generateControlVar(std::shared_ptr<SASAction> a, GroundedControlVar* cv);
+	void generateDuration(std::shared_ptr<SASAction> a, GroundedDuration* gd, LiteralTranslation* trans);
 	char generateComparator(int comp);
 	char generateTime(int time);
 	SASNumericExpression generateNumericExpression(GroundedNumericExpression* gn, LiteralTranslation* trans);
@@ -103,9 +103,9 @@ private:
 	void generateCondition(GroundedCondition* cond, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
 	void generateEffect(std::vector<GroundedCondition>* effects, unsigned int effIndex, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
 	bool modifiedVariable(unsigned int sasVar, std::vector<GroundedCondition>* effects, unsigned int effIndex, LiteralTranslation* trans);
-	void checkModifiedVariable(SASCondition* c, SASAction* a);
+	void checkModifiedVariable(SASCondition* c, std::shared_ptr<SASAction> a);
 	void checkNegatedPreconditionLiterals(GroundedAction* a);
-	SASNumericCondition generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, SASAction* a);
+	SASNumericCondition generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, std::shared_ptr<SASAction> a);
 	SASNumericEffect generateNumericEffect(GroundedNumericEffect* cond, LiteralTranslation* trans);
 	char generateAssignment(int assignment);
 	SASPreference generatePreference(GroundedPreference* pref, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);

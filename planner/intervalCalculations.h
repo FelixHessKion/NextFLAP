@@ -30,7 +30,7 @@ public:
 // Class for calculations with numeric intervals
 class IntervalCalculations {
 private:
-    SASAction* a;
+    std::shared_ptr<SASAction> a;
     std::vector<TInterval> fluentValues;
     TInterval duration;
     std::vector<TInterval> cvarValues;
@@ -44,7 +44,7 @@ private:
     void constrainAtEndFluent(TVariable v);
 
 public:
-    IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task);
+    IntervalCalculations(std::shared_ptr<SASAction> a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task);
     bool supportedNumericStartConditions(std::shared_ptr<bool[]> holdCondEff);
     bool supportedNumericEndConditions(std::shared_ptr<bool[]> holdCondEff);
     bool supportedNumericConditions(SASConditionalEffect* e);

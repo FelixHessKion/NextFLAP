@@ -85,7 +85,7 @@ private:
 		std::vector<TTimePoint>& linearOrder);
 
 public:
-	SASAction* action;					// New action added
+	std::shared_ptr<SASAction> action;					// New action added
 	unsigned int currentPrecondition;
 	unsigned int currentEffect;
 	unsigned int setPrecondition;
@@ -97,7 +97,7 @@ public:
 	int numSupportState;
 	std::shared_ptr<bool[]> condEffHold;
 
-	PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
+	PlanBuilder(std::shared_ptr<SASAction> a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
 		int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task);
 	~PlanBuilder();
 	bool addLink(SASCondition* c, TTimePoint p1, TTimePoint p2);

@@ -752,7 +752,7 @@ void SASTranslator::setInitialValuesForVariables(std::shared_ptr<SASTask> sTask,
 
 // Copies the grounded action, replacing the literals by the SAS variables
 void SASTranslator::createAction(GroundedAction* ga, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, bool isGoal) {
-	SASAction* a = isGoal ? sTask->createNewGoal() : 
+	std::shared_ptr<SASAction> a = isGoal ? sTask->createNewGoal() : 
 		sTask->createNewAction(ga->getName(gTask->task), ga->instantaneous, ga->isTIL, ga->isGoal);
 	for (unsigned int i = 0; i < ga->controlVars.size(); i++)
 		generateControlVar(a, &(ga->controlVars[i]));
@@ -811,7 +811,7 @@ void SASTranslator::createAction(GroundedAction* ga, std::shared_ptr<SASTask> sT
 	}	
 }
 
-void SASTranslator::generateControlVar(SASAction* a, GroundedControlVar* cv)
+void SASTranslator::generateControlVar(std::shared_ptr<SASAction> a, GroundedControlVar* cv)
 {
 	SASControlVar scv;
 	scv.name = cv->name;
@@ -821,7 +821,7 @@ void SASTranslator::generateControlVar(SASAction* a, GroundedControlVar* cv)
 }
 
 // Checks if a precondition is mofified by the efects
-void SASTranslator::checkModifiedVariable(SASCondition* c, SASAction* a) {
+void SASTranslator::checkModifiedVariable(SASCondition* c, std::shared_ptr<SASAction> a) {
 	for (unsigned int i = 0; i < a->endEff.size(); i++)
 		if (c->var == a->endEff[i].var && c->value != a->endEff[i].value) {
 			c->isModified = true;
@@ -835,7 +835,7 @@ void SASTranslator::checkModifiedVariable(SASCondition* c, SASAction* a) {
 }
 	
 // Copies the action duration, replacing the literals by the SAS variables 
-void SASTranslator::generateDuration(SASAction* a, GroundedDuration* gd, LiteralTranslation* trans) {
+void SASTranslator::generateDuration(std::shared_ptr<SASAction> a, GroundedDuration* gd, LiteralTranslation* trans) {
 	SASDurationCondition d;
 	d.time = generateTime(gd->time);
 	d.comp = generateComparator(gd->comp);
@@ -1019,7 +1019,7 @@ bool SASTranslator::modifiedVariable(unsigned int sasVar, vector<GroundedConditi
 }
 
 // Generates the equivalent SASNumericCondition from the given GroundedNumericCondition
-SASNumericCondition SASTranslator::generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, SASAction* a) {
+SASNumericCondition SASTranslator::generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, std::shared_ptr<SASAction> a) {
 	SASNumericCondition c;
 	c.comp = generateComparator(cond->comparator);
 	for (unsigned int i = 0; i < cond->terms.size(); i++) {

@@ -49,27 +49,27 @@ private:
 	std::vector<TVarValue> reachedValues;
 
 	void initialize();
-	void addEffects(SASAction* a);
+	void addEffects(std::shared_ptr<SASAction> a);
 	void addEffect(TVariable var, TValue value);
 	void expand();
 	void addSubgoals(std::vector<TVarValue>* goals, PriorityQueue* openConditions);
 	void addSubgoal(TVariable var, TValue value, PriorityQueue* openConditions);
-	void addSubgoals(SASAction* a, PriorityQueue* openConditions);
-	uint16_t getDifficulty(SASAction* a);
+	void addSubgoals(std::shared_ptr<SASAction> a, PriorityQueue* openConditions);
+	uint16_t getDifficulty(std::shared_ptr<SASAction> a);
 	uint16_t getDifficulty(SASCondition* c);
-	uint16_t getDifficultyWithPermanentMutex(SASAction* a);
-	void addTILactions(std::vector<SASAction*>* tilActions);
-	void addUsefulAction(SASAction* a, std::vector<SASAction*>* usefulActions);
+	uint16_t getDifficultyWithPermanentMutex(std::shared_ptr<SASAction> a);
+	void addTILactions(std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void addUsefulAction(std::shared_ptr<SASAction> a, std::vector<std::shared_ptr<SASAction>>* usefulActions);
 	uint16_t computeHeuristic(bool mutex, PriorityQueue* openConditions);
 	void resetReachedValues();
 
 public:
-	std::vector<SASAction*> relaxedPlan;
+	std::vector<std::shared_ptr<SASAction>> relaxedPlan;
 
 	RPG(std::vector< std::vector<TValue> >& varValues, std::shared_ptr<SASTask> task, bool forceAtEndConditions,
-		std::vector<SASAction*>* tilActions);
-	RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<SASAction*>* tilActions);
-	bool isExecutable(SASAction* a);
+		std::vector<std::shared_ptr<SASAction>>* tilActions);
+	RPG(TState* state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	bool isExecutable(std::shared_ptr<SASAction> a);
 	uint16_t evaluate(bool mutex);
 	uint16_t evaluate(TVarValue goal, bool mutex);
 	uint16_t evaluate(std::vector<TVarValue>* goals, bool mutex);

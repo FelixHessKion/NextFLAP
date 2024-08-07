@@ -27,7 +27,7 @@ private:
 	Planner* parentPlanner;
 	unsigned int expandedNodes;
 	Successors* successors;
-	std::vector<SASAction*>* tilActions;
+	std::vector<std::shared_ptr<SASAction>>* tilActions;
 	float initialH;
 	std::shared_ptr<Plan> solution;
 	std::vector<std::shared_ptr<Plan>> sucPlans;
@@ -47,7 +47,7 @@ private:
 
 public:
 	Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, TState* initialState, bool forceAtEndConditions,
-		bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions);
+		bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	std::shared_ptr<Plan> plan(float bestMakespan, clock_t startTime);
 	void clearSolution();
 };

@@ -11,20 +11,20 @@ using namespace std;
 
 //#define DEBUG_TEMPORALRPG_ON
 
-void TemporalRPG::initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions) {
+void TemporalRPG::initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	verifyFluent = false;
 	this->untilGoals = untilGoals;
 	this->task = task;
 	this->tilActions = tilActions;
 	if (untilGoals) {
 		for (unsigned int i = 0; i < task->goals.size(); i++) {
-			SASAction& goal = task->goals[i];
-			for (unsigned int j = 0; j < goal.startCond.size(); j++)
-				addGoalToAchieve(goal.startCond[j]);
-			for (unsigned int j = 0; j < goal.overCond.size(); j++)
-				addGoalToAchieve(goal.overCond[j]);
-			for (unsigned int j = 0; j < goal.endCond.size(); j++)
-				addGoalToAchieve(goal.endCond[j]);
+      std::shared_ptr<SASAction> goal = task->goals[i];
+			for (unsigned int j = 0; j < goal->startCond.size(); j++)
+				addGoalToAchieve(goal->startCond[j]);
+			for (unsigned int j = 0; j < goal->overCond.size(); j++)
+				addGoalToAchieve(goal->overCond[j]);
+			for (unsigned int j = 0; j < goal->endCond.size(); j++)
+				addGoalToAchieve(goal->endCond[j]);
 		}
 	}
 	numActions = task->actions.size();
@@ -58,12 +58,12 @@ void TemporalRPG::build(TState* state) {
 	float auxLevel;
 	while (qPNormal.size() > 0) {
 		FluentLevel* fl = (FluentLevel*)qPNormal.poll();
-		std::vector<SASAction*>& req = task->requirers[fl->variable][fl->value];
+		std::vector<std::shared_ptr<SASAction>>& req = task->requirers[fl->variable][fl->value];
 #ifdef DEBUG_TEMPORALRPG_ON
 		cout << "EXTR.: " << fl->toString(task) << ", " << req.size() << " requirers" << endl;
 #endif
 		for (unsigned int i = 0; i < req.size(); i++) {
-			SASAction* a = req[i];
+			std::shared_ptr<SASAction> a = req[i];
 			if (visitedAction[a->index] == 0) {
 				if (verifyFluent && actionProducesFluent(a)) visitedAction[a->index] = 1;
 				else {
@@ -164,7 +164,7 @@ void TemporalRPG::init(TState* state) {
 		firstGenerationTime[SASTask::getVariableValueCode(fluentToVerify.variable, fluentToVerify.value)] = -1;
 	}
 	for (int i = 0; i < numActions; i++) {
-		SASAction* a = &(task->actions[i]);
+		std::shared_ptr<SASAction> a = task->actions[i];
 		if (visitedAction[a->index] == 0)
 			programAction(a, state);
 	}
@@ -175,7 +175,7 @@ void TemporalRPG::init(TState* state) {
 	}
 }
 
-void TemporalRPG::programAction(SASAction* a, TState* state) {
+void TemporalRPG::programAction(std::shared_ptr<SASAction> a, TState* state) {
 	TVariable v;
 	TValue value;
 	float level, duration;
@@ -265,7 +265,7 @@ bool TemporalRPG::checkAcheivedGoals() {
 	return goalsToAchieve.empty();
 }
 
-bool TemporalRPG::actionProducesFluent(SASAction* a) {
+bool TemporalRPG::actionProducesFluent(std::shared_ptr<SASAction> a) {
 	for (unsigned int i = 0; i < a->startEff.size(); i++) {
 		if (a->startEff[i].var == fluentToVerify.variable && a->startEff[i].value == fluentToVerify.value)
 			return true;
@@ -322,16 +322,16 @@ void TemporalRPG::computeLiteralLevels() {
 void TemporalRPG::computeActionLevels(TState* state) {
 	actionLevels = std::make_unique<float[]>(numActions);
 	for (int i = 0; i < numActions; i++) {
-		actionLevels[i] = getActionLevel(&(task->actions[i]), state);
+		actionLevels[i] = getActionLevel(task->actions[i], state);
 #ifdef DEBUG_TEMPORALRPG_ON
 		cout << "Action: " << task->actions[i].name << ", level " << actionLevels[i] << endl;
 #endif
 	}
 	for (unsigned int i = 0; i < fluentList.size(); i++) {
 		LMFluent& f = fluentList[i];
-		std::vector<SASAction*>& p = task->producers[f.variable][f.value];
+		std::vector<std::shared_ptr<SASAction>>& p = task->producers[f.variable][f.value];
 		for (unsigned int j = 0; j < p.size(); j++) {
-			SASAction* a = p[j];
+			std::shared_ptr<SASAction> a = p[j];
 			if (actionLevels[a->index] < f.level && actionLevels[a->index] >= 0) {
 				f.producers.push_back(a);
 			}
@@ -339,7 +339,7 @@ void TemporalRPG::computeActionLevels(TState* state) {
 	}
 }
 
-float TemporalRPG::getActionLevel(SASAction* a, TState* state) {
+float TemporalRPG::getActionLevel(std::shared_ptr<SASAction> a, TState* state) {
 	float res = 0, level;
 	for (unsigned int i = 0; i < a->startCond.size(); i++) {
 		level = getFirstGenerationTime(a->startCond[i].var, a->startCond[i].value);

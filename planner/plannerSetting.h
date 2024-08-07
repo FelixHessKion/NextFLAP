@@ -22,15 +22,15 @@ private:
 	clock_t initialTime;
 	bool generateTrace;
   std::shared_ptr<Plan> initialPlan;
-	std::vector<SASAction*> tilActions;
+	std::vector<std::shared_ptr<SASAction>> tilActions;
 	bool forceAtEndConditions;
 	bool filterRepeatedStates;
 	TState* initialState;
 	Planner* planner;
 
 	void createInitialPlan();
-	SASAction* createInitialAction();
-	SASAction* createFictitiousAction(float actionDuration, std::vector<unsigned int>& varList,
+	std::shared_ptr<SASAction> createInitialAction();
+	std::shared_ptr<SASAction> createFictitiousAction(float actionDuration, std::vector<unsigned int>& varList,
 		float timePoint, std::string name, bool isTIL, bool isGoal);
 	void createTILactions(std::shared_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultPlan);
 	bool checkForceAtEndConditions();	// Check if it's required to leave at-end conditions not supported for some actions

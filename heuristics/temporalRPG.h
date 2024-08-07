@@ -42,7 +42,7 @@ public:
 	float level;
 	int index;
 	bool isGoal;
-	std::vector<SASAction*> producers;
+	std::vector<std::shared_ptr<SASAction>> producers;
 	LMFluent() { }
 	LMFluent(LMFluent* cp) {
 		variable = cp->variable;
@@ -80,7 +80,7 @@ private:
 	std::vector< std::vector<TVarValue> > fluentLevels;		// List of fluents at each level
 	std::unordered_map<float, int> fluentLevelIndex;		// Time -> level
   std::unique_ptr<float[]> actionLevels;									// Starting time of each action
-	std::vector<SASAction*>* tilActions;
+	std::vector<std::shared_ptr<SASAction>>* tilActions;
 
 	void addGoalToAchieve(SASCondition& c);
 	void init(TState* state);
@@ -93,13 +93,13 @@ private:
 		else return got->second;
 	}
 	bool checkAcheivedGoals();
-	bool actionProducesFluent(SASAction* a);
+	bool actionProducesFluent(std::shared_ptr<SASAction> a);
 	void clearPriorityQueue();
-	float getActionLevel(SASAction* a, TState* state);
-	void programAction(SASAction* a, TState* state);
+	float getActionLevel(std::shared_ptr<SASAction> a, TState* state);
+	void programAction(std::shared_ptr<SASAction> a, TState* state);
 
 public:
-	void initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<SASAction*>* tilActions);
+	void initialize(bool untilGoals, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	~TemporalRPG();
 	void build(TState* state);
 	void computeLiteralLevels();

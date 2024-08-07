@@ -14,7 +14,7 @@
 
 using namespace std;
 
-std::string PrintPlan::actionName(SASAction* a)
+std::string PrintPlan::actionName(std::shared_ptr<SASAction> a)
 {
 	return a->name;
 }
