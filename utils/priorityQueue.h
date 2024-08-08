@@ -9,21 +9,22 @@
 /********************************************************/
 
 #include <vector>
+#include <memory>
 
 #define DEFAULT_PQ_CAPACITY	 250
 
 class PriorityQueueItem {
 public:
-	virtual int compare(PriorityQueueItem* other) = 0;
+	virtual int compare(std::shared_ptr<PriorityQueueItem> other) = 0;
 	virtual ~PriorityQueueItem() { }
 };
 
 class PriorityQueue {
 private:
-	std::vector<PriorityQueueItem*> pq;		// Priority queue
+	std::vector<std::shared_ptr<PriorityQueueItem>> pq;		// Priority queue
 
 	void heapify(unsigned int gap) {
-		PriorityQueueItem* aux = pq[gap];
+		std::shared_ptr<PriorityQueueItem> aux = pq[gap];
 		unsigned int child = gap << 1;
 		while (child < pq.size()) {
 			if (child != pq.size() - 1 && pq[child + 1]->compare(pq[child]) < 0)
@@ -47,7 +48,7 @@ public:
 		pq.push_back(nullptr);	// Position 0 empty
 	}
 
-	void add(PriorityQueueItem* p) {
+	void add(std::shared_ptr<PriorityQueueItem> p) {
 		unsigned int gap = (unsigned int)pq.size();
 		pq.push_back(nullptr);
 		while (gap > 1 && p->compare(pq[gap >> 1]) < 0) {
@@ -61,12 +62,12 @@ public:
 		return (int)pq.size() - 1;
 	}
 	
-	inline PriorityQueueItem* peek() {
+	inline std::shared_ptr<PriorityQueueItem> peek() {
 		return pq[1];
 	}
 	
-	PriorityQueueItem* poll() {
-		PriorityQueueItem* next = pq[1];
+	std::shared_ptr<PriorityQueueItem> poll() {
+		std::shared_ptr<PriorityQueueItem> next = pq[1];
 		if (pq.size() > 2) {
 			pq[1] = pq.back();
 			pq.pop_back();
@@ -81,7 +82,7 @@ public:
 		pq.push_back(nullptr);	// Position 0 empty
 	}
 
-	inline PriorityQueueItem* at(unsigned int i) {
+	inline std::shared_ptr<PriorityQueueItem> at(unsigned int i) {
 		return pq[i];
 	}
 

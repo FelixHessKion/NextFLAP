@@ -66,8 +66,8 @@ public:
 		level = l;
 		producer = p;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		return ((NumericRPGCondition*)other)->level - level;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		return std::dynamic_pointer_cast<NumericRPGCondition>(other)->level - level;
 	}
 	virtual ~NumericRPGCondition() { }
 };
@@ -112,16 +112,16 @@ private:
 	bool updateNumericValues(int level);
 	void checkAction(std::shared_ptr<SASAction> a, int level);
 	bool checkGoal(std::shared_ptr<SASAction> a, int level);
-	void addSubgoals(std::shared_ptr<SASAction> a, int level, NumericRPGCondition* cp);
+	void addSubgoals(std::shared_ptr<SASAction> a, int level, std::shared_ptr<NumericRPGCondition> cp);
 	void addSubgoal(SASCondition* c);
-	void addSubgoal(std::shared_ptr<SASAction> a, SASNumericCondition* c, int level, std::vector<NumericRPGCondition*>* numCond);
+	void addSubgoal(std::shared_ptr<SASAction> a, SASNumericCondition* c, int level, std::vector<std::shared_ptr<NumericRPGCondition>>* numCond);
 	std::shared_ptr<SASAction> searchBestAction(TVariable v, TValue value, int level, int* actionLevel);
 	int findLevel(int actionIndex, int maxLevel);
 	int findMinNumVarLevel(TVariable v, int maxLevel);
 	int findMaxNumVarLevel(TVariable v, int maxLevel);
-	void addMinValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond);
-	void addMaxValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<NumericRPGCondition*>* numCond);
-	void addNumericSubgoal(TVariable v, int level, bool max, std::vector<NumericRPGCondition*>* numCond);
+	void addMinValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<std::shared_ptr<NumericRPGCondition>>* numCond);
+	void addMaxValueSubgoal(std::shared_ptr<SASAction> a, SASNumericExpression* e, int level, std::vector<std::shared_ptr<NumericRPGCondition>>* numCond);
+	void addNumericSubgoal(TVariable v, int level, bool max, std::vector<std::shared_ptr<NumericRPGCondition>>* numCond);
   std::shared_ptr<bool[]> calculateCondEffHold(std::shared_ptr<SASAction> a, int level, IntervalCalculations& ic);
 	bool checkCondEffectHold(SASConditionalEffect& e, int level, IntervalCalculations& ic);
 

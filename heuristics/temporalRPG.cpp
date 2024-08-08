@@ -45,8 +45,7 @@ void TemporalRPG::addGoalToAchieve(SASCondition& c) {
 
 void TemporalRPG::clearPriorityQueue() {
 	while (qPNormal.size() > 0) {
-		FluentLevel* fl = (FluentLevel*)qPNormal.poll();
-		delete fl;
+		std::shared_ptr<FluentLevel> fl = std::dynamic_pointer_cast<FluentLevel>(qPNormal.poll());
 	}
 }
 
@@ -57,7 +56,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 	}
 	float auxLevel;
 	while (qPNormal.size() > 0) {
-		FluentLevel* fl = (FluentLevel*)qPNormal.poll();
+		std::shared_ptr<FluentLevel> fl = std::dynamic_pointer_cast<FluentLevel>(qPNormal.poll());
 		std::vector<std::shared_ptr<SASAction>>& req = task->requirers[fl->variable][fl->value];
 #ifdef DEBUG_TEMPORALRPG_ON
 		cout << "EXTR.: " << fl->toString(task) << ", " << req.size() << " requirers" << endl;
@@ -95,7 +94,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 								auxLevel = getFirstGenerationTime(v, value);
 								if (auxLevel == -1 || auxLevel > effLevel) {
 									firstGenerationTime[SASTask::getVariableValueCode(v, value)] = effLevel;
-									qPNormal.add(new FluentLevel(v, value, effLevel));
+									qPNormal.add(std::make_shared<FluentLevel>(v, value, effLevel));
 #ifdef DEBUG_TEMPORALRPG_ON
 									cout << "* PROG: (" << task->variables[v].name << "," << task->values[value].name << ") -> " << effLevel << endl;
 #endif
@@ -108,7 +107,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 								auxLevel = getFirstGenerationTime(v, value);
 								if (auxLevel == -1 || auxLevel > effLevel) {
 									firstGenerationTime[SASTask::getVariableValueCode(v, value)] = effLevel;
-									qPNormal.add(new FluentLevel(v, value, effLevel));
+									qPNormal.add(std::make_shared<FluentLevel>(v, value, effLevel));
 #ifdef DEBUG_TEMPORALRPG_ON
 									cout << "* PROG: (" << task->variables[v].name << "," << task->values[value].name << ") -> " << effLevel << endl;
 #endif
@@ -134,7 +133,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 							auxLevel = getFirstGenerationTime(c.var, c.value);
 							if (auxLevel == -1 || auxLevel > effLevel) {
 								firstGenerationTime[SASTask::getVariableValueCode(c.var, c.value)] = effLevel;
-								qPNormal.add(new FluentLevel(c.var, c.value, effLevel));
+								qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, effLevel));
 							}
 						}
 						effLevel += task->getActionDuration(a, state->minState);
@@ -142,14 +141,13 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 							auxLevel = getFirstGenerationTime(c.var, c.value);
 							if (auxLevel == -1 || auxLevel > effLevel) {
 								firstGenerationTime[SASTask::getVariableValueCode(c.var, c.value)] = effLevel;
-								qPNormal.add(new FluentLevel(c.var, c.value, effLevel));
+								qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, effLevel));
 							}
 						}
 					}
 				}
 			}
 		}
-		delete fl;
 		if (untilGoals && checkAcheivedGoals()) {
 			clearPriorityQueue();
 		}
@@ -205,7 +203,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 			level = getFirstGenerationTime(v, value);
 			if (level == -1) {
 				firstGenerationTime[SASTask::getVariableValueCode(v, value)] = EPSILON;
-				qPNormal.add(new FluentLevel(v, value, EPSILON));
+				qPNormal.add(std::make_shared<FluentLevel>(v, value, EPSILON));
 #ifdef DEBUG_TEMPORALRPG_ON
 				cout << "* PROG: (" << task->variables[v].name << "," << task->values[value].name << ") -> " << EPSILON << endl;
 #endif
@@ -227,7 +225,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 					level = getFirstGenerationTime(c.var, c.value);
 					if (level == -1) {
 						firstGenerationTime[SASTask::getVariableValueCode(c.var, c.value)] = EPSILON;
-						qPNormal.add(new FluentLevel(c.var, c.value, EPSILON));
+						qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, EPSILON));
 					}
 				}
 				for (SASCondition &c : e.endEff) {
@@ -235,7 +233,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 					if (level == -1) {
 						if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState);
 						firstGenerationTime[SASTask::getVariableValueCode(c.var, c.value)] = duration;
-						qPNormal.add(new FluentLevel(c.var, c.value, duration));
+						qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, duration));
 					}
 				}
 			}
@@ -248,7 +246,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 			if (level == -1) {
 				if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState);
 				firstGenerationTime[SASTask::getVariableValueCode(v, value)] = duration;
-				qPNormal.add(new FluentLevel(v, value, duration));
+				qPNormal.add(std::make_shared<FluentLevel>(v, value, duration));
 #ifdef DEBUG_TEMPORALRPG_ON
 				cout << "* PROG: (" << task->variables[v].name << "," << task->values[value].name << ") -> " << duration << endl;
 #endif
@@ -300,12 +298,12 @@ void TemporalRPG::computeLiteralLevels() {
 		TVariable v = fluentList[i].variable;
 		TValue value = fluentList[i].value;
 		fluentIndex[SASTask::getVariableValueCode(v, value)] = fluentList[i].index;
-		qPNormal.add(new FluentLevel(v, value, fluentList[i].level));
+		qPNormal.add(std::make_shared<FluentLevel>(v, value, fluentList[i].level));
 	}
 	float currentLevel = -1;
 	int i = -1;
 	while (qPNormal.size() > 0) {
-		FluentLevel* fl = (FluentLevel*)qPNormal.poll();
+		std::shared_ptr<FluentLevel> fl = std::dynamic_pointer_cast<FluentLevel>(qPNormal.poll());
 		if (fl->level > currentLevel) {
 #ifdef DEBUG_TEMPORALRPG_ON
 			cout << "Level: " << fl->level << endl;
@@ -315,7 +313,6 @@ void TemporalRPG::computeLiteralLevels() {
 			fluentLevelIndex[currentLevel] = ++i;
 		}
 		fluentLevels[i].push_back(SASTask::getVariableValueCode(fl->variable, fl->value));
-		delete fl;
 	}
 }
 

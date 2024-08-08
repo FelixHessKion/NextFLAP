@@ -158,14 +158,13 @@ uint16_t FF_RPG::computeHeuristic(PriorityQueue* openConditions) {
 	uint16_t bestCost;
 	uint16_t h = 0;
 	while (openConditions->size() > 0) {
-		FF_RPGCondition* g = (FF_RPGCondition*)openConditions->poll();
+    std::shared_ptr<FF_RPGCondition> g = std::dynamic_pointer_cast<FF_RPGCondition>(openConditions->poll());
 		//if (debug) cout << "Condition: " << task->variables[g->var].name << " = " << task->values[g->value].name << " (level " << literalLevels[g->var][g->value] << ")" << endl;
 #ifdef DEBUG_RPG_ON
 		cout << "Condition: " << task->variables[g->var].name << " = " << task->values[g->value].name << " (level " << literalLevels[g->var][g->value] << ")" << endl;
 #endif
 		gLevel = literalLevels[g->var][g->value];
 		if (gLevel <= 0) {
-			delete g;
 			continue;
 		}
 		if (gLevel == MAX_INT32) return MAX_UINT16;
@@ -197,7 +196,6 @@ uint16_t FF_RPG::computeHeuristic(PriorityQueue* openConditions) {
 				}
 			}
 		}
-		delete g;
 		if (bestAction != nullptr) {
 			//if (debug) cout << bestAction->name << endl;
 #ifdef DEBUG_RPG_ON
@@ -239,7 +237,7 @@ void FF_RPG::addSubgoals(std::vector<TVarValue>* goals, PriorityQueue* openCondi
 void FF_RPG::addSubgoal(TVariable var, TValue value, PriorityQueue* openConditions) {
 	int level = literalLevels[var][value];
 	if (level > 0) {
-		openConditions->add(new FF_RPGCondition(var, value, level));
+		openConditions->add(std::make_shared<FF_RPGCondition>(var, value, level));
 #ifdef DEBUG_RPG_ON
 		cout << "* Adding subgoal: " << task->variables[var].name << " = " << task->values[value].name << " (level " << level << ")" << endl;
 #endif

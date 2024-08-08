@@ -18,8 +18,8 @@ public:
 		value = val;
 		level = l;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		return ((FF_RPGCondition*)other)->level - level;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		return std::dynamic_pointer_cast<FF_RPGCondition>(other)->level - level;
 	}
 	virtual ~FF_RPGCondition() { }
 };

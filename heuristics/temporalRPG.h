@@ -24,8 +24,8 @@ public:
 		value = val;
 		level = lev;
 	}
-	virtual inline int compare(PriorityQueueItem* other) {
-		float otherLevel = ((FluentLevel*)other)->level;
+	virtual inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		float otherLevel = std::dynamic_pointer_cast<FluentLevel>(other)->level;
 		if (level < otherLevel) return -1;
 		else if (level > otherLevel) return 1;
 		else return 0;

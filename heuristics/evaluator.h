@@ -34,8 +34,8 @@ public:
 		time = t;
 		plan = pl;
 	}
-	virtual inline int compare(PriorityQueueItem* other) {
-		double otherTime = ((ScheduledPoint*)other)->time;
+	virtual inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		double otherTime = std::dynamic_pointer_cast<ScheduledPoint>(other)->time;
 		if (time < otherTime) return -1;
 		else if (time > otherTime) return 1;
 		else return 0;

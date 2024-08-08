@@ -56,8 +56,8 @@ void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_p
 	pq.clear();
 	for (unsigned int i = 1; i < planComponents.size(); i++) {
 		std::shared_ptr<Plan> p = planComponents.get(i);
-		pq.add(new ScheduledPoint(stepToStartPoint(i), p->startPoint.updatedTime, p));
-		pq.add(new ScheduledPoint(stepToEndPoint(i), p->endPoint.updatedTime, p));
+		pq.add(std::make_shared<ScheduledPoint>(stepToStartPoint(i), p->startPoint.updatedTime, p));
+		pq.add(std::make_shared<ScheduledPoint>(stepToEndPoint(i), p->endPoint.updatedTime, p));
 		if (!p->action->isTIL && !p->action->isGoal) {
 			int index = p->action->index;
 			if (visitedActions.find(index) == visitedActions.end()) {
@@ -70,7 +70,7 @@ void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_p
 	}
 	std::shared_ptr<LandmarkCheck> l, al;
 	while (pq.size() > 0) {
-		ScheduledPoint* p = (ScheduledPoint*)pq.poll();
+		std::shared_ptr<ScheduledPoint> p = std::dynamic_pointer_cast<ScheduledPoint>(pq.poll());
 		std::shared_ptr<SASAction> a = p->plan->action;
 		bool atStart = (p->p & 1) == 0;
 		std::vector<SASCondition>* eff = atStart ? &a->startEff : &a->endEff;
@@ -87,7 +87,6 @@ void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_p
 				}
 			}
 		}
-		delete p;
 		if (numEff != nullptr) {
 			for (TFluentInterval& f : *numEff) {
 				fs->minState[f.numVar] = f.interval.minValue;

@@ -49,10 +49,10 @@ public:
 		newTime = t;
 		linearOrderIndex = i;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		int res = linearOrderIndex - ((PBTimepointToDelay*)other)->linearOrderIndex;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		int res = linearOrderIndex - std::dynamic_pointer_cast<PBTimepointToDelay>(other)->linearOrderIndex;
 		if (res == 0) {
-			if (newTime < ((PBTimepointToDelay*)other)->newTime) return 1;
+			if (newTime < std::dynamic_pointer_cast<PBTimepointToDelay>(other)->newTime) return 1;
 			else return -1;
 		}
 		else return res;

@@ -155,22 +155,21 @@ bool PlanBuilder::delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& p
 		if ((tp & 1) == 1) { // End of the action -> delay its begining
 			std::shared_ptr<Plan> step = planEffects->planComponents->get(timePointToStep(tp));
 			TFloatValue startTime = step->startPoint.updatedTime + newTime[i] - step->endPoint.updatedTime;
-			pq.add(new PBTimepointToDelay(tp - 1, startTime, indexInLinearOrder[tp - 1]));
+			pq.add(std::make_shared<PBTimepointToDelay>(tp - 1, startTime, indexInLinearOrder[tp - 1]));
 		}
 		else {
-			pq.add(new PBTimepointToDelay(pointToDelay[i], newTime[i], indexInLinearOrder[pointToDelay[i]]));
+			pq.add(std::make_shared<PBTimepointToDelay>(pointToDelay[i], newTime[i], indexInLinearOrder[pointToDelay[i]]));
 		}
 	}
 	std::vector<TFloatValue> resNewTimes(linearOrder.size(), FLOAT_INFINITY);
 	bool ok = true;
 	TStep currentStep = timePointToStep(lastTimePoint);
 	while (pq.size() > 0 && ok) {
-		PBTimepointToDelay* pqItem = (PBTimepointToDelay*)pq.poll();
+    std::shared_ptr<PBTimepointToDelay> pqItem = std::dynamic_pointer_cast<PBTimepointToDelay>(pq.poll());
 		TTimePoint tp = pqItem->tp;
 		TFloatValue pqNewTime = pqItem->newTime;
 		int pqOrder = pqItem->linearOrderIndex;
 		//cout << "Timepoint: " << tp << ", Order: " << pqOrder << ", Time: " << pqNewTime << endl;
-		delete pqItem;
 		if (resNewTimes[tp] != FLOAT_INFINITY && resNewTimes[tp] < pqNewTime) { // New delay -> avoid inf. loops
 			ok = false; // Let Z3 to solve
 			break;
@@ -193,7 +192,7 @@ bool PlanBuilder::delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& p
 						TTimePoint nextTimepoint = linearOrder[nextIndex];
 						if (existOrder(tp + 1, nextTimepoint)) {
 							//cout << "* Timepoint " << nextTimepoint << " added by " << (tp + 1) << endl;
-							pq.add(new PBTimepointToDelay(nextTimepoint, resNewTimes[tp + 1] + EPSILON, nextIndex));
+							pq.add(std::make_shared<PBTimepointToDelay>(nextTimepoint, resNewTimes[tp + 1] + EPSILON, nextIndex));
 						}
 					}
 				}
@@ -203,13 +202,13 @@ bool PlanBuilder::delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& p
 					TTimePoint nextTimepoint = linearOrder[nextIndex];
 					if (existOrder(tp, nextTimepoint)) {
 						//cout << "* Timepoint " << nextTimepoint << " added by " << tp << endl;
-						pq.add(new PBTimepointToDelay(nextTimepoint, resNewTimes[tp] + EPSILON, nextIndex));
+						pq.add(std::make_shared<PBTimepointToDelay>(nextTimepoint, resNewTimes[tp] + EPSILON, nextIndex));
 					}
 				}
 			}	
 		}
 	}
-	while (pq.size() > 0) delete (PBTimepointToDelay*)pq.poll();
+	while (pq.size() > 0) pq.poll();
 	if (ok) {
 		for (int tp = 0; tp < resNewTimes.size(); tp++) {
 			if (resNewTimes[tp] != FLOAT_INFINITY) {
