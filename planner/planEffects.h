@@ -55,7 +55,7 @@ private:
 
 public:
 	PlanEffect** planEffects;							// Plan effects: (var, value) -> PlanEffect
-	VarChange* varChanges;								// Variable changes: var -> VarChange
+  std::unique_ptr<VarChange[]> varChanges;								// Variable changes: var -> VarChange
 	std::vector<NumVarChange> numStates;				// Sequence of numeric states in each timepoint
 	unsigned int iteration;
 	PlanComponents* planComponents;
