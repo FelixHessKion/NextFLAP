@@ -102,7 +102,7 @@ void Plan::addFluentIntervals()
 
 void Plan::addChildren(std::vector<std::shared_ptr<Plan>>& suc)
 {
-	childPlans = new std::vector<std::shared_ptr<Plan>>(suc);
+	childPlans = std::make_shared<std::vector<std::shared_ptr<Plan>>>(suc);
 }
 
 void Plan::addPlanUpdate(TTimePoint tp, TFloatValue time)

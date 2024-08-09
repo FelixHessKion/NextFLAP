@@ -683,7 +683,7 @@ unsigned int Successors::addActionSupport(PlanBuilder* pb, TVariable var, TValue
 void Successors::computeSuccessorsThroughBrotherPlans()
 {
 	std::shared_ptr<Plan> parentPlan = basePlan->parentPlan;
-	vector<std::shared_ptr<Plan>>* brotherPlans = parentPlan->childPlans;
+  std::shared_ptr<vector<std::shared_ptr<Plan>>> brotherPlans = parentPlan->childPlans;
 	for (unsigned int i = 0; i < brotherPlans->size(); i++) {
 		std::shared_ptr<Plan> brotherPlan = (*brotherPlans)[i];
 		if (brotherPlan != basePlan && !brotherPlan->expanded() && !visitedAction(brotherPlan->action)) {

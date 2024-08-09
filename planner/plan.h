@@ -75,7 +75,7 @@ private:
 public:
 	TPlanId id;
   std::shared_ptr<Plan> parentPlan;						// Pointer to its parent plan
-	std::vector<std::shared_ptr<Plan>>* childPlans;			// Vector of child plans. This vector is nullptr if
+  std::shared_ptr<std::vector<std::shared_ptr<Plan>>> childPlans;			// Vector of child plans. This vector is nullptr if
 											// the plan has not been expanded yet
 	std::shared_ptr<SASAction> action;						// New action added
 	bool fixedInit;							// True if the initial time is fixed (action cannot be delayed)
