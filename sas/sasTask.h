@@ -315,7 +315,7 @@ public:
 	char metricType;								// '>' = Maximize, '<' = Minimize , 'X' = no metric specified
 	SASMetric metric;
 	bool metricDependsOnDuration;					// True if the metric depends on the plan duration
-	std::vector<std::shared_ptr<SASAction>>** requirers;
+  std::unique_ptr<std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]>[]> requirers;
   std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numRequirers;
 	std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numGoalRequirers;
 	std::vector<std::shared_ptr<SASAction>>** producers;

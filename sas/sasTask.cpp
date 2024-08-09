@@ -497,12 +497,6 @@ SASTask::SASTask() {
 }
 
 SASTask::~SASTask() {
-	if (requirers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] requirers[i];
-		}
-		delete[] requirers;
-	}
 	if (producers != nullptr) {
 		for (int i = 0; i < variables.size(); i++) {
 			delete[] producers[i];
@@ -628,9 +622,9 @@ void SASTask::computeInitialState() {
 
 // Computes the list of actions that requires a (= var value)
 void SASTask::computeRequirers() {
-	requirers = new vector<std::shared_ptr<SASAction>>*[variables.size()];
+	requirers = std::make_unique<std::unique_ptr<vector<std::shared_ptr<SASAction>>[]>[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
-		requirers[i] = new vector<std::shared_ptr<SASAction>>[values.size()];
+		requirers[i] = std::make_unique<vector<std::shared_ptr<SASAction>>[]>(values.size());
 	}
 	unsigned int numActions = actions.size();
 	for (unsigned int i = 0; i < numActions; i++) {
