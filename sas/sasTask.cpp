@@ -740,14 +740,15 @@ void SASTask::computeNumericVariablesInActions(SASNumericExpression* e, std::vec
 void SASTask::computeMutexWithVarValues() {
 	uint32_t vv1, vv2;
 	std::unordered_map<uint64_t, bool>::const_iterator got = mutex.begin();
-	std::unordered_map<uint32_t, std::vector<uint32_t>*>::const_iterator it;
+  std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>>::const_iterator it;  
 	for (; got != mutex.end(); ++got) {
 		uint64_t n = got->first;
 		vv2 = n & 0xFFFFFFFF;
 		vv1 = (uint32_t) (n >> 32);
 		it = mutexWithVarValue.find(vv1);
 		if (it == mutexWithVarValue.end()) {
-      std::vector<uint32_t> *item =  new std::vector<uint32_t>();
+      std::shared_ptr<std::vector<TVarValue>> item = std::make_shared<std::vector<TVarValue>>();
+      // std::vector<uint32_t> *item =  new std::vector<uint32_t>();
 			item->push_back(vv2);
 			mutexWithVarValue[vv1] = item;
 		} else {
@@ -798,7 +799,7 @@ void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>
 void SASTask::computePermanentMutex() {
     //clock_t tini = clock();
     computeMutexWithVarValues();
-	std::unordered_map<uint32_t, std::vector<uint32_t>*>::const_iterator it;
+	std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>>::const_iterator it;
 	std::unordered_map<uint32_t,bool>::const_iterator ug;
 	for (it = mutexWithVarValue.begin(); it != mutexWithVarValue.end(); ++it) {
 		//cout << it->second->size() << endl;

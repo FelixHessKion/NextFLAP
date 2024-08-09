@@ -274,7 +274,7 @@ public:
 class SASTask {    
 private:
     std::unordered_map<TMutex, bool> mutex;
-    std::unordered_map<TVarValue, std::vector<TVarValue>*> mutexWithVarValue;
+    std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>> mutexWithVarValue;
     std::unordered_map<TMutex, bool> permanentMutex;
     std::unordered_map<TMutex, bool> permanentMutexActions;
     std::unordered_map<std::string, unsigned int> valuesByName;
