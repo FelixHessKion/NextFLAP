@@ -93,10 +93,9 @@ public:
 	bool z3Checked;							// Plan checked by z3 solver?
 	bool invalid;							// Invalid plan (after z3 checking)
 	//int numUsefulActions;					// Number of useful actions included in the plan
-	std::vector<int>* holdCondEff;
+  std::shared_ptr<std::vector<int>> holdCondEff;
 
 	Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
-	~Plan();
 	void setDuration(TFloatValue min, TFloatValue max);
 	void setTime(TTime init, TTime end, bool fixed);
 	int compare(std::shared_ptr<Plan> p);

@@ -40,10 +40,6 @@ Plan::Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, 
 	}
 }
 
-Plan::~Plan()
-{
-	if (holdCondEff != nullptr) delete holdCondEff;
-}
 
 void Plan::addFluentIntervals(PlanPoint& pp, std::vector<SASNumericEffect>& eff)
 {
@@ -59,7 +55,7 @@ void Plan::addFluentIntervals(PlanPoint& pp, std::vector<SASNumericEffect>& eff)
 void Plan::addConditionalEffect(unsigned int numEff)
 {
 	if (holdCondEff == nullptr) {
-		holdCondEff = new vector<int>();
+		holdCondEff = std::make_shared<vector<int>>();
 	}
 	holdCondEff->push_back(numEff);
 }
