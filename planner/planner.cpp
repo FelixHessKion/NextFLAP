@@ -32,10 +32,10 @@ Planner::Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPla
 	this->expandedNodes = 0;
 	this->generateTrace = generateTrace;
 	this->tilActions = tilActions;
-	successors = new Successors(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
+	successors = std::make_unique<Successors>(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
 	this->initialH = FLOAT_INFINITY;
 	this->solution = nullptr;
-	selector = new SearchQueue();
+	selector = std::make_unique<SearchQueue>();
 	successors->evaluator.calculateFrontierState(this->initialPlan);
 	/*
 	selector->addQueue(SEARCH_NRPG);

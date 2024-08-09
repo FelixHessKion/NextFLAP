@@ -26,12 +26,12 @@ private:
 	bool generateTrace;
 	Planner* parentPlanner;
 	unsigned int expandedNodes;
-	Successors* successors;
+  std::unique_ptr<Successors> successors;
 	std::vector<std::shared_ptr<SASAction>>* tilActions;
 	float initialH;
 	std::shared_ptr<Plan> solution;
 	std::vector<std::shared_ptr<Plan>> sucPlans;
-	SearchQueue* selector;
+	std::unique_ptr<SearchQueue> selector;
 	clock_t startTime;
 	float bestMakespan;
 	int bestNumSteps;
