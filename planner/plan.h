@@ -54,7 +54,7 @@ private:
 
 public:
 	TTime updatedTime;							// Final scheduled time, after applying updates in child plans
-	std::vector<TFluentInterval>* numVarValues;	// Numeric var. values. Vector is nullptr if the action does not modify numeric vbles.
+  std::shared_ptr<std::vector<TFluentInterval>> numVarValues;	// Numeric var. values. Vector is nullptr if the action does not modify numeric vbles.
 	std::vector<TCausalLink> causalLinks;		// New causal links. TStep is the support action. These CLs are sorted like the
 												// action prec. at that time point, followed by over all precs.
 	std::vector<TNumericCausalLink> numCausalLinks;

@@ -74,7 +74,7 @@ void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_p
 		std::shared_ptr<SASAction> a = p->plan->action;
 		bool atStart = (p->p & 1) == 0;
 		std::vector<SASCondition>* eff = atStart ? &a->startEff : &a->endEff;
-		std::vector<TFluentInterval>* numEff = atStart ? p->plan->startPoint.numVarValues : p->plan->endPoint.numVarValues;
+    std::shared_ptr<std::vector<TFluentInterval>> numEff = atStart ? p->plan->startPoint.numVarValues : p->plan->endPoint.numVarValues;
 		for (SASCondition& c : *eff) {
 			fs->state[c.var] = c.value;
 		}

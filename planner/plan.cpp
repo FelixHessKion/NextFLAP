@@ -48,7 +48,7 @@ Plan::~Plan()
 void Plan::addFluentIntervals(PlanPoint& pp, std::vector<SASNumericEffect>& eff)
 {
 	if (eff.size() > 0) {
-		pp.numVarValues = new std::vector<TFluentInterval>();
+		pp.numVarValues = std::make_shared<std::vector<TFluentInterval>>();
 		for (int i = 0; i < eff.size(); i++) {
 			SASNumericEffect* ne = &(eff[i]);
 			pp.numVarValues->emplace_back(ne->var, ne->exp.value, ne->exp.value);
@@ -149,6 +149,6 @@ void PlanPoint::addNumericCausalLink(TTimePoint timePoint, TVarValue var)
 void PlanPoint::addNumericValue(TVariable v, TFloatValue min, TFloatValue max)
 {
 	if (numVarValues == nullptr)
-		numVarValues = new std::vector<TFluentInterval>();
+		numVarValues = std::make_shared<std::vector<TFluentInterval>>();
 	numVarValues->emplace_back(v, min, max);
 }
