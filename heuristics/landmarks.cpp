@@ -318,14 +318,14 @@ void LandmarkTree::addGoalNode(SASCondition* c, std::shared_ptr<TState> state) {
 	//if (state->state[c->var] == c->value) return;
 	int index = rpg.getFluentIndex(c->var, c->value);
 	if (index >= 0) {
-		LMFluent* goal = rpg.getFluentByIndex(index);
+		std::shared_ptr<LMFluent> goal = rpg.getFluentByIndex(index);
 		goal->isGoal = true;
 		// std::unique_ptr<LTNode> n = new LTNode(goal, nodes.size());
     std::shared_ptr<LTNode> n = std::make_shared<LTNode>(goal, nodes.size());
 		nodes.push_back(n);
 		fluentNode[index] = n->getIndex();
 		int levelIndex = rpg.getLevelIndex(goal->level);
-		objs[levelIndex].push_back(new LMFluent(*goal));
+		objs[levelIndex].push_back(std::make_shared<LMFluent>(*goal));
 	}
 }
 
@@ -337,7 +337,7 @@ void LandmarkTree::exploreRPG() {
 		cout << "EXPLORING LEVEL " << level << ", whith " << objs[level].size() << " items" << endl;
 #endif
 		for (unsigned int i = 0; i < objs[level].size(); i++) {
-			LMFluent* obj = objs[level][i];
+			std::shared_ptr<LMFluent> obj = objs[level][i];
 #ifdef DEBUG_LANDMARKS_ON		
 			cout << "* Obj: " << obj->toString(task) << endl;
 #endif
@@ -384,8 +384,8 @@ void LandmarkTree::exploreRPG() {
 void LandmarkTree::actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, std::shared_ptr<LTNode> g, int level) {
 	if (a->size() == 0) return;
 	std::vector<std::shared_ptr<USet>> d;		// Calculating I set: preconditions that
-	std::vector<LMFluent*> i;	// are common to all the actions in A
-	std::vector<LMFluent*> u;
+	std::vector<std::shared_ptr<LMFluent>> i;	// are common to all the actions in A
+	std::vector<std::shared_ptr<LMFluent>> u;
 	unsigned int numFluents = rpg.getFluentListSize();
   std::unique_ptr<int[]> common = std::make_unique<int[]>(numFluents);
 	for (unsigned int n = 0; n < numFluents; n++) common[n] = 0;
@@ -401,7 +401,7 @@ void LandmarkTree::actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, 
 		else if (common[n] > 0) u.push_back(rpg.getFluentByIndex(n));
 	}
 	for (unsigned int n = 0; n < i.size(); n++) {	// Exploring candidate landmarks in I 
-		LMFluent* p = i[n];
+		std::shared_ptr<LMFluent> p = i[n];
 #ifdef DEBUG_LANDMARKS_ON		
 		cout << " - Candidate: " << p->toString(task) << endl;
 #endif
@@ -487,7 +487,7 @@ std::shared_ptr<USet> LandmarkTree::findDisjObject(std::shared_ptr<USet> u, int 
 	return nullptr;
 }
 
-void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<LMFluent*>* u, std::vector<std::shared_ptr<SASAction>>* a) {
+void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<std::shared_ptr<LMFluent>>* u, std::vector<std::shared_ptr<SASAction>>* a) {
 	res->clear();
 	std::vector<std::shared_ptr<USet>> hashU;
 	std::vector<std::shared_ptr<USet>> aux;
@@ -495,7 +495,7 @@ void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vecto
 	cout << "U size: " << u->size() << endl;
 #endif
 	for (unsigned int i = 0; i < u->size(); i++) {
-		LMFluent* l = u->at(i);
+		std::shared_ptr<LMFluent> l = u->at(i);
 		unsigned int f = task->values[l->value].fncIndex;
 #ifdef DEBUG_LANDMARKS_ON		
 		cout << "U: " << l->toString(task) << ", fnc = " << f << endl;
@@ -588,7 +588,7 @@ void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vecto
 }
 
 void LandmarkTree::analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_ptr<SASAction>>* a, std::vector<std::shared_ptr<USet>>* u1) {
-	std::vector< std::vector<LMFluent*> > fluentProducers(a->size());
+	std::vector< std::vector<std::shared_ptr<LMFluent>> > fluentProducers(a->size());
 	// Grouping the literals in the set according to the actions that generated them
 	for (unsigned int i = 0; i < a->size(); i++) {
 		std::shared_ptr<SASAction> action = a->at(i);
@@ -628,17 +628,17 @@ void LandmarkTree::analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_p
 	// An uSet has only one element per action in A
 	bool finish = false;
 	for (unsigned int i = 0; i < fluentProducers[0].size() && !finish; i++) {
-		LMFluent* l = fluentProducers[0][i];
+		std::shared_ptr<LMFluent> l = fluentProducers[0][i];
     std::shared_ptr<USet> u = std::make_shared<USet>();
 		u->initialize(l, s->id);
 		for (unsigned int j = 1; j < fluentProducers.size(); j++) {
-			std::vector<LMFluent*>* actionFluents = &(fluentProducers[j]);
+			std::vector<std::shared_ptr<LMFluent>>* actionFluents = &(fluentProducers[j]);
 			if (actionFluents->size() == 0) {
 				finish = true;
 				break;
 			}
 			int k = equalParameters(l, actionFluents);
-			LMFluent* similar = actionFluents->at(k);
+			std::shared_ptr<LMFluent> similar = actionFluents->at(k);
 			actionFluents->erase(actionFluents->begin() + k);
 			u->addElement(similar);
 		}
@@ -646,13 +646,13 @@ void LandmarkTree::analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_p
 	}
 }
 
-bool LandmarkTree::verify(LMFluent* p) {
+bool LandmarkTree::verify(std::shared_ptr<LMFluent> p) {
 	if (p->isGoal) return true;
 	LandmarkRPG r;
 	return r.verifyFluent(p->variable, p->value, state, task);
 }
 
-bool LandmarkTree::verify(std::vector<LMFluent*>* v) {
+bool LandmarkTree::verify(std::vector<std::shared_ptr<LMFluent>>* v) {
 	LandmarkRPG r;
 	std::vector<TVariable> var;
 	std::vector<TValue> val;
@@ -712,7 +712,7 @@ void LandmarkTree::checkPreconditions(std::shared_ptr<SASAction> a, std::unique_
 	}
 }
 
-int LandmarkTree::equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFluents) {
+int LandmarkTree::equalParameters(std::shared_ptr<LMFluent> l, std::vector<std::shared_ptr<LMFluent>>* actionFluents) {
 	std::vector<int> candidates = std::vector<int>();
 	std::vector<int> auxCandidates = std::vector<int>();
 	SASValue& p1 = task->values[l->value];
@@ -758,7 +758,7 @@ int LandmarkTree::equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFlu
 
 void LandmarkTree::postProcessing() {
 	// P: Candidate landmarks that precede necessarily a given candidate landmark g
-	std::vector<LMFluent*> p;
+	std::vector<std::shared_ptr<LMFluent>> p;
 	// A: Actions that produce a landmark g
 	std::vector<std::shared_ptr<SASAction>> a;
 	// We analyze all the literal nodes g of the Landmark Tree
@@ -794,7 +794,7 @@ void LandmarkTree::postProcessing() {
 	}
 }
 
-void LandmarkTree::getActions(std::vector<std::shared_ptr<SASAction>>* aList, LMFluent* l1, LMFluent* l2) {
+void LandmarkTree::getActions(std::vector<std::shared_ptr<SASAction>>* aList, std::shared_ptr<LMFluent> l1, std::shared_ptr<LMFluent> l2) {
 	aList->clear();
 	if (rpg.getFluentByIndex(l1->index) == nullptr || rpg.getFluentByIndex(l2->index) == nullptr) return;
 	std::vector<std::shared_ptr<SASAction>>& producers = task->producers[l2->variable][l2->value];

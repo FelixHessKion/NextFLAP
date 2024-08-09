@@ -44,7 +44,7 @@ public:
 	bool isGoal;
 	std::vector<std::shared_ptr<SASAction>> producers;
 	LMFluent() { }
-	LMFluent(LMFluent* cp) {
+	LMFluent(std::shared_ptr<LMFluent> cp) {
 		variable = cp->variable;
 		value = cp->value;
 		level = cp->level;
@@ -75,7 +75,7 @@ private:
 	bool verifyFluent;
 	LMFluent fluentToVerify;
   std::unique_ptr<char[]> visitedAction;
-	std::vector<LMFluent> fluentList;						// List of fluents (ComputeLiterals)
+	std::vector<std::shared_ptr<LMFluent>> fluentList;						// List of fluents (ComputeLiterals)
 	std::unordered_map<TVarValue, int> fluentIndex;			// [variable,value] -> fluent index
 	std::vector< std::vector<TVarValue> > fluentLevels;		// List of fluents at each level
 	std::unordered_map<float, int> fluentLevelIndex;		// Time -> level
@@ -111,7 +111,7 @@ public:
 		if (got == fluentIndex.end()) return -1;
 		else return got->second;
 	}
-	inline LMFluent* getFluentByIndex(int index) { return &fluentList[index]; }
+	inline std::shared_ptr<LMFluent> getFluentByIndex(int index) { return fluentList[index]; }
 	inline int getLevelIndex(float level) {
 		std::unordered_map<float, int>::const_iterator got = fluentLevelIndex.find(level);
 		if (got == fluentLevelIndex.end()) return -1;

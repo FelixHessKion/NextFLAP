@@ -13,7 +13,7 @@ class LTNode;
 class USet {				// Disjunctive landmark
 public:
 	int id;
-	std::vector<LMFluent*> fluentSet;
+	std::vector<std::shared_ptr<LMFluent>> fluentSet;
 	std::shared_ptr<LTNode> node;
 	int value;
 
@@ -25,18 +25,18 @@ public:
 		node = s->node;
 		value = s->value;
 	}
-	void initialize(LMFluent* l, int fncIndex) {
+	void initialize(std::shared_ptr<LMFluent> l, int fncIndex) {
 		id = fncIndex;
 		fluentSet.push_back(l);
 		node = nullptr;
 		value = 0;
 	}
-	void addElement(LMFluent* l) {
+	void addElement(std::shared_ptr<LMFluent> l) {
 		if (!contains(l)) {
 			fluentSet.push_back(l);
 		}
 	}
-	bool contains(LMFluent* l) {
+	bool contains(std::shared_ptr<LMFluent> l) {
 		for (unsigned int i = 0; i < fluentSet.size(); i++) {
 			if (fluentSet[i]->index == l->index) {
 				return true;
@@ -78,15 +78,15 @@ public:
 
 class LTNode {				// Landmark node
 private:
-	LMFluent* fluent;
+  std::shared_ptr<LMFluent> fluent;
 	std::shared_ptr<USet> disjunction;
 	bool singleLiteral;
 	unsigned int index;
 
 public:
 	LTNode() { index = MAX_INT32; }
-	LTNode(LMFluent* f, unsigned int i) {
-		fluent = new LMFluent(*f);
+	LTNode(std::shared_ptr<LMFluent> f, unsigned int i) {
+		fluent = std::make_shared<LMFluent>(*f);
 		disjunction = nullptr;
 		singleLiteral = true;
 		index = i;
@@ -98,7 +98,7 @@ public:
 		index = i;
 	}
 	inline unsigned int getIndex() { return index; }
-	inline LMFluent* getFluent() { return fluent; }
+	inline std::shared_ptr<LMFluent> getFluent() { return fluent; }
 	inline std::shared_ptr<USet> getSet() { return disjunction; }
 	inline bool single() { return singleLiteral; }
 	std::string toString(std::shared_ptr<SASTask> task) {
@@ -159,7 +159,7 @@ private:
 	TemporalRPG rpg;
 	std::shared_ptr<SASTask> task;
 	std::vector<int> fluentNode;
-	std::vector< std::vector< LMFluent* > > objs;
+	std::vector<std::vector<std::shared_ptr<LMFluent>>> objs;
 	std::vector< std::vector< std::shared_ptr<USet> > > disjObjs;
 	bool** reasonableOrderings;
   std::unique_ptr<std::unique_ptr<bool[]>[]> matrix;
@@ -170,15 +170,15 @@ private:
 	void exploreRPG();
 	void actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, std::shared_ptr<LTNode> g, int level);
 	void checkPreconditions(std::shared_ptr<SASAction> a, std::unique_ptr<int[]> &common);
-	bool verify(LMFluent* p);
-	bool verify(std::vector<LMFluent*>* v);
+	bool verify(std::shared_ptr<LMFluent> p);
+	bool verify(std::vector<std::shared_ptr<LMFluent>>* v);
 	bool verify(std::vector<std::shared_ptr<SASAction>>* a);
-	void groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<LMFluent*>* u, std::vector<std::shared_ptr<SASAction>>* a);
+	void groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<std::shared_ptr<LMFluent>>* u, std::vector<std::shared_ptr<SASAction>>* a);
 	void analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_ptr<SASAction>>* a, std::vector<std::shared_ptr<USet>>* u1);
-	int equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFluents);
+	int equalParameters(std::shared_ptr<LMFluent> l, std::vector<std::shared_ptr<LMFluent>>* actionFluents);
 	std::shared_ptr<USet> findDisjObject(std::shared_ptr<USet> u, int level);
 	void postProcessing();
-	void getActions(std::vector<std::shared_ptr<SASAction>>* aList, LMFluent* l1, LMFluent* l2);
+	void getActions(std::vector<std::shared_ptr<SASAction>>* aList, std::shared_ptr<LMFluent> l1, std::shared_ptr<LMFluent> l2);
 
 public:
 	std::vector<std::shared_ptr<LTNode>> nodes;
@@ -203,7 +203,7 @@ public:
 			values.push_back(n->getFluent()->value);
 		}
 		else {
-			std::vector<LMFluent*>* fs = &(n->getSet()->fluentSet);
+			std::vector<std::shared_ptr<LMFluent>>* fs = &(n->getSet()->fluentSet);
 			for (unsigned int i = 0; i < fs->size(); i++) {
 				variables.push_back(fs->at(i)->variable);
 				values.push_back(fs->at(i)->value);

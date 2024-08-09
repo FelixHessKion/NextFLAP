@@ -290,15 +290,15 @@ void TemporalRPG::computeLiteralLevels() {
 	fluentList.reserve(firstGenerationTime.size());
 	int index = 0;
 	for (auto it = firstGenerationTime.begin(); it != firstGenerationTime.end(); ++it, ++index) {
-		LMFluent f;
-		f.initialize(it->first, it->second, index);
+    std::shared_ptr<LMFluent> f = std::make_shared<LMFluent>();
+		f->initialize(it->first, it->second, index);
 		fluentList.push_back(f);
 	}
 	for (unsigned int i = 0; i < fluentList.size(); i++) {
-		TVariable v = fluentList[i].variable;
-		TValue value = fluentList[i].value;
-		fluentIndex[SASTask::getVariableValueCode(v, value)] = fluentList[i].index;
-		qPNormal.add(std::make_shared<FluentLevel>(v, value, fluentList[i].level));
+		TVariable v = fluentList[i]->variable;
+		TValue value = fluentList[i]->value;
+		fluentIndex[SASTask::getVariableValueCode(v, value)] = fluentList[i]->index;
+		qPNormal.add(std::make_shared<FluentLevel>(v, value, fluentList[i]->level));
 	}
 	float currentLevel = -1;
 	int i = -1;
@@ -325,12 +325,12 @@ void TemporalRPG::computeActionLevels(std::shared_ptr<TState> state) {
 #endif
 	}
 	for (unsigned int i = 0; i < fluentList.size(); i++) {
-		LMFluent& f = fluentList[i];
-		std::vector<std::shared_ptr<SASAction>>& p = task->producers[f.variable][f.value];
+    std::shared_ptr<LMFluent> f = fluentList[i];
+		std::vector<std::shared_ptr<SASAction>>& p = task->producers[f->variable][f->value];
 		for (unsigned int j = 0; j < p.size(); j++) {
 			std::shared_ptr<SASAction> a = p[j];
-			if (actionLevels[a->index] < f.level && actionLevels[a->index] >= 0) {
-				f.producers.push_back(a);
+			if (actionLevels[a->index] < f->level && actionLevels[a->index] >= 0) {
+				f->producers.push_back(a);
 			}
 		}
 	}
