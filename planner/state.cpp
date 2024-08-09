@@ -12,8 +12,8 @@ TState::TState(unsigned int numSASVars, unsigned int numNumVars) {
 	this->numSASVars = numSASVars;
 	this->numNumVars = numNumVars;
 	state = std::make_unique<TValue[]>(numSASVars);
-	minState = new TFloatValue[numNumVars];
-	maxState = new TFloatValue[numNumVars];
+	minState = std::make_unique<TFloatValue[]>(numNumVars);
+	maxState = std::make_unique<TFloatValue[]>(numNumVars);
 }
 
 TState::TState(std::shared_ptr<SASTask> task) : TState(task->variables.size(), task->numVariables.size()) {	// Create the initial state
@@ -26,6 +26,6 @@ TState::TState(std::shared_ptr<SASTask> task) : TState(task->variables.size(), t
 }
 
 TState::~TState() {
-	delete[] minState;
-	delete[] maxState;
+	// delete[] minState;
+	// delete[] maxState;
 }

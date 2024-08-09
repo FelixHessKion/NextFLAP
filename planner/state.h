@@ -17,8 +17,8 @@ public:
 	unsigned int numSASVars;	// Number of SAS variables
 	unsigned int numNumVars;	// Number of numeric variables
   std::unique_ptr<TValue[]> state;				// Values of the SAS variables in the state
-	TFloatValue* minState;		// Minimum values of the numeric variables in the state
-	TFloatValue* maxState;		// Maximum values of the numeric variables in the state
+	std::unique_ptr<TFloatValue[]> minState;		// Minimum values of the numeric variables in the state
+	std::unique_ptr<TFloatValue[]> maxState;		// Maximum values of the numeric variables in the state
 
 	TState(unsigned int numSASVars, unsigned int numNumVars);
 	TState(std::shared_ptr<SASTask> task);

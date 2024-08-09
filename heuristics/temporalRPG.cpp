@@ -100,7 +100,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 #endif
 								}
 							}
-							effLevel += task->getActionDuration(a, state->minState);
+							effLevel += task->getActionDuration(a, state->minState.get());
 							for (unsigned j = 0; j < a->endEff.size(); j++) {
 								TVariable v = a->endEff[j].var;
 								TValue value = a->endEff[j].value;
@@ -136,7 +136,7 @@ void TemporalRPG::build(std::shared_ptr<TState> state) {
 								qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, effLevel));
 							}
 						}
-						effLevel += task->getActionDuration(a, state->minState);
+						effLevel += task->getActionDuration(a, state->minState.get());
 						for (SASCondition &c : e.endEff) {
 							auxLevel = getFirstGenerationTime(c.var, c.value);
 							if (auxLevel == -1 || auxLevel > effLevel) {
@@ -231,7 +231,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 				for (SASCondition &c : e.endEff) {
 					level = getFirstGenerationTime(c.var, c.value);
 					if (level == -1) {
-						if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState);
+						if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState.get());
 						firstGenerationTime[SASTask::getVariableValueCode(c.var, c.value)] = duration;
 						qPNormal.add(std::make_shared<FluentLevel>(c.var, c.value, duration));
 					}
@@ -244,7 +244,7 @@ void TemporalRPG::programAction(std::shared_ptr<SASAction> a, std::shared_ptr<TS
 			value = a->endEff[j].value;
 			level = getFirstGenerationTime(v, value);
 			if (level == -1) {
-				if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState);
+				if (duration < 0) duration = EPSILON + task->getActionDuration(a, state->minState.get());
 				firstGenerationTime[SASTask::getVariableValueCode(v, value)] = duration;
 				qPNormal.add(std::make_shared<FluentLevel>(v, value, duration));
 #ifdef DEBUG_TEMPORALRPG_ON
@@ -348,7 +348,7 @@ float TemporalRPG::getActionLevel(std::shared_ptr<SASAction> a, std::shared_ptr<
 		if (level > res) res = level;
 		else if (level == -1) return -1;
 	}
-	float duration = task->getActionDuration(a, state->minState);
+	float duration = task->getActionDuration(a, state->minState.get());
 	for (unsigned int i = 0; i < a->endCond.size(); i++) {
 		level = getFirstGenerationTime(a->endCond[i].var, a->endCond[i].value);
 		if (level == -1) return -1;
