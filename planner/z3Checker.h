@@ -35,8 +35,8 @@ private:
 	PlanComponents planComponents;
 	std::vector<Z3StepVariables> stepVars;
 	context* cont;
-	solver* checker;
-	optimize* optimizer;
+  std::unique_ptr<solver> checker;
+	std::unique_ptr<optimize> optimizer;
 
 	void defineVariables(std::shared_ptr<Plan> p, TStep s);
 	void defineConstraints(std::shared_ptr<Plan> p, TStep s);

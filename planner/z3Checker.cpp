@@ -25,8 +25,8 @@ bool Z3Checker::checkPlan(std::shared_ptr<Plan> p, bool optimizeMakespan, TContr
             defineVariables(planComponents.get(s), s);
         }
         if (optimizeMakespan) 
-            optimizer = new optimize(c);
-        else checker = new solver(c);
+            optimizer = std::make_unique<optimize>(c);
+        else checker = std::make_unique<solver>(c);
         for (TStep s = 0; s < planComponents.size(); s++) {
             defineConstraints(planComponents.get(s), s);
         }
@@ -45,8 +45,8 @@ bool Z3Checker::checkPlan(std::shared_ptr<Plan> p, bool optimizeMakespan, TContr
             if (valid) 
                 updatePlan(p, checker->get_model(), cvarValues);
         }
-        if (optimizeMakespan) delete optimizer;
-        else delete checker;
+        if (optimizeMakespan) optimizer = nullptr;
+        else checker = nullptr;
         stepVars.clear();
         Z3_finalize_memory();
     }
