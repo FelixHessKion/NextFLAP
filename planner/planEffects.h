@@ -54,14 +54,13 @@ private:
 	TFloatValue getMaxControlVarValue(TTimePoint timepoint, TVariable var);
 
 public:
-	PlanEffect** planEffects;							// Plan effects: (var, value) -> PlanEffect
+  std::unique_ptr<std::unique_ptr<PlanEffect[]>[]> planEffects;							// Plan effects: (var, value) -> PlanEffect
   std::unique_ptr<VarChange[]> varChanges;								// Variable changes: var -> VarChange
 	std::vector<NumVarChange> numStates;				// Sequence of numeric states in each timepoint
 	unsigned int iteration;
 	PlanComponents* planComponents;
 
 	PlanEffects(std::shared_ptr<SASTask> task);
-	~PlanEffects();
 	void setCurrentIteration(unsigned int currentIteration, PlanComponents* planComponents);
 	void addEffect(SASCondition& eff, TTimePoint timePoint);
 	void addNumEffect(TFluentInterval& eff, TTimePoint timePoint);

@@ -47,23 +47,15 @@ PlanEffects::PlanEffects(std::shared_ptr<SASTask> task)
 	this->task = task;
 	int numVariables = (int)task->variables.size();
 	int numValues = (int)task->values.size();
-	planEffects = new PlanEffect * [numVariables];
+	planEffects = std::make_unique<std::unique_ptr<PlanEffect[]>[]>(numVariables);
 	for (int i = 0; i < numVariables; i++) {
-		planEffects[i] = new PlanEffect[numValues];
+		planEffects[i] = std::make_unique<PlanEffect[]>(numValues);
 	}
 	varChanges = std::make_unique<VarChange[]>(numVariables);
 	int numNumVariables = (int)task->numVariables.size();
 	this->iteration = 0;
 }
 
-PlanEffects::~PlanEffects()
-{
-	unsigned int numVariables = (unsigned int)task->variables.size();
-	for (unsigned int i = 0; i < numVariables; i++) {
-		delete[] planEffects[i];
-	}
-	delete[] planEffects;
-}
 
 void PlanEffects::setCurrentIteration(unsigned int currentIteration, PlanComponents* planComponents)
 {
