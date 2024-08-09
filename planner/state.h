@@ -16,7 +16,7 @@ class TState {
 public:
 	unsigned int numSASVars;	// Number of SAS variables
 	unsigned int numNumVars;	// Number of numeric variables
-	TValue* state;				// Values of the SAS variables in the state
+  std::unique_ptr<TValue[]> state;				// Values of the SAS variables in the state
 	TFloatValue* minState;		// Minimum values of the numeric variables in the state
 	TFloatValue* maxState;		// Maximum values of the numeric variables in the state
 

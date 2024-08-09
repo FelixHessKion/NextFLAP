@@ -11,7 +11,7 @@ using namespace std;
 TState::TState(unsigned int numSASVars, unsigned int numNumVars) {
 	this->numSASVars = numSASVars;
 	this->numNumVars = numNumVars;
-	state = new TValue[numSASVars];
+	state = std::make_unique<TValue[]>(numSASVars);
 	minState = new TFloatValue[numNumVars];
 	maxState = new TFloatValue[numNumVars];
 }
@@ -26,7 +26,6 @@ TState::TState(std::shared_ptr<SASTask> task) : TState(task->variables.size(), t
 }
 
 TState::~TState() {
-	delete[] state;
 	delete[] minState;
 	delete[] maxState;
 }
