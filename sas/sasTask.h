@@ -318,8 +318,8 @@ public:
   std::unique_ptr<std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]>[]> requirers;
   std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numRequirers;
 	std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numGoalRequirers;
-	std::vector<std::shared_ptr<SASAction>>** producers;
-	std::vector<SASConditionalProducer>** condProducers;
+	std::unique_ptr<std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]>[]> producers;
+	std::unique_ptr<std::unique_ptr<std::vector<SASConditionalProducer>[]>[]> condProducers;
 	std::vector<std::shared_ptr<SASAction>> actionsWithoutConditions;
   std::unique_ptr<TValue[]> initialState;							// Values of the SAS variables in the initial state
 	std::unique_ptr<float[]> numInitialState;							// Values of the numeric variables in the initial state

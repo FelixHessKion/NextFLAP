@@ -497,18 +497,6 @@ SASTask::SASTask() {
 }
 
 SASTask::~SASTask() {
-	if (producers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] producers[i];
-		}
-		delete[] producers;
-	}
-	if (condProducers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] condProducers[i];
-		}
-		delete[] condProducers;
-	}
 	if (staticNumFunctions != nullptr) delete[] staticNumFunctions;
 }
 
@@ -658,11 +646,11 @@ void SASTask::addToRequirers(TVariable v, TValue val, std::shared_ptr<SASAction>
 
 // Computes the list of actions that produces (= var value)
 void SASTask::computeProducers() {
-	producers = new vector<std::shared_ptr<SASAction>>*[variables.size()];
-	condProducers = new vector<SASConditionalProducer>*[variables.size()];
+	producers = std::make_unique<std::unique_ptr<vector<std::shared_ptr<SASAction>>[]>[]>(variables.size());
+	condProducers = std::make_unique<std::unique_ptr<vector<SASConditionalProducer>[]>[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
-		producers[i] = new vector<std::shared_ptr<SASAction>>[values.size()];
-		condProducers[i] = new vector<SASConditionalProducer>[values.size()];
+		producers[i] = std::make_unique<vector<std::shared_ptr<SASAction>>[]>(values.size());
+		condProducers[i] = std::make_unique<vector<SASConditionalProducer>[]>(values.size());
 	}
 	unsigned int numActions = actions.size();
 	for (unsigned int i = 0; i < numActions; i++) {
