@@ -80,7 +80,7 @@ public:
 	std::shared_ptr<SASAction> action;						// New action added
 	bool fixedInit;							// True if the initial time is fixed (action cannot be delayed)
 	TInterval actionDuration;				// Action duration
-	std::vector<TInterval>* cvarValues;		// Control var. values. Vector is nullptr if the action has no control vars.
+  std::unique_ptr<std::vector<TInterval>> cvarValues;		// Control var. values. Vector is nullptr if the action has no control vars.
 	std::vector<TPlanUpdate>* planUpdates;	// Changes in previous steps of the plan
 	std::vector<TOrdering> orderings;		// New orderings (first time point [lower 16 bits] -> second time point [higher 16 bits])
 	PlanPoint startPoint;					// At-start plan data

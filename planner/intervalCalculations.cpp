@@ -354,7 +354,7 @@ void IntervalCalculations::applyEndEffects(std::vector<TNumVarChange>* v, std::s
 void IntervalCalculations::copyControlVars(std::shared_ptr<Plan> p)
 {
 	if (cvarValues.empty()) return;
-	p->cvarValues = new std::vector<TInterval>();
+	p->cvarValues = std::make_unique<std::vector<TInterval>>();
 	for (TInterval& i : cvarValues) {
 		p->cvarValues->push_back(i);
 	}
