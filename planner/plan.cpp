@@ -108,7 +108,7 @@ void Plan::addChildren(std::vector<std::shared_ptr<Plan>>& suc)
 void Plan::addPlanUpdate(TTimePoint tp, TFloatValue time)
 {
 	if (planUpdates == nullptr)
-		planUpdates = new std::vector<TPlanUpdate>();
+		planUpdates = std::make_unique<std::vector<TPlanUpdate>>();
 	planUpdates->emplace_back(tp, time);
 }
 
