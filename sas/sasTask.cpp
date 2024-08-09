@@ -496,9 +496,6 @@ SASTask::SASTask() {
 	numGoalsInPlateau = 1;
 }
 
-SASTask::~SASTask() {
-	if (staticNumFunctions != nullptr) delete[] staticNumFunctions;
-}
 
 // Adds a mutex relationship between (var1, value1) and (var2, value2)
 void SASTask::addMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2) {
@@ -750,7 +747,7 @@ void SASTask::computeMutexWithVarValues() {
 		vv1 = (uint32_t) (n >> 32);
 		it = mutexWithVarValue.find(vv1);
 		if (it == mutexWithVarValue.end()) {
-      std::vector<uint32_t> *item = new std::vector<uint32_t>();
+      std::vector<uint32_t> *item =  new std::vector<uint32_t>();
 			item->push_back(vv2);
 			mutexWithVarValue[vv1] = item;
 		} else {
@@ -921,7 +918,7 @@ void SASTask::addToProducers(TVariable v, TValue val, std::shared_ptr<SASAction>
 //   variable in the state (e.g. temperature), and the numeric variable (fuel-used) is used in the metric.
 void SASTask::computeInitialActionsCost(bool keepStaticData) {
 	if (keepStaticData) {	// Static functions have not been deleted, so it is necessary to check which ones are static
-		staticNumFunctions = new bool[numVariables.size()];
+		staticNumFunctions = std::make_shared<bool[]>[numVariables.size()];
 		for (unsigned int i = 0; i < numVariables.size(); i++) {
 			staticNumFunctions[i] = true;
 		}
@@ -938,7 +935,7 @@ void SASTask::computeInitialActionsCost(bool keepStaticData) {
 	else {
 		staticNumFunctions = nullptr;
 	}
-	bool *variablesOnMetric = new bool[numVariables.size()];
+  std::unique_ptr<bool[]> variablesOnMetric = std::make_unqiue<bool[]>(numVariables.size());
 	for (unsigned int i = 0; i < numVariables.size(); i++) {
 		variablesOnMetric[i] = false;
 	}
@@ -1035,7 +1032,7 @@ float SASTask::computeActionCost(std::shared_ptr<SASAction> a, float* numState, 
 	}
 	else {
 		unsigned int numV = numVariables.size();
-		float* newState = new float[numV];
+    std::unique_ptr<float[]> newState = std::make_unique<float[]>(numV);
 		for (unsigned int i = 0; i < numV; i++) {
 			newState[i] = numState[i];
 		}

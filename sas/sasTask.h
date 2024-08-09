@@ -279,7 +279,7 @@ private:
     std::unordered_map<TMutex, bool> permanentMutexActions;
     std::unordered_map<std::string, unsigned int> valuesByName;
     std::vector<TVarValue> goalList;
-    bool* staticNumFunctions;
+    std::unique_ptr<bool[]> staticNumFunctions;
     std::vector<GoalDeadline> goalDeadlines;
 
 	inline static TMutex getMutexCode(TVariable var1, TValue value1, TVariable var2, TValue value2) {
@@ -333,7 +333,6 @@ public:
 	std::unique_ptr<std::vector<TVariable>[]> numVarReqGoal;		// For each goal, numeric variables that are required in the goal
 
     SASTask();
-	~SASTask();
 	void addMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
     bool isMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
     bool isPermanentMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
