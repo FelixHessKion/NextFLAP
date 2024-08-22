@@ -11,7 +11,7 @@ class LandmarkCheck {			// Landmarks reachability for heuristic purposes
 private:
 	std::vector<TVariable> vars;
 	std::vector<TValue> values;
-	std::vector<std::shared_ptr<LandmarkCheck>> prev;
+	std::vector<std::weak_ptr<LandmarkCheck>> prev;
 	std::vector<std::shared_ptr<LandmarkCheck>> next;
 	bool checked;
 	bool single;
@@ -19,7 +19,7 @@ private:
 public:
 	LandmarkCheck(LandmarkNode* n);
 	void addNext(std::shared_ptr<LandmarkCheck> n);
-	void addPrev(std::shared_ptr<LandmarkCheck> n);
+	void addPrev(std::weak_ptr<LandmarkCheck> n);
 	void removeSuccessor(std::shared_ptr<LandmarkCheck> n);
 	void removePredecessor(std::shared_ptr<LandmarkCheck> n);
 	bool isGoal(std::shared_ptr<SASTask> task);
@@ -34,7 +34,7 @@ public:
 	inline TVariable getVar() { return vars[0]; }
 	inline TValue getValue() { return values[0]; }
 	inline std::shared_ptr<LandmarkCheck> getNext(unsigned int i) { return next[i]; }
-	inline std::shared_ptr<LandmarkCheck> getPrev(unsigned int i) { return prev[i]; }
+	inline std::weak_ptr<LandmarkCheck> getPrev(unsigned int i) { return prev[i]; }
 	std::string toString(std::shared_ptr<SASTask> task, bool showNext);
 };
 

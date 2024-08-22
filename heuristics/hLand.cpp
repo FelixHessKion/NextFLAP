@@ -22,7 +22,7 @@ void LandmarkCheck::addNext(std::shared_ptr<LandmarkCheck> n) {
 	next.push_back(n);
 }
 
-void LandmarkCheck::addPrev(std::shared_ptr<LandmarkCheck> n) {
+void LandmarkCheck::addPrev(std::weak_ptr<LandmarkCheck> n) {
 	prev.push_back(n);
 }
 
@@ -48,7 +48,7 @@ string LandmarkCheck::toString(std::shared_ptr<SASTask> task, bool showNext) {
 void LandmarkCheck::removePredecessor(std::shared_ptr<LandmarkCheck> n) {
 	unsigned int i = 0;
 	while (i < prev.size()) {
-		if (prev[i] == n) {
+		if (prev[i].lock() == n) {
 			//cout << "  Deleted predecessor" << endl;
 			prev.erase(prev.begin() + i);
 		}
@@ -157,7 +157,7 @@ void LandmarkHeuristic::initialize(std::shared_ptr<TState> state, std::shared_pt
 		std::shared_ptr<LandmarkCheck> n = toDelete[i];
 		//cout << "Deleting node: " << n->toString(task, false) << endl;
 		for (unsigned int j = 0; j < n->numPrev(); j++)
-			n->getPrev(j)->removeSuccessor(n);
+			n->getPrev(j).lock()->removeSuccessor(n);
 		for (unsigned int j = 0; j < n->numNext(); j++)
 			n->getNext(j)->removePredecessor(n);
 		for (unsigned int j = 0; j < nodes.size(); j++) {
@@ -185,7 +185,7 @@ void LandmarkHeuristic::initialize(std::shared_ptr<TState> state, std::shared_pt
 
 bool LandmarkHeuristic::hasRootPredecessor(std::shared_ptr<LandmarkCheck> n) {
 	for (unsigned int i = 0; i < n->numPrev(); i++) {
-		std::shared_ptr<LandmarkCheck> p = n->getPrev(i);
+		std::shared_ptr<LandmarkCheck> p = n->getPrev(i).lock();
 		bool found = false;
 		for (unsigned int j = 0; j < rootNodes.size(); j++) {
 			if (rootNodes[j] == p) {
