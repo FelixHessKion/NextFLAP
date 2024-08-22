@@ -15,7 +15,7 @@ void PlanComponents::calculate(std::shared_ptr<Plan> base)
 		numSteps = 0;
 	}
 	else {
-		calculate(base->parentPlan);
+		calculate(base->parentPlan.lock());
 		base->startPoint.copyInitialTime();
 		base->endPoint.copyInitialTime();
 		basePlanComponents.push_back(base);

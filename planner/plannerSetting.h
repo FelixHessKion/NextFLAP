@@ -32,7 +32,7 @@ private:
 	std::shared_ptr<SASAction> createInitialAction();
 	std::shared_ptr<SASAction> createFictitiousAction(float actionDuration, std::vector<unsigned int>& varList,
 		float timePoint, std::string name, bool isTIL, bool isGoal);
-	void createTILactions(std::shared_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultPlan);
+	void createTILactions(std::weak_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultPlan);
 	bool checkForceAtEndConditions();	// Check if it's required to leave at-end conditions not supported for some actions
 	bool checkRepeatedStates();
 

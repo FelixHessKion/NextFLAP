@@ -74,7 +74,7 @@ private:
 
 public:
 	TPlanId id;
-  std::shared_ptr<Plan> parentPlan;						// Pointer to its parent plan
+  std::weak_ptr<Plan> parentPlan;						// Pointer to its parent plan
   std::shared_ptr<std::vector<std::shared_ptr<Plan>>> childPlans;			// Vector of child plans. This vector is nullptr if
 											// the plan has not been expanded yet
 	std::shared_ptr<SASAction> action;						// New action added
@@ -95,7 +95,7 @@ public:
 	//int numUsefulActions;					// Number of useful actions included in the plan
   std::shared_ptr<std::vector<int>> holdCondEff;
 
-	Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
+	Plan(std::shared_ptr<SASAction> action, std::weak_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
 	void setDuration(TFloatValue min, TFloatValue max);
 	void setTime(TTime init, TTime end, bool fixed);
 	int compare(std::shared_ptr<Plan> p);

@@ -26,7 +26,7 @@ PlannerSetting::PlannerSetting(std::shared_ptr<SASTask> stask) {
 // Creates the initial empty plan that only contains the initial and the TIL fictitious actions
 void PlannerSetting::createInitialPlan() {
 	std::shared_ptr<SASAction> initialAction = createInitialAction();
-	initialPlan = std::make_shared<Plan>(initialAction, nullptr, 0, nullptr);
+	initialPlan = std::make_shared<Plan>(initialAction, std::weak_ptr<Plan>(), 0, nullptr);
 	initialPlan->setDuration(EPSILON, EPSILON);
 	initialPlan->setTime(-EPSILON, 0, true);
 	initialPlan->addFluentIntervals();
@@ -100,8 +100,8 @@ std::shared_ptr<SASAction> PlannerSetting::createFictitiousAction(float actionDu
 }
 
 // Adds the fictitious TIL actions to the initial plan. Returns the resulting plan
-void PlannerSetting::createTILactions(std::shared_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultplan) {
-	std::shared_ptr<Plan> result = parentPlan;
+void PlannerSetting::createTILactions(std::weak_ptr<Plan> parentPlan, std::shared_ptr<Plan> resultplan) {
+	std::shared_ptr<Plan> result = parentPlan.lock();
 	unordered_map<float, vector<unsigned int> > til;			// Time point -> variables modified at that time
 	for (unsigned int i = 0; i < task->variables.size(); i++) {	// Non-numeric effects
 		SASVariable& var = task->variables[i];

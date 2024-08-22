@@ -12,7 +12,7 @@ using namespace std;
 /* CLASS: Plan                                          */
 /********************************************************/
 
-Plan::Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
+Plan::Plan(std::shared_ptr<SASAction> action, std::weak_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
 	this->parentPlan = parentPlan;
 	this->action = action;
 	this->childPlans = nullptr;
@@ -20,8 +20,8 @@ Plan::Plan(std::shared_ptr<SASAction> action, std::shared_ptr<Plan> parentPlan, 
 	this->cvarValues = nullptr;
 	this->planUpdates = nullptr;
     this->fixedInit = false;
-    if (parentPlan != nullptr && action->startNumEff.size()) this->g = parentPlan->g + action->startNumEff[0].exp.value;
-    else if (parentPlan != nullptr ) this->g = parentPlan->g + 1;
+    if (parentPlan.lock() != nullptr && action->startNumEff.size()) this->g = parentPlan.lock()->g + action->startNumEff[0].exp.value;
+    else if (parentPlan.lock() != nullptr ) this->g = parentPlan.lock()->g + 1;
     else this->g = 0;
     addFluentIntervals();
     this->h = (int)MAX_UINT16;
@@ -91,7 +91,7 @@ int Plan::compare(std::shared_ptr<Plan> p)
 
 bool Plan::isRoot()
 {
-	return parentPlan == nullptr || this->action->isTIL;
+	return parentPlan.lock() == nullptr || this->action->isTIL;
 }
 
 void Plan::addFluentIntervals()
@@ -114,8 +114,8 @@ void Plan::addPlanUpdate(TTimePoint tp, TFloatValue time)
 
 int Plan::getCheckDistance()
 {
-	if (z3Checked || parentPlan == nullptr) return 0;
-	return 1 + parentPlan->getCheckDistance();
+	if (z3Checked || parentPlan.lock() == nullptr) return 0;
+	return 1 + parentPlan.lock()->getCheckDistance();
 }
 
 /*

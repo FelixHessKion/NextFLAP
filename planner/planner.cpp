@@ -78,7 +78,7 @@ bool Planner::checkPlan(std::shared_ptr<Plan> p) {
 void Planner::markAsInvalid(std::shared_ptr<Plan> p)
 {
 	markChildrenAsInvalid(p);
-	std::shared_ptr<Plan> parent = p->parentPlan;
+	std::shared_ptr<Plan> parent = p->parentPlan.lock();
 	if (parent != nullptr && !parent->isRoot() && !parent->z3Checked) {
 		if (!checkPlan(parent)) {
 			markAsInvalid(parent);

@@ -69,7 +69,7 @@ void PrintPlan::rawPrint(std::shared_ptr<Plan> p, SASTask* task)
 	std::shared_ptr<Plan> current = p;
 	while (current != nullptr) {
 		planComponents.insert(planComponents.begin(), current);
-		current = current->parentPlan;
+		current = current->parentPlan.lock();
 	}
 	for (int step = 0; step < planComponents.size(); step++) {
 		p = planComponents[step];

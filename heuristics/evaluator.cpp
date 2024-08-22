@@ -17,7 +17,7 @@ using namespace std;
 
 // Evaluates a plan. Its heuristic value is stored in the plan (p->h)
 void Evaluator::evaluate(std::shared_ptr<Plan> p) {
-	int limit = p->parentPlan->h;
+	int limit = p->parentPlan.lock()->h;
 	if (numericConditionsOrConditionalEffects) {
 		NumericRPG rpg(p->fs, tilActions, task, limit);
 		p->h = rpg.evaluate();
