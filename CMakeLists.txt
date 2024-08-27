@@ -5,7 +5,7 @@ project(nextflap)
 # Set the C++ standard to use  
 set(CMAKE_CXX_STANDARD 20)  
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
   
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_EXECUTABLE "Build executable" ON)

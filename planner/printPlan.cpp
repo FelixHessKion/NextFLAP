@@ -24,6 +24,7 @@ void PrintPlan::print(std::shared_ptr<Plan> p, TControVarValues *cvarValues) {
   Linearizer linearizer;
   linearizer.linearize(planComponents);
   float makespan = 0;
+  cout << endl;
   for (TTimePoint tp : linearizer.linearOrder) {
     std::shared_ptr<Plan> pc = planComponents.get(timePointToStep(tp));
     if ((tp & 1) == 0 && !pc->isRoot() && !pc->action->isGoal) {
