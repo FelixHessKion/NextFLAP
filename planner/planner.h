@@ -47,7 +47,7 @@ private:
 
 public:
 	Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, std::shared_ptr<TState> initialState, bool forceAtEndConditions,
-		bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions);
+        bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	std::shared_ptr<Plan> plan(float bestMakespan, clock_t startTime);
 	void clearSolution();
 };

@@ -2,6 +2,8 @@
 #include "z3Checker.h"
 #include "printPlan.h"
 
+#include <iomanip>
+
 /********************************************************/
 /* Oscar Sapena Vercher - DSIC - UPV                    */
 /* April 2022                                           */
@@ -19,7 +21,7 @@ bool Planner::emptySearchSpace()
 
 // Constructor
 Planner::Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, std::shared_ptr<TState> initialState, bool forceAtEndConditions,
-	bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions)
+    bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions)
 {
 	this->bestH = MAX_INT32;
 	this->task = task;
@@ -32,7 +34,7 @@ Planner::Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPla
 	this->expandedNodes = 0;
 	this->generateTrace = generateTrace;
 	this->tilActions = tilActions;
-	successors = std::make_unique<Successors>(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
+    successors = std::make_unique<Successors>(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
 	this->initialH = FLOAT_INFINITY;
 	this->solution = nullptr;
 	selector = std::make_unique<SearchQueue>();
@@ -104,7 +106,11 @@ void Planner::searchStep() {
 		return;
 
 #if _DEBUG
-	cout << "Base plan: " << base->id << ", " << base->action->name << "(G = " << base->g << ", H=" << base->h << ")" << endl;
+        cout << "Base plan: " << right << setw(2) << setfill(' ') << base->id
+             << ", " << left << setw(50) << setfill(' ') << base->action->name
+             << "(G = " << right << setw(6) << setfill(' ') << base->g
+             << ", H=" << right << setw(6) << setfill(' ') << base->h << ")"
+             << endl;
 #endif
 	if (!base->invalid && !successors->repeatedState(base)) {
 		if (base->action->startNumCond.size() > 0 || 

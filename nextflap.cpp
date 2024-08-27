@@ -152,6 +152,7 @@ void startPlanning(PlannerParameters* parameters) {
                     bestMakespan = solutionMakespan;
                     bestNumSteps = solution->g;
                     cout << ";Solution found in " << time << endl;
+                    break;
                 }
             }
         }
