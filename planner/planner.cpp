@@ -2,6 +2,8 @@
 #include "z3Checker.h"
 #include "printPlan.h"
 
+#include <iomanip>
+
 /********************************************************/
 /* Oscar Sapena Vercher - DSIC - UPV                    */
 /* April 2022                                           */
@@ -18,8 +20,8 @@ bool Planner::emptySearchSpace()
 }
 
 // Constructor
-Planner::Planner(SASTask* task, Plan* initialPlan, TState* initialState, bool forceAtEndConditions,
-	bool filterRepeatedStates, bool generateTrace, std::vector<SASAction*>* tilActions)
+Planner::Planner(std::shared_ptr<SASTask> task, std::shared_ptr<Plan> initialPlan, std::shared_ptr<TState> initialState, bool forceAtEndConditions,
+    bool filterRepeatedStates, bool generateTrace, std::vector<std::shared_ptr<SASAction>>* tilActions)
 {
 	this->bestH = MAX_INT32;
 	this->task = task;
@@ -32,10 +34,10 @@ Planner::Planner(SASTask* task, Plan* initialPlan, TState* initialState, bool fo
 	this->expandedNodes = 0;
 	this->generateTrace = generateTrace;
 	this->tilActions = tilActions;
-	successors = new Successors(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
+    successors = std::make_unique<Successors>(initialState, task, forceAtEndConditions, filterRepeatedStates, tilActions);
 	this->initialH = FLOAT_INFINITY;
 	this->solution = nullptr;
-	selector = new SearchQueue();
+	selector = std::make_unique<SearchQueue>();
 	successors->evaluator.calculateFrontierState(this->initialPlan);
 	/*
 	selector->addQueue(SEARCH_NRPG);
@@ -47,7 +49,7 @@ Planner::Planner(SASTask* task, Plan* initialPlan, TState* initialState, bool fo
 }
 
 // Starts the search
-Plan* Planner::plan(float bestMakespan, clock_t startTime)
+std::shared_ptr<Plan> Planner::plan(float bestMakespan, clock_t startTime)
 {
 	this->startTime = startTime;
 	this->bestMakespan = bestMakespan;
@@ -66,7 +68,7 @@ void Planner::clearSolution()
 }
 
 // Checks if a plan is valid
-bool Planner::checkPlan(Plan* p) {
+bool Planner::checkPlan(std::shared_ptr<Plan> p) {
 	Z3Checker checker;
 	cout << ".";
 	p->z3Checked = true;
@@ -75,10 +77,10 @@ bool Planner::checkPlan(Plan* p) {
 }
 
 // Marks a plan as invalid
-void Planner::markAsInvalid(Plan* p)
+void Planner::markAsInvalid(std::shared_ptr<Plan> p)
 {
 	markChildrenAsInvalid(p);
-	Plan* parent = p->parentPlan;
+	std::shared_ptr<Plan> parent = p->parentPlan.lock();
 	if (parent != nullptr && !parent->isRoot() && !parent->z3Checked) {
 		if (!checkPlan(parent)) {
 			markAsInvalid(parent);
@@ -87,9 +89,9 @@ void Planner::markAsInvalid(Plan* p)
 }
 
 // Marks a children plan as invalid
-void Planner::markChildrenAsInvalid(Plan* p) {
+void Planner::markChildrenAsInvalid(std::shared_ptr<Plan> p) {
 	if (p->childPlans != nullptr) {
-		for (Plan* child : *(p->childPlans)) {
+		for (std::shared_ptr<Plan> child : *(p->childPlans)) {
 			child->invalid = true;
 			markChildrenAsInvalid(child);
 		}
@@ -98,13 +100,17 @@ void Planner::markChildrenAsInvalid(Plan* p) {
 
 // Makes one search step
 void Planner::searchStep() {
-	Plan* base = selector->poll();
+	std::shared_ptr<Plan> base = selector->poll();
 	float baseMakespan = PrintPlan::getMakespan(base);
 	if (baseMakespan >= bestMakespan)
 		return;
 
 #if _DEBUG
-	cout << "Base plan: " << base->id << ", " << base->action->name << "(G = " << base->g << ", H=" << base->h << ")" << endl;
+        cout << "Base plan: " << right << setw(2) << setfill(' ') << base->id
+             << ", " << left << setw(50) << setfill(' ') << base->action->name
+             << "(G = " << right << setw(6) << setfill(' ') << base->g
+             << ", H=" << right << setw(6) << setfill(' ') << base->h << ")"
+             << endl;
 #endif
 	if (!base->invalid && !successors->repeatedState(base)) {
 		if (base->action->startNumCond.size() > 0 || 
@@ -126,7 +132,7 @@ void Planner::searchStep() {
 }
 
 // Expands the current base plan
-void Planner::expandBasePlan(Plan* base)
+void Planner::expandBasePlan(std::shared_ptr<Plan> base)
 {
 	if (base->expanded()) {
 		sucPlans.clear();
@@ -147,11 +153,11 @@ void Planner::expandBasePlan(Plan* base)
 }
 
 // Adds the successor plans to the selector
-void Planner::addSuccessors(Plan* base)
+void Planner::addSuccessors(std::shared_ptr<Plan> base)
 {
 	base->addChildren(sucPlans);
 	if (solution == nullptr) {
-		for (Plan* p : sucPlans) {
+		for (std::shared_ptr<Plan> p : sucPlans) {
 			//cout << "* Successor: " << p->id << ", " << p->action->name << "(G = " << p->g << ", H=" << p->h << ")" << endl;
 			selector->add(p);
 		}

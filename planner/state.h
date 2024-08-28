@@ -10,17 +10,18 @@
 
 #include "../utils/utils.h"
 #include "../sas/sasTask.h"
+#include <memory>
 
 class TState {
 public:
 	unsigned int numSASVars;	// Number of SAS variables
 	unsigned int numNumVars;	// Number of numeric variables
-	TValue* state;				// Values of the SAS variables in the state
-	TFloatValue* minState;		// Minimum values of the numeric variables in the state
-	TFloatValue* maxState;		// Maximum values of the numeric variables in the state
+  std::unique_ptr<TValue[]> state;				// Values of the SAS variables in the state
+	std::unique_ptr<TFloatValue[]> minState;		// Minimum values of the numeric variables in the state
+	std::unique_ptr<TFloatValue[]> maxState;		// Maximum values of the numeric variables in the state
 
 	TState(unsigned int numSASVars, unsigned int numNumVars);
-	TState(SASTask* task);
+	TState(std::shared_ptr<SASTask> task);
 	~TState();
 	inline uint64_t getCode() {
 		uint64_t code = 0;
@@ -30,7 +31,7 @@ public:
 			code = 31 * code + ((uint64_t)(100 * (minState[i] + maxState[i])));
 		return code;
 	}
-	inline bool compareTo(TState* s) {
+	inline bool compareTo(std::shared_ptr<TState> s) {
 		for (unsigned int i = 0; i < numNumVars; i++) {
 			if (abs(minState[i] - s->minState[i]) >= EPSILON) return false;
 			if (abs(maxState[i] - s->maxState[i]) >= EPSILON) return false;

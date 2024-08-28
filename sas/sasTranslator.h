@@ -13,10 +13,12 @@
 #include "sasTask.h"
 #include "mutexGraph.h"
 
+#include <memory>
+
 class LiteralTranslation {
 public:
-	unsigned int* numericVariables;						// New indexes for numeric variables
-	unsigned int* sasVariables;							// Already defined SAS variables
+	std::unique_ptr<unsigned int[]> numericVariables;						// New indexes for numeric variables
+	std::unique_ptr<unsigned int[]> sasVariables;							// Already defined SAS variables
 	std::vector< std::vector<unsigned int> > literals;	// literal -> <sasVariable, sasValue>
 	LiteralTranslation(unsigned int numVars);
 	~LiteralTranslation();
@@ -24,13 +26,13 @@ public:
 
 class SASTranslator {
 private:
-    GroundedTask* gTask;
-    bool** mutex;
-    bool* actions;
-    bool* isLiteral;
-    bool* literalInFNA;
-	bool* literalInF;
-	bool* negatedLiteral;
+    std::unique_ptr<GroundedTask> gTask;
+    std::unique_ptr<std::unique_ptr<bool[]>[]> mutex;
+    std::unique_ptr<bool[]> actions;
+    std::unique_ptr<bool[]> isLiteral;
+    std::unique_ptr<bool[]> literalInFNA;
+	  std::unique_ptr<bool[]> literalInF;
+	  std::unique_ptr<bool[]> negatedLiteral;
     bool negatedPrecs;
 	unsigned int numNewLiterals;
     unsigned int numVars;
@@ -43,7 +45,7 @@ private:
     bool holdsCondition(const GroundedCondition *c, std::vector<unsigned int>* preconditions);
     void computeMutex(GroundedAction* a, const std::vector<unsigned int> preconditions, unsigned int startEndPrec/*,
 		std::vector<bool>& holdCondEff*/);
-    void splitMutex(SASTask* sTask, bool onlyGenerateMutex);
+    void splitMutex(std::shared_ptr<SASTask> sTask, bool onlyGenerateMutex);
 	inline static int findInVector(unsigned int value, const std::vector<unsigned int>* v) {
         for (unsigned int i = 0; i < v->size(); i++)
             if ((*v)[i] == value) return (int) i;
@@ -84,43 +86,43 @@ private:
 		   }
         }
     }
-    void updateDomain(SASTask* sTask, MutexGraph* graph, LiteralTranslation* trans);
-    void simplifyDomain(SASTask* sTask, LiteralTranslation* trans);
-	void removeMultipleValues(SASTask* sTask, LiteralTranslation* trans);
-	void createNumericAndFiniteDomainVariables(SASTask* sTask, LiteralTranslation* trans);
-	void setInitialValuesForVariables(SASTask* sTask, LiteralTranslation* trans);
-	void createAction(GroundedAction* ga, SASTask* sTask, LiteralTranslation* trans, bool isGoal);
-	void generateControlVar(SASAction* a, GroundedControlVar* cv);
-	void generateDuration(SASAction* a, GroundedDuration* gd, LiteralTranslation* trans);
+    void updateDomain(std::shared_ptr<SASTask> sTask, MutexGraph* graph, LiteralTranslation* trans);
+    void simplifyDomain(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	void removeMultipleValues(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	void createNumericAndFiniteDomainVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	void setInitialValuesForVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	void createAction(GroundedAction* ga, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, bool isGoal);
+	void generateControlVar(std::shared_ptr<SASAction> a, GroundedControlVar* cv);
+	void generateDuration(std::shared_ptr<SASAction> a, GroundedDuration* gd, LiteralTranslation* trans);
 	char generateComparator(int comp);
 	char generateTime(int time);
 	SASNumericExpression generateNumericExpression(GroundedNumericExpression* gn, LiteralTranslation* trans);
 	SASNumericExpression generateNumericExpression(PartiallyGroundedNumericExpression* gn, LiteralTranslation* trans);
 	char generateNumericExpressionType(int type);
 	char generatePartiallyNumericExpressionType(int type);
-	void generateCondition(GroundedCondition* cond, SASTask* sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
-	void generateEffect(std::vector<GroundedCondition>* effects, unsigned int effIndex, SASTask* sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
+	void generateCondition(GroundedCondition* cond, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
+	void generateEffect(std::vector<GroundedCondition>* effects, unsigned int effIndex, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, std::vector<SASCondition>* conditionSet);
 	bool modifiedVariable(unsigned int sasVar, std::vector<GroundedCondition>* effects, unsigned int effIndex, LiteralTranslation* trans);
-	void checkModifiedVariable(SASCondition* c, SASAction* a);
+	void checkModifiedVariable(SASCondition* c, std::shared_ptr<SASAction> a);
 	void checkNegatedPreconditionLiterals(GroundedAction* a);
-	SASNumericCondition generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, SASAction* a);
+	SASNumericCondition generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, std::shared_ptr<SASAction> a);
 	SASNumericEffect generateNumericEffect(GroundedNumericEffect* cond, LiteralTranslation* trans);
 	char generateAssignment(int assignment);
-	SASPreference generatePreference(GroundedPreference* pref, SASTask* sTask, LiteralTranslation* trans);
-	SASGoalDescription generateGoalDescription(GroundedGoalDescription* gd, SASTask* sTask, LiteralTranslation* trans);
-	SASConstraint createConstraint(GroundedConstraint* gc, SASTask* sTask, LiteralTranslation* trans);
+	SASPreference generatePreference(GroundedPreference* pref, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	SASGoalDescription generateGoalDescription(GroundedGoalDescription* gd, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
+	SASConstraint createConstraint(GroundedConstraint* gc, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
 	SASMetric createMetric(GroundedMetric* metric, LiteralTranslation* trans);
 	void writeMutexFile();
 	void removeActionsWithMutexConditions();
 	bool hasMutexConditions(GroundedAction* a);
 	bool isMutex(GroundedCondition &c1, GroundedCondition &c2);
-	void translateMutex(SASTask* sTask, LiteralTranslation* trans);
+	void translateMutex(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans);
 	bool checkConditionalEffectHolds(GroundedConditionalEffect& e);
 	void classifyEffect(GroundedCondition& e, std::vector<unsigned int>& newA, std::vector<unsigned int>& add, 
 		std::vector<unsigned int>& del);
 
 public:
-    SASTask* translate(GroundedTask* gTask, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData);
+    void translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData, std::shared_ptr<SASTask> sTaskOut);
 };
 
 #endif

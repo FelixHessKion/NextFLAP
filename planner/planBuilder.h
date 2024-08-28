@@ -49,10 +49,10 @@ public:
 		newTime = t;
 		linearOrderIndex = i;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		int res = linearOrderIndex - ((PBTimepointToDelay*)other)->linearOrderIndex;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		int res = linearOrderIndex - std::dynamic_pointer_cast<PBTimepointToDelay>(other)->linearOrderIndex;
 		if (res == 0) {
-			if (newTime < ((PBTimepointToDelay*)other)->newTime) return 1;
+			if (newTime < std::dynamic_pointer_cast<PBTimepointToDelay>(other)->newTime) return 1;
 			else return -1;
 		}
 		else return res;
@@ -63,7 +63,7 @@ public:
 // Plan builder
 class PlanBuilder {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	unsigned int iteration;
 	std::vector< std::vector<unsigned int> >* matrix;
 	std::vector<TTimePoint> prevPoints;	// For internal calculations
@@ -73,19 +73,19 @@ private:
 	inline bool existOrder(TTimePoint t1, TTimePoint t2) { return (*matrix)[t1][t2] == iteration; }
 	inline void setOrder(TTimePoint t1, TTimePoint t2) { (*matrix)[t1][t2] = iteration; }
 	inline void clearOrder(TTimePoint t1, TTimePoint t2) { (*matrix)[t1][t2] = 0; }
-	void addCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVarValue varValue);
-	void addNumericCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVariable var);
-	void setActionStartTime(Plan* p);
-	bool checkFollowingSteps(Plan* p, std::vector<TTimePoint>& linearOrder);
+	void addCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVarValue varValue);
+	void addNumericCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVariable var);
+	void setActionStartTime(std::shared_ptr<Plan> p);
+	bool checkFollowingSteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& linearOrder);
 	bool invalidTILorder(TTimePoint p1, TTimePoint p2);
 	void topologicalOrder(std::vector<TTimePoint>* linearOrder);
 	unsigned int topologicalOrder(TTimePoint orig, std::vector<TTimePoint>* linearOrder, unsigned int pos,
 		std::vector<bool>* visited);
-	bool delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
+	bool delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
 		std::vector<TTimePoint>& linearOrder);
 
 public:
-	SASAction* action;					// New action added
+	std::shared_ptr<SASAction> action;					// New action added
 	unsigned int currentPrecondition;
 	unsigned int currentEffect;
 	unsigned int setPrecondition;
@@ -95,17 +95,17 @@ public:
 	std::vector<TOrdering> orderings;
 	std::vector<unsigned int> openCond;
 	int numSupportState;
-	bool* condEffHold;
+	std::shared_ptr<bool[]> condEffHold;
 
-	PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
-		int numSupportState, PlanEffects* planEffects, SASTask* task);
+	PlanBuilder(std::shared_ptr<SASAction> a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
+		int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task);
 	~PlanBuilder();
 	bool addLink(SASCondition* c, TTimePoint p1, TTimePoint p2);
 	bool addNumLink(TVariable v, TTimePoint p1, TTimePoint p2);
 	bool addOrdering(TTimePoint p1, TTimePoint p2);
 	void removeLastLink();
 	void removeLastOrdering();
-	Plan* generatePlan(Plan* basePlan, TPlanId idPlan);
+	std::shared_ptr<Plan> generatePlan(std::shared_ptr<Plan> basePlan, TPlanId idPlan);
 };
 
 #endif

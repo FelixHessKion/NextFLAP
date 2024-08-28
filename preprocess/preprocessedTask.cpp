@@ -13,7 +13,7 @@ using namespace std;
 /* CLASS: OpPreference                                  */
 /********************************************************/
 
-string OpPreference::toString(const vector<Variable> &opParameters, const vector<Variable>& controlVars, ParsedTask* task) {
+string OpPreference::toString(const vector<Variable> &opParameters, const vector<Variable>& controlVars, std::unique_ptr<ParsedTask> & task) {
     return "(" + name + ": " + preference.toString(opParameters, controlVars, task->functions,
         task->objects, task->types) + ")";
 }
@@ -289,7 +289,7 @@ void Operator::addNumericEffect(OpEffect eff, TimeSpecifier time) {
     else atEnd.numericEff.push_back(eff);
 }
 
-string Operator::toString(ParsedTask* task) {
+string Operator::toString(std::unique_ptr<ParsedTask> & task) {
     string s = name + "\nDURATION:";
     for (unsigned int i = 0; i < duration.size(); i++) {
         s += "\n " + duration[i].toString(parameters, controlVars, task->functions, task->objects);
@@ -366,8 +366,7 @@ string Operator::toString(ParsedTask* task) {
 /********************************************************/
 
 // Creates a new preprocessed task
-PreprocessedTask::PreprocessedTask(ParsedTask* parsedTask) {
-    task = parsedTask;
+PreprocessedTask::PreprocessedTask(std::unique_ptr<ParsedTask> & parsedTask): task(parsedTask){
 }
 
 // Disposes the preprocessed task

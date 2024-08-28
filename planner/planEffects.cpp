@@ -42,29 +42,20 @@ void VarChange::add(TValue v, TTimePoint time, unsigned int iteration) {
 /* CLASS: PlanEffects                                   */
 /********************************************************/
 
-PlanEffects::PlanEffects(SASTask* task)
+PlanEffects::PlanEffects(std::shared_ptr<SASTask> task)
 {
 	this->task = task;
 	int numVariables = (int)task->variables.size();
 	int numValues = (int)task->values.size();
-	planEffects = new PlanEffect * [numVariables];
+	planEffects = std::make_unique<std::unique_ptr<PlanEffect[]>[]>(numVariables);
 	for (int i = 0; i < numVariables; i++) {
-		planEffects[i] = new PlanEffect[numValues];
+		planEffects[i] = std::make_unique<PlanEffect[]>(numValues);
 	}
-	varChanges = new VarChange[numVariables];
+	varChanges = std::make_unique<VarChange[]>(numVariables);
 	int numNumVariables = (int)task->numVariables.size();
 	this->iteration = 0;
 }
 
-PlanEffects::~PlanEffects()
-{
-	delete[] varChanges;
-	unsigned int numVariables = (unsigned int)task->variables.size();
-	for (unsigned int i = 0; i < numVariables; i++) {
-		delete[] planEffects[i];
-	}
-	delete[] planEffects;
-}
 
 void PlanEffects::setCurrentIteration(unsigned int currentIteration, PlanComponents* planComponents)
 {
@@ -140,14 +131,14 @@ TFloatValue PlanEffects::getNumVarMinValue(TVariable var, int stateIndex)
 TFloatValue PlanEffects::getMinActionDuration(TTimePoint timepoint)
 {
 	TStep step = timePointToStep(timepoint);
-	Plan* plan = planComponents->get(step);
+	std::shared_ptr<Plan> plan = planComponents->get(step);
 	return plan->actionDuration.minValue;
 }
 
 TFloatValue PlanEffects::getMinControlVarValue(TTimePoint timepoint, TVariable var)
 {
 	TStep step = timePointToStep(timepoint);
-	Plan* plan = planComponents->get(step);
+	std::shared_ptr<Plan> plan = planComponents->get(step);
 	return plan->cvarValues->at(var).minValue;
 }
 
@@ -166,13 +157,13 @@ TFloatValue PlanEffects::getNumVarMaxValue(TVariable var, int stateIndex)
 TFloatValue PlanEffects::getMaxActionDuration(TTimePoint timepoint)
 {
 	TStep step = timePointToStep(timepoint);
-	Plan* plan = planComponents->get(step);
+	std::shared_ptr<Plan> plan = planComponents->get(step);
 	return plan->actionDuration.maxValue;
 }
 
 TFloatValue PlanEffects::getMaxControlVarValue(TTimePoint timepoint, TVariable var)
 {
 	TStep step = timePointToStep(timepoint);
-	Plan* plan = planComponents->get(step);
+	std::shared_ptr<Plan> plan = planComponents->get(step);
 	return plan->cvarValues->at(var).maxValue;
 }

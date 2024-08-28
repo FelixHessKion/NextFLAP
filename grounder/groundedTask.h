@@ -12,6 +12,7 @@
 #include "../utils/utils.h"
 #include <cstdint>
 #include <fstream>
+#include <memory>
 
 // Types of the control parameters (real or integer)
 enum GroundedControlVarType {
@@ -25,7 +26,7 @@ public:
     std::string name;
     GroundedControlVarType type;
 
-    GroundedControlVar(Variable& v, unsigned int i, ParsedTask* task) {
+    GroundedControlVar(Variable& v, unsigned int i, std::unique_ptr<ParsedTask> & task) {
         name = v.name;
         index = i;
         if (v.types[0] == task->INTEGER_TYPE) type = GCVT_INTEGER;
@@ -43,7 +44,7 @@ public:
     float time;             // 0 if it is not a time-initial literal
     unsigned int value;
     float numericValue;
-    std::string toString(ParsedTask* task, bool isNumeric);
+    std::string toString(std::unique_ptr<ParsedTask> & task, bool isNumeric);
 };
 
 // Grounded variable
@@ -54,8 +55,8 @@ public:
     std::vector<unsigned int> params;
     bool isNumeric;
     std::vector<GroundedValue> initialValues;
-    std::string toString(ParsedTask* task);
-    std::string toString(ParsedTask* task, bool isGoal);
+    std::string toString(std::unique_ptr<ParsedTask> & task);
+    std::string toString(std::unique_ptr<ParsedTask> & task, bool isGoal);
 };
 
 // Grounded condition
@@ -64,8 +65,8 @@ public:
     unsigned int varIndex;
     unsigned int valueIndex;
     GroundedCondition(unsigned int variable, unsigned int value);
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables);
-    void writePDDLCondition(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables, bool isGoal);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
+    void writePDDLCondition(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, bool isGoal);
 };
 
 // Types of numeric expressions
@@ -81,9 +82,9 @@ public:
     float value;                  // if type == GE_NUMBER
     unsigned int index;           // if type == GE_VAR | GE_OBJECT
     std::vector<GroundedNumericExpression> terms;  // if type == GE_SUM | GE_SUB | GE_DIV | GE_MUL | GE_SHARP_T
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, 
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, 
         std::vector<GroundedControlVar>& controlVars);
-    void writePDDLNumericExpression(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables, bool isGoal);
+    void writePDDLNumericExpression(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, bool isGoal);
     bool requiresNumericVariable(TVariable v);
 };
 
@@ -102,8 +103,8 @@ public:
     std::vector<unsigned int> paramIndex;   // if type == PGE_UNGROUNDED_VAR | PGE_TERM
     std::vector<PartiallyGroundedNumericExpression> terms;  // if type == PGE_SUM | PGE_SUB | PGE_DIV | PGE_MUL | PGE_NOT
     void addTerm(Term &term, std::vector<unsigned int> &parameters);
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables);
-    void writePDDLNumericExpression(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
+    void writePDDLNumericExpression(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
 };
       
 // Grounded numeric condition
@@ -111,8 +112,8 @@ class GroundedNumericCondition {
 public:
     Comparator comparator;
     std::vector<GroundedNumericExpression> terms;
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
-    void writePDDLCondition(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables, bool isGoal);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
+    void writePDDLCondition(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, bool isGoal);
     bool requiresNumericVariable(TVariable v);
 };
 
@@ -122,8 +123,8 @@ public:
     Assignment assignment;
     unsigned int varIndex;
     GroundedNumericExpression exp;
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
-    void writePDDLEffect(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
+    void writePDDLEffect(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
 };
 
 // Types of grounded goal descriptions
@@ -134,8 +135,8 @@ enum GroundedGoalDescriptionType {GG_FLUENT = 0, GG_UNGROUNDED_FLUENT = 1,
 // Grounded goal description
 class GroundedGoalDescription {
 private:
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, unsigned int paramNumber);
-    void writePDDLGoal(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables, char paramName);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, unsigned int paramNumber);
+    void writePDDLGoal(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, char paramName);
     
 public:
     TimeSpecifier time;
@@ -151,8 +152,8 @@ public:
     Comparator comparator;                                 // if type == GG_COMP
     std::vector<PartiallyGroundedNumericExpression> exp;   // if type == GG_COMP
     void addTerm(Term &term, std::vector<unsigned int> &parameters);
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables);
-    void writePDDLGoal(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
+    void writePDDLGoal(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
 };
 
 // Grounded preference
@@ -160,9 +161,9 @@ class GroundedPreference {
 public:
     unsigned int nameIndex;
     GroundedGoalDescription preference;
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables,
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
-    void writePDDLPreference(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables,
+    void writePDDLPreference(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
 };
 
@@ -172,8 +173,8 @@ public:
     TimeSpecifier time;
     Comparator comp;
     GroundedNumericExpression exp;
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
-    void writePDDLDuration(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, std::vector<GroundedControlVar>& controlVars);
+    void writePDDLDuration(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
 };
 
 class GroundedConditionalEffect {
@@ -193,8 +194,8 @@ public:
 // Grounded action
 class GroundedAction {
 private:
-    void writePDDLDuration(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
-    void writePDDLEffect(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables);
+    void writePDDLDuration(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
+    void writePDDLEffect(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables);
     
 public:
     unsigned int index;
@@ -223,14 +224,14 @@ public:
         this->isTIL = isTIL;
         this->isGoal = isGoal;
     }
-    std::string getName(ParsedTask* task);
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables,
+    std::string getName(std::unique_ptr<ParsedTask> & task);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
-    void writePDDLAction(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables,
+    void writePDDLAction(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
-	void writePDDLCondition(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables,
+	void writePDDLCondition(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
-    void writePDDLGoal(std::ofstream &f, ParsedTask* task, std::vector<GroundedVar> &variables,
+    void writePDDLGoal(std::ofstream &f, std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables,
                 std::vector<std::string> &preferenceNames);
     bool requiresNumericVariable(TVariable v);
 };
@@ -244,7 +245,7 @@ public:
     std::vector<GroundedGoalDescription> goal;      // if type!=RT_AND & RT_PREFERENCE & RT_FORALL
     std::vector<float> time;                		// if type==RT_WITHIN | RT_ALWAYS_WITHIN | RT_HOLD_DURING | RT_HOLD_AFTER
     std::vector< std::vector<unsigned int> > paramTypes;   // if type == RT_FORALL
-    std::string toString(ParsedTask* task, std::vector<GroundedVar> &variables, std::vector<std::string> &preferenceNames);
+    std::string toString(std::unique_ptr<ParsedTask> & task, std::vector<GroundedVar> &variables, std::vector<std::string> &preferenceNames);
 };
 
 // Grounded metric
@@ -281,8 +282,8 @@ private:
     void writePDDLMetric(std::ofstream &f, Metric &m);
      
 public:
-    ParsedTask* task;
-    GroundedTask(ParsedTask* parsedTask);
+    std::unique_ptr<ParsedTask> & task;
+    GroundedTask(std::unique_ptr<ParsedTask> & parsedTask);
     std::vector<GroundedVar> variables;
     std::vector<GroundedAction> actions;
     std::vector<GroundedAction> goals;
@@ -294,7 +295,7 @@ public:
 	
     std::string toString();
     void writePDDLDomain();
-    static void writePDDLTypes(std::ofstream &f, std::vector<unsigned int> &types, ParsedTask* task);
+    static void writePDDLTypes(std::ofstream &f, std::vector<unsigned int> &types, std::unique_ptr<ParsedTask> & task);
     void writePDDLProblem();
 };
 

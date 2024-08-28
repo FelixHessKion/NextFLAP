@@ -18,7 +18,7 @@ SearchQueue::SearchQueue() {
 }
 
 // Adds a new plan to the list of open nodes
-void SearchQueue::add(Plan* p) {
+void SearchQueue::add(std::shared_ptr<Plan> p) {
 	unsigned int gap = (unsigned int)pq.size();
 	uint32_t parent;
 	pq.push_back(nullptr);
@@ -31,8 +31,8 @@ void SearchQueue::add(Plan* p) {
 }
 
 // Removes and returns the best plan in the queue of open nodes
-Plan* SearchQueue::poll() {
-	Plan* best = pq[1];
+std::shared_ptr<Plan> SearchQueue::poll() {
+	std::shared_ptr<Plan> best = pq[1];
 	if (pq.size() > 2) {
 		pq[1] = pq.back();
 		pq.pop_back();
@@ -44,7 +44,7 @@ Plan* SearchQueue::poll() {
 
 // Repairs the order in the priority queue
 void SearchQueue::heapify(unsigned int gap) {
-	Plan* aux = pq[gap];
+	std::shared_ptr<Plan> aux = pq[gap];
 	unsigned int child = gap << 1;
 	while (child < pq.size()) {
 		if (child != pq.size() - 1 && pq[child + 1]->compare(pq[child]) < 0)

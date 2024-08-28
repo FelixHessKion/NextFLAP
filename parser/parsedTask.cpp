@@ -150,7 +150,7 @@ NumericExpression::NumericExpression(unsigned int fncIndex, const vector<Term>& 
         function.params.push_back(fncParams[i]);
 }
 
-NumericExpression::NumericExpression(Symbol s, const vector<NumericExpression>& operands, SyntaxAnalyzer* syn) {
+NumericExpression::NumericExpression(Symbol s, const vector<NumericExpression>& operands, std::shared_ptr<SyntaxAnalyzer>  syn) {
     switch (s) {
     case Symbol::MINUS:
         if (operands.size() == 1) type = NET_NEGATION;
@@ -823,7 +823,7 @@ unsigned int ParsedTask::getTypeIndex(string const& name) {
 }
 
 // Stores a PDDL type and returns its index
-unsigned int ParsedTask::addType(string name, vector<unsigned int>& parentTypes, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addType(string name, vector<unsigned int>& parentTypes, std::shared_ptr<SyntaxAnalyzer>  syn) {
     unsigned int index = getTypeIndex(name);
     Type* t;
     if (index != MAX_UNSIGNED_INT) {	// Type redefined -> update its parent types
@@ -850,7 +850,7 @@ unsigned int ParsedTask::getObjectIndex(string const& name) {
 }
 
 // Stores a PDDL constant and returns its index
-unsigned int ParsedTask::addConstant(string name, vector<unsigned int>& types, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addConstant(string name, vector<unsigned int>& types, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getObjectIndex(name) != MAX_UNSIGNED_INT)
         syn->notifyError("Constant '" + name + "' redefined");
     unsigned int index = (unsigned int)objects.size();
@@ -863,7 +863,7 @@ unsigned int ParsedTask::addConstant(string name, vector<unsigned int>& types, S
 }
 
 // Stores a PDDL object and returns its index
-unsigned int ParsedTask::addObject(string name, vector<unsigned int>& types, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addObject(string name, vector<unsigned int>& types, std::shared_ptr<SyntaxAnalyzer>  syn) {
     Object* obj;
     unsigned int index = getObjectIndex(name);
     if (getObjectIndex(name) != MAX_UNSIGNED_INT) {
@@ -897,7 +897,7 @@ unsigned int ParsedTask::getPreferenceIndex(std::string const& name) {
 }
 
 // Stores a predicate and returns its index
-unsigned int ParsedTask::addPredicate(Function fnc, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addPredicate(Function fnc, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getFunctionIndex(fnc.name) != MAX_UNSIGNED_INT)
         syn->notifyError("Predicate '" + fnc.name + "' redefined");
     unsigned int index = (unsigned int)functions.size();
@@ -909,7 +909,7 @@ unsigned int ParsedTask::addPredicate(Function fnc, SyntaxAnalyzer* syn) {
 }
 
 // Stores a function and returns its index
-unsigned int ParsedTask::addFunction(Function fnc, const vector<unsigned int>& valueTypes, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addFunction(Function fnc, const vector<unsigned int>& valueTypes, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getFunctionIndex(fnc.name) != MAX_UNSIGNED_INT)
         syn->notifyError("Function '" + fnc.name + "' redefined");
     unsigned int index = (unsigned int)functions.size();
@@ -920,7 +920,7 @@ unsigned int ParsedTask::addFunction(Function fnc, const vector<unsigned int>& v
     return index;
 }
 
-unsigned int ParsedTask::addFunction(Function fnc, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addFunction(Function fnc, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getFunctionIndex(fnc.name) != MAX_UNSIGNED_INT)
         syn->notifyError("Function '" + fnc.name + "' redefined");
     unsigned int index = (unsigned int)functions.size();
@@ -934,7 +934,7 @@ unsigned int ParsedTask::addFunction(Function fnc, SyntaxAnalyzer* syn) {
 // Stores a durative action and returns its index
 unsigned int ParsedTask::addAction(string name, const vector<Variable>& parameters, const vector<Variable>& controlVars,
     const vector<Duration>& duration, const DurativeCondition& condition,
-    const DurativeEffect& effect, SyntaxAnalyzer* syn) {
+    const DurativeEffect& effect, std::shared_ptr<SyntaxAnalyzer>  syn) {
     for (unsigned int i = 0; i < durativeActions.size(); i++)
         if (durativeActions[i].name.compare(name) == 0)
             syn->notifyError("Action '" + name + "' redefined");
@@ -958,7 +958,7 @@ unsigned int ParsedTask::addAction(string name, const vector<Variable>& paramete
 
 // Stores an action and returns its index
 unsigned int ParsedTask::addAction(std::string name, const vector<Variable>& parameters,
-    const Precondition& precondition, const Effect& effect, SyntaxAnalyzer* syn) {
+    const Precondition& precondition, const Effect& effect, std::shared_ptr<SyntaxAnalyzer>  syn) {
     for (unsigned int i = 0; i < durativeActions.size(); i++)
         if (durativeActions[i].name.compare(name) == 0)
             syn->notifyError("Action '" + name + "' redefined");
@@ -977,7 +977,7 @@ unsigned int ParsedTask::addAction(std::string name, const vector<Variable>& par
 }
 
 // Stores a preference
-unsigned int ParsedTask::addPreference(std::string name, const GoalDescription& goal, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addPreference(std::string name, const GoalDescription& goal, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getPreferenceIndex(name) != MAX_UNSIGNED_INT)
         syn->notifyError("Preference '" + name + "' redefined");
     unsigned int index = (unsigned int)preferences.size();
@@ -991,7 +991,7 @@ unsigned int ParsedTask::addPreference(std::string name, const GoalDescription& 
 }
 
 // Stores a preference
-unsigned int ParsedTask::addPreference(const Constraint& c, SyntaxAnalyzer* syn) {
+unsigned int ParsedTask::addPreference(const Constraint& c, std::shared_ptr<SyntaxAnalyzer>  syn) {
     if (getPreferenceIndex(c.preferenceName) != MAX_UNSIGNED_INT)
         syn->notifyError("Preference '" + c.preferenceName + "' redefined");
     unsigned int index = (unsigned int)preferences.size();

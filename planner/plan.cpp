@@ -12,7 +12,7 @@ using namespace std;
 /* CLASS: Plan                                          */
 /********************************************************/
 
-Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEff) {
+Plan::Plan(std::shared_ptr<SASAction> action, std::weak_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff) {
 	this->parentPlan = parentPlan;
 	this->action = action;
 	this->childPlans = nullptr;
@@ -20,8 +20,8 @@ Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEf
 	this->cvarValues = nullptr;
 	this->planUpdates = nullptr;
     this->fixedInit = false;
-    if (parentPlan != nullptr && action->startNumEff.size()) this->g = parentPlan->g + action->startNumEff[0].exp.value;
-    else if (parentPlan != nullptr ) this->g = parentPlan->g + 1;
+    if (parentPlan.lock() != nullptr && action->startNumEff.size()) this->g = parentPlan.lock()->g + action->startNumEff[0].exp.value;
+    else if (parentPlan.lock() != nullptr ) this->g = parentPlan.lock()->g + 1;
     else this->g = 0;
     addFluentIntervals();
     this->h = (int)MAX_UINT16;
@@ -40,16 +40,11 @@ Plan::Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEf
 	}
 }
 
-Plan::~Plan()
-{
-	if (fs != nullptr) delete fs;
-	if (holdCondEff != nullptr) delete holdCondEff;
-}
 
 void Plan::addFluentIntervals(PlanPoint& pp, std::vector<SASNumericEffect>& eff)
 {
 	if (eff.size() > 0) {
-		pp.numVarValues = new std::vector<TFluentInterval>();
+		pp.numVarValues = std::make_shared<std::vector<TFluentInterval>>();
 		for (int i = 0; i < eff.size(); i++) {
 			SASNumericEffect* ne = &(eff[i]);
 			pp.numVarValues->emplace_back(ne->var, ne->exp.value, ne->exp.value);
@@ -60,7 +55,7 @@ void Plan::addFluentIntervals(PlanPoint& pp, std::vector<SASNumericEffect>& eff)
 void Plan::addConditionalEffect(unsigned int numEff)
 {
 	if (holdCondEff == nullptr) {
-		holdCondEff = new vector<int>();
+		holdCondEff = std::make_shared<vector<int>>();
 	}
 	holdCondEff->push_back(numEff);
 }
@@ -78,7 +73,7 @@ void Plan::setTime(TTime init,  TTime end, bool fixed) {
 
 // Compares this plan with the given one. Returns a negative number if this is better, 
 // 0 if both are equally good or a positive number if p is better
-int Plan::compare(Plan* p)
+int Plan::compare(std::shared_ptr<Plan> p)
 {
 	if (SIGNIFICATIVE_LANDMARKS) {
 		int v1 = g + h + 2 * hLand, v2 = p->g + p->h + 2 * p->hLand;
@@ -96,7 +91,7 @@ int Plan::compare(Plan* p)
 
 bool Plan::isRoot()
 {
-	return parentPlan == nullptr || this->action->isTIL;
+	return parentPlan.lock() == nullptr || this->action->isTIL;
 }
 
 void Plan::addFluentIntervals()
@@ -105,22 +100,22 @@ void Plan::addFluentIntervals()
 	addFluentIntervals(this->endPoint, this->action->endNumEff);
 }
 
-void Plan::addChildren(std::vector<Plan*>& suc)
+void Plan::addChildren(std::vector<std::shared_ptr<Plan>>& suc)
 {
-	childPlans = new std::vector<Plan*>(suc);
+	childPlans = std::make_shared<std::vector<std::shared_ptr<Plan>>>(suc);
 }
 
 void Plan::addPlanUpdate(TTimePoint tp, TFloatValue time)
 {
 	if (planUpdates == nullptr)
-		planUpdates = new std::vector<TPlanUpdate>();
+		planUpdates = std::make_unique<std::vector<TPlanUpdate>>();
 	planUpdates->emplace_back(tp, time);
 }
 
 int Plan::getCheckDistance()
 {
-	if (z3Checked || parentPlan == nullptr) return 0;
-	return 1 + parentPlan->getCheckDistance();
+	if (z3Checked || parentPlan.lock() == nullptr) return 0;
+	return 1 + parentPlan.lock()->getCheckDistance();
 }
 
 /*
@@ -150,6 +145,6 @@ void PlanPoint::addNumericCausalLink(TTimePoint timePoint, TVarValue var)
 void PlanPoint::addNumericValue(TVariable v, TFloatValue min, TFloatValue max)
 {
 	if (numVarValues == nullptr)
-		numVarValues = new std::vector<TFluentInterval>();
+		numVarValues = std::make_shared<std::vector<TFluentInterval>>();
 	numVarValues->emplace_back(v, min, max);
 }

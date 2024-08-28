@@ -64,7 +64,7 @@ void Successors::computeBasePlanEffects(std::vector<TTimePoint>& linearOrder)
 	for (int i = 1; i < linearOrder.size(); i++) {
 		TTimePoint timePoint = linearOrder[i];
 		TStep step = timePointToStep(timePoint);
-		Plan* plan = planComponents.get(step);
+		std::shared_ptr<Plan> plan = planComponents.get(step);
 		bool atStart = (timePoint & 1) == 0;
 		if (atStart) {
 			planPoint = &(plan->startPoint);
@@ -97,15 +97,15 @@ void Successors::computeBasePlanEffects(std::vector<TTimePoint>& linearOrder)
 void Successors::fullSuccessorsCalculation()
 {
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		fullActionCheck(&(task->goals[i]), MAX_UINT16, 0, 0, 0);
+		fullActionCheck(task->goals[i], MAX_UINT16, 0, 0, 0);
 	}
 	for (unsigned int i = 0; i < task->actions.size(); i++) {
-		fullActionCheck(&(task->actions[i]), MAX_UINT16, 0, 0, 0);
+		fullActionCheck(task->actions[i], MAX_UINT16, 0, 0, 0);
 	}
 }
 
 // Checks if the given action can generate a successor plan
-void Successors::fullActionCheck(SASAction* a, TVariable var, TValue value, TTimePoint effectTime,
+void Successors::fullActionCheck(std::shared_ptr<SASAction> a, TVariable var, TValue value, TTimePoint effectTime,
 	TTimePoint startTimeNewAction)
 {
 	/*
@@ -174,7 +174,7 @@ bool Successors::setNumericCausalLinks(PlanBuilder* pb, int numSupportState, SAS
 	return true;
 }
 
-void Successors::computeSupportingTimePoints(SASAction* action, int numSupportState, std::vector<TTimePoint>* supportingTimePoints) {
+void Successors::computeSupportingTimePoints(std::shared_ptr<SASAction> action, int numSupportState, std::vector<TTimePoint>* supportingTimePoints) {
 	if (action->isGoal) {
 		for (TVariable v : task->numVarReqGoal[action->index]) {
 			int ns = numSupportState;
@@ -234,7 +234,7 @@ void Successors::addNumericSupport(PlanBuilder* pb, int numCond, std::vector<TTi
 	}
 }
 
-int Successors::supportedNumericConditions(SASAction* a)
+int Successors::supportedNumericConditions(std::shared_ptr<SASAction> a)
 {
 	if (planEffects.numStates.empty()) return -1; // Supported since there are no numeric fluents in the problem
 	if (a->startNumCond.empty() && a->overNumCond.empty() && a->endNumCond.empty())
@@ -247,7 +247,7 @@ int Successors::supportedNumericConditions(SASAction* a)
 	return -2;	// Index of the numeric state that supports the numeric conditions. -2 means unsupported conditions
 }
 
-int Successors::supportedNumericConditions(SASConditionalEffect* e, SASAction* a)
+int Successors::supportedNumericConditions(SASConditionalEffect* e, std::shared_ptr<SASAction> a)
 {
 	if (planEffects.numStates.empty()) return -1; // Supported since there are no numeric fluents in the problem
 	if (e->startNumCond.empty() && e->endNumCond.empty())
@@ -260,7 +260,7 @@ int Successors::supportedNumericConditions(SASConditionalEffect* e, SASAction* a
 	return -2;	// Index of the numeric state that supports the numeric conditions. -2 means unsupported conditions
 }
 
-bool Successors::supportedConditions(const SASAction* a)
+bool Successors::supportedConditions(const std::shared_ptr<SASAction> a)
 {
 	for (unsigned int i = 0; i < a->startCond.size(); i++)
 		if (!supportedCondition(a->startCond[i]))
@@ -277,8 +277,8 @@ bool Successors::supportedConditions(const SASAction* a)
 	return true;
 }
 
-Successors::Successors(TState* state, SASTask* task, bool forceAtEndConditions, bool filterRepeatedStates,
-	std::vector<SASAction*>* tilActions) : planEffects(task)
+Successors::Successors(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, bool forceAtEndConditions, bool filterRepeatedStates,
+	std::vector<std::shared_ptr<SASAction>>* tilActions) : planEffects(task)
 {
 	this->task = task;
 	this->initialState = state;
@@ -517,7 +517,7 @@ void Successors::checkCondEffCondition(int numEff, int numCond, SASCondition* c,
 void Successors::generateSuccessor(PlanBuilder* pb)
 {
 	pb->addOrdering(pb->lastTimePoint - 1, pb->lastTimePoint);		// Ordering from the begining to the end of the new step
-	Plan* p = pb->generatePlan(basePlan, ++idPlan);
+	std::shared_ptr<Plan> p = pb->generatePlan(basePlan, ++idPlan);
 	if (p != nullptr) {
 		addSuccessor(p);
 	}
@@ -531,12 +531,9 @@ void Successors::generateSuccessor(PlanBuilder* pb)
 Successors::~Successors() {
 }
 
-void Successors::addSuccessor(Plan* p)
+void Successors::addSuccessor(std::shared_ptr<Plan> p)
 {
-	if (PrintPlan::getMakespan(p) > bestMakespan) {
-		delete p;
-	}
-	else {
+	if (PrintPlan::getMakespan(p) <= bestMakespan) {
 		evaluator.calculateFrontierState(p);
 		evaluator.evaluate(p);
 		
@@ -553,7 +550,7 @@ void Successors::addSuccessor(Plan* p)
 }
 
 // Fills vector suc with the possible successor plans of the given base plan
-void Successors::computeSuccessors(Plan* base, std::vector<Plan*>* suc, float bestMakespan)
+void Successors::computeSuccessors(std::shared_ptr<Plan> base, std::vector<std::shared_ptr<Plan>>* suc, float bestMakespan)
 {
 	//PrintPlan::rawPrint(base, task);
 
@@ -570,21 +567,21 @@ void Successors::computeSuccessors(Plan* base, std::vector<Plan*>* suc, float be
 		fullSuccessorsCalculation();
 	}
 	else { 							// Calculation of successores based on the parent plan
-		for (SASAction& a : task->goals) {
-			fullActionCheck(&a, MAX_UINT16, 0, 0, 0);
+		for (std::shared_ptr<SASAction> a : task->goals) {
+			fullActionCheck(a, MAX_UINT16, 0, 0, 0);
 		}
 		computeSuccessorsSupportedByLastActions();
 		computeSuccessorsThroughBrotherPlans();
 	}
 }
 
-bool Successors::repeatedState(Plan* p)
+bool Successors::repeatedState(std::shared_ptr<Plan> p)
 {
 	if (!filterRepeatedStates) return false;
 	uint64_t code = p->fs->getCode();
-	std::unordered_map<uint64_t, std::vector<Plan*> >::const_iterator got = memo.find(code);
+	std::unordered_map<uint64_t, std::vector<std::shared_ptr<Plan>> >::const_iterator got = memo.find(code);
 	if (got != memo.end()) {
-		for (Plan* op : got->second) {
+		for (std::shared_ptr<Plan> op : got->second) {
 			if (p->fs->compareTo(op->fs)) {
 				return true;	// Repeated state
 			}
@@ -592,7 +589,7 @@ bool Successors::repeatedState(Plan* p)
 		memo[code].push_back(p);
 	}
 	else {
-		std::vector<Plan*> v;
+		std::vector<std::shared_ptr<Plan>> v;
 		v.push_back(p);
 		memo[code] = v;
 	}
@@ -603,12 +600,12 @@ bool Successors::repeatedState(Plan* p)
 void Successors::computeSuccessorsSupportedByLastActions()
 {
 	if (basePlan->repeatedState) return;
-	SASAction* a = basePlan->action;
+	std::shared_ptr<SASAction> a = basePlan->action;
 	TTimePoint startTimeNewAction = stepToStartPoint(newStep);
 	TTimePoint startTimeLastAction = startTimeNewAction - 2;
 	for (SASCondition& c : a->startEff) {
-		vector<SASAction*>& req = task->requirers[c.var][c.value];
-		for (SASAction* ra : req) {
+		vector<std::shared_ptr<SASAction>>& req = task->requirers[c.var][c.value];
+		for (std::shared_ptr<SASAction> ra : req) {
 			if (!visitedAction(ra)) {
 				setVisitedAction(ra);
 				//cout << "Action " << ra->name << " supported by at-start" << endl;
@@ -617,8 +614,8 @@ void Successors::computeSuccessorsSupportedByLastActions()
 		}
 	}
 	for (SASCondition& c : a->endEff) {
-		vector<SASAction*>& req = task->requirers[c.var][c.value];
-		for (SASAction* ra : req) {
+		vector<std::shared_ptr<SASAction>>& req = task->requirers[c.var][c.value];
+		for (std::shared_ptr<SASAction> ra : req) {
 			if (!visitedAction(ra)) {
 				setVisitedAction(ra);
 				//cout << "Action " << ra->name << " supported by at-end" << endl;
@@ -627,8 +624,8 @@ void Successors::computeSuccessorsSupportedByLastActions()
 		}
 	}
 	for (SASNumericEffect& c : a->startNumEff) {
-		vector<SASAction*>& req = task->numRequirers[c.var];
-		for (SASAction* ra : req) {
+		vector<std::shared_ptr<SASAction>>& req = task->numRequirers[c.var];
+		for (std::shared_ptr<SASAction> ra : req) {
 			if (!visitedAction(ra)) {
 				setVisitedAction(ra);
 				fullActionCheck(ra, MAX_UINT16, 0, startTimeLastAction, startTimeNewAction);
@@ -636,8 +633,8 @@ void Successors::computeSuccessorsSupportedByLastActions()
 		}
 	}
 	for (SASNumericEffect& c : a->endNumEff) {
-		vector<SASAction*>& req = task->numRequirers[c.var];
-		for (SASAction* ra : req) {
+		vector<std::shared_ptr<SASAction>>& req = task->numRequirers[c.var];
+		for (std::shared_ptr<SASAction> ra : req) {
 			if (!visitedAction(ra)) {
 				setVisitedAction(ra);
 				fullActionCheck(ra, MAX_UINT16, 0, startTimeLastAction + 1, startTimeNewAction);
@@ -650,7 +647,7 @@ void Successors::computeSuccessorsSupportedByLastActions()
 unsigned int Successors::addActionSupport(PlanBuilder* pb, TVariable var, TValue value, TTimePoint effectTime,
 	TTimePoint startTimeNewAction)
 {
-	SASAction* a = pb->action;
+	std::shared_ptr<SASAction> a = pb->action;
 	for (unsigned int i = 0; i < a->startCond.size(); i++) {
 		if (a->startCond[i].var == var && a->startCond[i].value == value) {
 			pb->setPrecondition = i;
@@ -685,10 +682,10 @@ unsigned int Successors::addActionSupport(PlanBuilder* pb, TVariable var, TValue
 
 void Successors::computeSuccessorsThroughBrotherPlans()
 {
-	Plan* parentPlan = basePlan->parentPlan;
-	vector<Plan*>* brotherPlans = parentPlan->childPlans;
+	std::shared_ptr<Plan> parentPlan = basePlan->parentPlan.lock();
+  std::shared_ptr<vector<std::shared_ptr<Plan>>> brotherPlans = parentPlan->childPlans;
 	for (unsigned int i = 0; i < brotherPlans->size(); i++) {
-		Plan* brotherPlan = (*brotherPlans)[i];
+		std::shared_ptr<Plan> brotherPlan = (*brotherPlans)[i];
 		if (brotherPlan != basePlan && !brotherPlan->expanded() && !visitedAction(brotherPlan->action)) {
 			setVisitedAction(brotherPlan->action);
 			fullActionCheck(brotherPlan->action, MAX_UINT16, 0, 0, 0);
@@ -755,7 +752,7 @@ void Successors::fullConditionSupportCheck(PlanBuilder* pb, SASCondition* c, TTi
 void Successors::checkThreatsBetweenCausalLinksInBasePlanAndNewActionEffects(PlanBuilder* pb, std::vector<Threat>* threats) {
 	TTimePoint p2 = 0;
 	for (TStep i = 0; i < planComponents.size(); i++) {
-		Plan* planComp = planComponents.get(i);
+		std::shared_ptr<Plan> planComp = planComponents.get(i);
 		for (TCausalLink& cl : planComp->startPoint.causalLinks) {
 			checkThreatBetweenCausalLinkInBasePlanAndNewActionEffects(pb, threats, cl, p2);
 		}
@@ -872,8 +869,8 @@ void Successors::checkThreats(PlanBuilder* pb) {
 bool Successors::mutexPoints(TTimePoint p1, TTimePoint p2, TVariable var, PlanBuilder* pb)
 {
 	TStep s1 = p1 >> 1, s2 = p2 >> 1;
-	SASAction* a1 = s1 == planComponents.size() ? pb->action : planComponents.get(s1)->action;
-	SASAction* a2 = s2 == planComponents.size() ? pb->action : planComponents.get(s2)->action;
+	std::shared_ptr<SASAction> a1 = s1 == planComponents.size() ? pb->action : planComponents.get(s1)->action;
+	std::shared_ptr<SASAction> a2 = s2 == planComponents.size() ? pb->action : planComponents.get(s2)->action;
 	if (a1->instantaneous || a2->instantaneous) {
 		SASCondition* c1 = getRequiredValue(a1, var);
 		if (c1 == nullptr || !c1->isModified) return false;
@@ -888,14 +885,14 @@ bool Successors::mutexPoints(TTimePoint p1, TTimePoint p2, TVariable var, PlanBu
 	}
 }
 
-SASCondition* Successors::getRequiredValue(SASAction* a, TVariable var) {
+SASCondition* Successors::getRequiredValue(std::shared_ptr<SASAction> a, TVariable var) {
 	for (SASCondition &c : a->startCond)
 		if (c.var == var) 
 			return &c;
 	return nullptr;
 }
 
-SASCondition* Successors::getRequiredValue(TTimePoint p, SASAction* a, TVariable var) {
+SASCondition* Successors::getRequiredValue(TTimePoint p, std::shared_ptr<SASAction> a, TVariable var) {
 	std::vector<SASCondition>* cond = (p & 1) == 0 ? &(a->startCond) : &(a->endCond);
 	for (unsigned int i = 0; i < cond->size(); i++)
 		if ((*cond)[i].var == var) return &((*cond)[i]);

@@ -12,7 +12,7 @@ using namespace std;
 /* LandmarkRPG                             */
 /*******************************************/
 
-bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyFluent(TVariable v, TValue value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	achievedFluent.erase(SASTask::getVariableValueCode(v, value));
@@ -22,9 +22,9 @@ bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, SASTask* ta
 			TVariable gv = SASTask::getVariableIndex(lastLevel->at(i));
 			TValue gvalue = SASTask::getValueIndex(lastLevel->at(i));
 			if (gv == v && gvalue == value) continue;
-			std::vector<SASAction*>& aList = task->requirers[gv][gvalue];
+			std::vector<std::shared_ptr<SASAction>>& aList = task->requirers[gv][gvalue];
 			for (unsigned int j = 0; j < aList.size(); j++) {
-				SASAction* a = aList[j];
+				std::shared_ptr<SASAction> a = aList[j];
 				if (!achievedAction[a->index] && isExecutable(a, v, value)) {
 					achievedAction[a->index] = true;
 					addActionEffects(a);
@@ -38,7 +38,7 @@ bool LandmarkRPG::verifyFluent(TVariable v, TValue value, TState* s, SASTask* ta
 	return res;
 }
 
-bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	unsigned int n = v->size();
@@ -58,9 +58,9 @@ bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* 
 				}
 			}
 			if (!inSet) {
-				std::vector<SASAction*>& aList = task->requirers[gv][gvalue];
+				std::vector<std::shared_ptr<SASAction>>& aList = task->requirers[gv][gvalue];
 				for (unsigned int j = 0; j < aList.size(); j++) {
-					SASAction* a = aList[j];
+					std::shared_ptr<SASAction> a = aList[j];
 					if (!achievedAction[a->index] && isExecutable(a, v, value)) {
 						achievedAction[a->index] = true;
 						addActionEffects(a);
@@ -75,7 +75,7 @@ bool LandmarkRPG::verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* 
 	return res;
 }
 
-bool LandmarkRPG::verifyActions(std::vector<SASAction*>* actions, TState* s, SASTask* task) {
+bool LandmarkRPG::verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize(s);
 	while (remainingGoals.size() > 0 && lastLevel->size() > 0) {
@@ -83,9 +83,9 @@ bool LandmarkRPG::verifyActions(std::vector<SASAction*>* actions, TState* s, SAS
 		for (unsigned int i = 0; i < lastLevel->size(); i++) {
 			TVariable gv = SASTask::getVariableIndex(lastLevel->at(i));
 			TValue gvalue = SASTask::getValueIndex(lastLevel->at(i));
-			std::vector<SASAction*>& aList = task->requirers[gv][gvalue];
+			std::vector<std::shared_ptr<SASAction>>& aList = task->requirers[gv][gvalue];
 			for (unsigned int j = 0; j < aList.size(); j++) {
-				SASAction* a = aList[j];
+				std::shared_ptr<SASAction> a = aList[j];
 				if (!achievedAction[a->index] && isExecutable(a) && allowedAction(a, actions)) {
 					achievedAction[a->index] = true;
 					addActionEffects(a);
@@ -123,7 +123,7 @@ void LandmarkRPG::swapLevels() {
 	}
 }
 
-bool LandmarkRPG::isExecutable(SASAction* a, TVariable v, TValue value) {
+bool LandmarkRPG::isExecutable(std::shared_ptr<SASAction> a, TVariable v, TValue value) {
 	if (!isExecutable(a)) return false;
 	for (unsigned int j = 0; j < a->startEff.size(); j++)
 		if (a->startEff[j].var == v && a->startEff[j].value == value) return false;
@@ -147,7 +147,7 @@ bool LandmarkRPG::isExecutable(SASAction* a, TVariable v, TValue value) {
 	return true;
 }
 
-bool LandmarkRPG::isExecutable(SASAction* a, std::vector<TVariable>* v, std::vector<TValue>* value) {
+bool LandmarkRPG::isExecutable(std::shared_ptr<SASAction> a, std::vector<TVariable>* v, std::vector<TValue>* value) {
 	if (!isExecutable(a)) return false;
 	unsigned int n = v->size();
 	for (unsigned int j = 0; j < a->startEff.size(); j++) {
@@ -178,7 +178,7 @@ bool LandmarkRPG::isExecutable(SASAction* a, std::vector<TVariable>* v, std::vec
 	return true;
 }
 
-bool LandmarkRPG::isExecutable(SASAction* a) {
+bool LandmarkRPG::isExecutable(std::shared_ptr<SASAction> a) {
 	for (unsigned int j = 0; j < a->startCond.size(); j++)
 		if (!fluentAchieved(a->startCond[j].var, a->startCond[j].value)) return false;
 	for (unsigned int j = 0; j < a->overCond.size(); j++)
@@ -188,14 +188,14 @@ bool LandmarkRPG::isExecutable(SASAction* a) {
 	return true;
 }
 
-bool LandmarkRPG::allowedAction(SASAction* a, std::vector<SASAction*>* actions) {
+bool LandmarkRPG::allowedAction(std::shared_ptr<SASAction> a, std::vector<std::shared_ptr<SASAction>>* actions) {
 	for (unsigned int i = 0; i < actions->size(); i++) {
 		if (a->index == actions->at(i)->index) return false;
 	}
 	return true;
 }
 
-void LandmarkRPG::addActionEffects(SASAction* a) {
+void LandmarkRPG::addActionEffects(std::shared_ptr<SASAction> a) {
 	TVarValue code;
 	for (unsigned int j = 0; j < a->startEff.size(); j++) {
 		code = SASTask::getVariableValueCode(a->startEff[j].var, a->startEff[j].value);
@@ -232,13 +232,13 @@ void LandmarkRPG::addActionEffects(SASAction* a) {
 	}
 }
 
-void LandmarkRPG::initialize(TState* s) {
+void LandmarkRPG::initialize(std::shared_ptr<TState> s) {
 	unsigned int numActions = task->actions.size();
-	achievedAction = new bool[numActions];
+	achievedAction = std::make_unique<bool[]>(numActions);
 	for (unsigned int i = 0; i < numActions; i++) achievedAction[i] = false;
-	lastLevel = new std::vector<TVarValue>();
+	lastLevel = std::make_unique<std::vector<TVarValue>>();
 	lastLevel->reserve((s->numSASVars) << 1);
-	newLevel = new std::vector<TVarValue>();
+	newLevel = std::make_unique<std::vector<TVarValue>>();
 	newLevel->reserve((s->numSASVars) << 1);
 	remainingGoals.reserve(s->numSASVars);
 	for (unsigned int i = 0; i < s->numSASVars; i++) {
@@ -247,10 +247,10 @@ void LandmarkRPG::initialize(TState* s) {
 		achievedFluent[code] = true;
 	}
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		SASAction& g = task->goals[i];
-		for (unsigned int j = 0; j < g.startCond.size(); j++) addGoal(&(g.startCond[j]));
-		for (unsigned int j = 0; j < g.overCond.size(); j++) addGoal(&(g.overCond[j]));
-		for (unsigned int j = 0; j < g.endCond.size(); j++) addGoal(&(g.endCond[j]));
+    std::shared_ptr<SASAction> g = task->goals[i];
+		for (unsigned int j = 0; j < g->startCond.size(); j++) addGoal(&(g->startCond[j]));
+		for (unsigned int j = 0; j < g->overCond.size(); j++) addGoal(&(g->overCond[j]));
+		for (unsigned int j = 0; j < g->endCond.size(); j++) addGoal(&(g->endCond[j]));
 	}
 }
 
@@ -261,9 +261,6 @@ void LandmarkRPG::addGoal(SASCondition* c) {
 }
 
 void LandmarkRPG::clearMemory() {
-	delete newLevel;
-	delete lastLevel;
-	delete[] achievedAction;
 	achievedFluent.clear();
 	remainingGoals.clear();
 }
@@ -273,7 +270,7 @@ void LandmarkRPG::clearMemory() {
 /* LandmarkTree                            */
 /*******************************************/
 
-LandmarkTree::LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+LandmarkTree::LandmarkTree(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->state = state;
 	this->task = task;
 	rpg.initialize(false, task, tilActions);
@@ -293,17 +290,17 @@ LandmarkTree::LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>
 		disjObjs.emplace_back();
 	}
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		SASAction& g = task->goals[i];
-		for (unsigned int j = 0; j < g.startCond.size(); j++) addGoalNode(&(g.startCond[j]), state);
-		for (unsigned int j = 0; j < g.overCond.size(); j++) addGoalNode(&(g.overCond[j]), state);
-		for (unsigned int j = 0; j < g.endCond.size(); j++) addGoalNode(&(g.endCond[j]), state);
+    std::shared_ptr<SASAction> g = task->goals[i];
+		for (unsigned int j = 0; j < g->startCond.size(); j++) addGoalNode(&(g->startCond[j]), state);
+		for (unsigned int j = 0; j < g->overCond.size(); j++)  addGoalNode(&(g->overCond[j]), state);
+		for (unsigned int j = 0; j < g->endCond.size(); j++)   addGoalNode(&(g->endCond[j]), state);
 	}
 	exploreRPG();
 	// Creating the adjacency matrix 
 	unsigned int n = nodes.size();
-	matrix = new bool* [n];
+	matrix = std::make_unique<std::unique_ptr<bool[]>[]>(n);
 	for (unsigned int j = 0; j < n; j++) {
-		matrix[j] = new bool[n];
+		matrix[j] = std::make_unique<bool[]>(n);
 		for (unsigned int i = 0; i < n; i++)
 			matrix[j][i] = false;
 	}
@@ -315,23 +312,20 @@ LandmarkTree::LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>
 }
 
 LandmarkTree::~LandmarkTree() {
-	for (unsigned int i = 0; i < nodes.size(); i++)
-		delete[] matrix[i];
-	delete[] matrix;
-	for (unsigned int i = 0; i < nodes.size(); i++) delete nodes[i];
 }
 
-void LandmarkTree::addGoalNode(SASCondition* c, TState* state) {
+void LandmarkTree::addGoalNode(SASCondition* c, std::shared_ptr<TState> state) {
 	//if (state->state[c->var] == c->value) return;
 	int index = rpg.getFluentIndex(c->var, c->value);
 	if (index >= 0) {
-		LMFluent* goal = rpg.getFluentByIndex(index);
+		std::shared_ptr<LMFluent> goal = rpg.getFluentByIndex(index);
 		goal->isGoal = true;
-		LTNode* n = new LTNode(goal, nodes.size());
+		// std::unique_ptr<LTNode> n = new LTNode(goal, nodes.size());
+    std::shared_ptr<LTNode> n = std::make_shared<LTNode>(goal, nodes.size());
 		nodes.push_back(n);
 		fluentNode[index] = n->getIndex();
 		int levelIndex = rpg.getLevelIndex(goal->level);
-		objs[levelIndex].push_back(new LMFluent(*goal));
+		objs[levelIndex].push_back(std::make_shared<LMFluent>(*goal));
 	}
 }
 
@@ -343,7 +337,7 @@ void LandmarkTree::exploreRPG() {
 		cout << "EXPLORING LEVEL " << level << ", whith " << objs[level].size() << " items" << endl;
 #endif
 		for (unsigned int i = 0; i < objs[level].size(); i++) {
-			LMFluent* obj = objs[level][i];
+			std::shared_ptr<LMFluent> obj = objs[level][i];
 #ifdef DEBUG_LANDMARKS_ON		
 			cout << "* Obj: " << obj->toString(task) << endl;
 #endif
@@ -357,13 +351,13 @@ void LandmarkTree::exploreRPG() {
 			actionProcessing(&(obj->producers), nodes[fluentNode[obj->index]], level);
 		}
 		for (unsigned int i = 0; i < disjObjs[level].size(); i++) {
-			USet* disjObj = disjObjs[level][i];
+			std::shared_ptr<USet> disjObj = disjObjs[level][i];
 #ifdef DEBUG_LANDMARKS_ON
 			cout << "* Dobj: " << disjObj->toString(task) << endl;
 #endif
 			// For each disjunction of literals in disjObjs[level], we calculate A 
 			// as the union of the producer actions of each literal in the disjunction
-			std::vector<SASAction*> a;
+			std::vector<std::shared_ptr<SASAction>> a;
 			bool initialState = false;
 			for (unsigned int j = 0; j < disjObj->fluentSet.size(); j++) {
 				if (disjObj->fluentSet[j]->level == 0) {
@@ -387,13 +381,13 @@ void LandmarkTree::exploreRPG() {
 	}
 }
 
-void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int level) {
+void LandmarkTree::actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, std::shared_ptr<LTNode> g, int level) {
 	if (a->size() == 0) return;
-	std::vector<USet*> d;		// Calculating I set: preconditions that
-	std::vector<LMFluent*> i;	// are common to all the actions in A
-	std::vector<LMFluent*> u;
+	std::vector<std::shared_ptr<USet>> d;		// Calculating I set: preconditions that
+	std::vector<std::shared_ptr<LMFluent>> i;	// are common to all the actions in A
+	std::vector<std::shared_ptr<LMFluent>> u;
 	unsigned int numFluents = rpg.getFluentListSize();
-	int* common = new int[numFluents];
+  std::unique_ptr<int[]> common = std::make_unique<int[]>(numFluents);
 	for (unsigned int n = 0; n < numFluents; n++) common[n] = 0;
 	for (unsigned int n = 0; n < a->size(); n++) {
 #ifdef DEBUG_LANDMARKS_ON
@@ -407,16 +401,16 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 		else if (common[n] > 0) u.push_back(rpg.getFluentByIndex(n));
 	}
 	for (unsigned int n = 0; n < i.size(); n++) {	// Exploring candidate landmarks in I 
-		LMFluent* p = i[n];
+		std::shared_ptr<LMFluent> p = i[n];
 #ifdef DEBUG_LANDMARKS_ON		
 		cout << " - Candidate: " << p->toString(task) << endl;
 #endif
 		if (verify(p)) {
 			// Adding landmark p to N, and transition p->g in E
 			// The literal is stored only if it hasn't appeared before (it is ensured by checking literalNode) 
-			LTNode* node;
+			std::shared_ptr<LTNode> node;
 			if (fluentNode[p->index] == -1) {
-				node = new LTNode(p, nodes.size());
+				node = std::make_shared<LTNode>(p, nodes.size());
 				nodes.push_back(node);
 				fluentNode[p->index] = node->getIndex();
 #ifdef DEBUG_LANDMARKS_ON		
@@ -455,11 +449,11 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 	// Exploring candidate disjunctive landmarks in D 
 	groupUSet(&d, &u, a);
 	for (unsigned int n = 0; n < d.size(); n++) {
-		USet* d2 = d[n];
-		USet* d1 = findDisjObject(d2, level);
+		std::shared_ptr<USet> d2 = d[n];
+		std::shared_ptr<USet> d1 = findDisjObject(d2, level);
 		if (d1 == nullptr) {
 			if (verify(&(d2->fluentSet))) {
-				d2->node = new LTNode(d2, nodes.size());
+				d2->node = std::make_shared<LTNode>(d2, nodes.size());
 				nodes.push_back(d2->node);
 				edges.emplace_back();
 				edges.back().initialize(d2->node, g, NECESSARY);
@@ -479,10 +473,9 @@ void LandmarkTree::actionProcessing(std::vector<SASAction*>* a, LTNode* g, int l
 			edges.back().initialize(d1->node, g, NECESSARY);
 		}
 	}
-	delete[] common;
 }
 
-USet* LandmarkTree::findDisjObject(USet* u, int level) {
+std::shared_ptr<USet> LandmarkTree::findDisjObject(std::shared_ptr<USet> u, int level) {
 	//cout << "Searching for " << u->toString(task) << endl;
 	for (int i = level; i >= 0; i--) {
 		for (int j = 0; j < (int)disjObjs[i].size(); j++) {
@@ -494,15 +487,15 @@ USet* LandmarkTree::findDisjObject(USet* u, int level) {
 	return nullptr;
 }
 
-void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a) {
+void LandmarkTree::groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<std::shared_ptr<LMFluent>>* u, std::vector<std::shared_ptr<SASAction>>* a) {
 	res->clear();
-	std::vector<USet*> hashU;
-	std::vector<USet*> aux;
+	std::vector<std::shared_ptr<USet>> hashU;
+	std::vector<std::shared_ptr<USet>> aux;
 #ifdef DEBUG_LANDMARKS_ON		
 	cout << "U size: " << u->size() << endl;
 #endif
 	for (unsigned int i = 0; i < u->size(); i++) {
-		LMFluent* l = u->at(i);
+		std::shared_ptr<LMFluent> l = u->at(i);
 		unsigned int f = task->values[l->value].fncIndex;
 #ifdef DEBUG_LANDMARKS_ON		
 		cout << "U: " << l->toString(task) << ", fnc = " << f << endl;
@@ -510,7 +503,7 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 		if (f != FICTITIOUS_FUNCTION) {
 			while (hashU.size() <= f) hashU.push_back(nullptr);
 			if (hashU[f] == nullptr) {
-				hashU[f] = new USet();
+				hashU[f] = std::make_shared<USet>();
 				hashU[f]->initialize(l, (int)f);
 				aux.push_back(hashU[f]);
 			}
@@ -525,12 +518,12 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 	// Verify if the uSets are correct 
 	// All the actions must have provided the uSet with at least a precondition of each type 
 	for (unsigned int i = 0; i < aux.size(); i++) {
-		USet* s = aux[i];
+		std::shared_ptr<USet> s = aux[i];
 		int instances = 0;
 		int actions = 0;
 		if (s->fluentSet.size() != 1) {
 			for (unsigned int j = 0; j < a->size(); j++) {
-				SASAction* action = a->at(j);
+				std::shared_ptr<SASAction> action = a->at(j);
 				bool visited = false;
 				for (unsigned int k = 0; k < action->startCond.size(); k++) {
 					if (s->matches(action->startCond[k])) {
@@ -585,21 +578,20 @@ void LandmarkTree::groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u,
 #ifdef DEBUG_LANDMARKS_ON		
 				cout << "Set added: " << s->toString(task) << endl;
 #endif
-				res->push_back(new USet(s));
+				res->push_back(std::make_shared<USet>(s));
 			}
 			else if (actions == (int)a->size() && instances > (int)a->size()) {
 				analyzeSet(s, a, res);
 			}
 		}
-		delete s;
 	}
 }
 
-void LandmarkTree::analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<USet*>* u1) {
-	std::vector< std::vector<LMFluent*> > fluentProducers(a->size());
+void LandmarkTree::analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_ptr<SASAction>>* a, std::vector<std::shared_ptr<USet>>* u1) {
+	std::vector< std::vector<std::shared_ptr<LMFluent>> > fluentProducers(a->size());
 	// Grouping the literals in the set according to the actions that generated them
 	for (unsigned int i = 0; i < a->size(); i++) {
-		SASAction* action = a->at(i);
+		std::shared_ptr<SASAction> action = a->at(i);
 		for (unsigned int j = 0; j < action->startCond.size(); j++) {
 			if ((int)task->values[action->startCond[j].value].fncIndex == s->id) {
 				int n = rpg.getFluentIndex(action->startCond[j].var, action->startCond[j].value);
@@ -636,31 +628,31 @@ void LandmarkTree::analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<U
 	// An uSet has only one element per action in A
 	bool finish = false;
 	for (unsigned int i = 0; i < fluentProducers[0].size() && !finish; i++) {
-		LMFluent* l = fluentProducers[0][i];
-		USet u;
-		u.initialize(l, s->id);
+		std::shared_ptr<LMFluent> l = fluentProducers[0][i];
+    std::shared_ptr<USet> u = std::make_shared<USet>();
+		u->initialize(l, s->id);
 		for (unsigned int j = 1; j < fluentProducers.size(); j++) {
-			std::vector<LMFluent*>* actionFluents = &(fluentProducers[j]);
+			std::vector<std::shared_ptr<LMFluent>>* actionFluents = &(fluentProducers[j]);
 			if (actionFluents->size() == 0) {
 				finish = true;
 				break;
 			}
 			int k = equalParameters(l, actionFluents);
-			LMFluent* similar = actionFluents->at(k);
+			std::shared_ptr<LMFluent> similar = actionFluents->at(k);
 			actionFluents->erase(actionFluents->begin() + k);
-			u.addElement(similar);
+			u->addElement(similar);
 		}
-		u1->push_back(new USet(&u));
+		u1->push_back(std::make_shared<USet>(u));
 	}
 }
 
-bool LandmarkTree::verify(LMFluent* p) {
+bool LandmarkTree::verify(std::shared_ptr<LMFluent> p) {
 	if (p->isGoal) return true;
 	LandmarkRPG r;
 	return r.verifyFluent(p->variable, p->value, state, task);
 }
 
-bool LandmarkTree::verify(std::vector<LMFluent*>* v) {
+bool LandmarkTree::verify(std::vector<std::shared_ptr<LMFluent>>* v) {
 	LandmarkRPG r;
 	std::vector<TVariable> var;
 	std::vector<TValue> val;
@@ -674,12 +666,12 @@ bool LandmarkTree::verify(std::vector<LMFluent*>* v) {
 	return r.verifyFluents(&var, &val, state, task);
 }
 
-bool LandmarkTree::verify(std::vector<SASAction*>* a) {
+bool LandmarkTree::verify(std::vector<std::shared_ptr<SASAction>>* a) {
 	LandmarkRPG r;
 	return r.verifyActions(a, state, task);
 }
 
-void LandmarkTree::checkPreconditions(SASAction* a, int* common) {
+void LandmarkTree::checkPreconditions(std::shared_ptr<SASAction> a, std::unique_ptr<int[]> &common) {
 	std::vector<int> changed;
 	for (SASCondition &c : a->startCond) {
 		int index = rpg.getFluentIndex(c.var, c.value);
@@ -720,7 +712,7 @@ void LandmarkTree::checkPreconditions(SASAction* a, int* common) {
 	}
 }
 
-int LandmarkTree::equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFluents) {
+int LandmarkTree::equalParameters(std::shared_ptr<LMFluent> l, std::vector<std::shared_ptr<LMFluent>>* actionFluents) {
 	std::vector<int> candidates = std::vector<int>();
 	std::vector<int> auxCandidates = std::vector<int>();
 	SASValue& p1 = task->values[l->value];
@@ -766,9 +758,9 @@ int LandmarkTree::equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFlu
 
 void LandmarkTree::postProcessing() {
 	// P: Candidate landmarks that precede necessarily a given candidate landmark g
-	std::vector<LMFluent*> p;
+	std::vector<std::shared_ptr<LMFluent>> p;
 	// A: Actions that produce a landmark g
-	std::vector<SASAction*> a;
+	std::vector<std::shared_ptr<SASAction>> a;
 	// We analyze all the literal nodes g of the Landmark Tree
 	for (unsigned int i = 0; i < nodes.size(); i++) {	// Only single literals are processed
 		if (nodes[i]->single()) {
@@ -802,12 +794,12 @@ void LandmarkTree::postProcessing() {
 	}
 }
 
-void LandmarkTree::getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFluent* l2) {
+void LandmarkTree::getActions(std::vector<std::shared_ptr<SASAction>>* aList, std::shared_ptr<LMFluent> l1, std::shared_ptr<LMFluent> l2) {
 	aList->clear();
 	if (rpg.getFluentByIndex(l1->index) == nullptr || rpg.getFluentByIndex(l2->index) == nullptr) return;
-	std::vector<SASAction*>& producers = task->producers[l2->variable][l2->value];
+	std::vector<std::shared_ptr<SASAction>>& producers = task->producers[l2->variable][l2->value];
 	for (unsigned int i = 0; i < producers.size(); i++) {
-		SASAction* a = producers[i];
+		std::shared_ptr<SASAction> a = producers[i];
 		bool added = false;
 		for (unsigned int j = 0; j < a->startCond.size() && !added; j++) {
 			int n = rpg.getFluentIndex(a->startCond[j].var, a->startCond[j].value);
@@ -857,7 +849,7 @@ void LandmarkTree::getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFl
 /* Landmarks                               */
 /*******************************************/
 
-Landmarks::Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+Landmarks::Landmarks(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	LandmarkTree lt(state, task, tilActions);
 	unordered_map<int, int> mapping;
 	for (unsigned int i = 0; i < lt.nodes.size(); i++) {
@@ -880,7 +872,7 @@ Landmarks::Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilA
 	}
 }
 
-void Landmarks::filterTransitiveOrders(SASTask* task) {
+void Landmarks::filterTransitiveOrders(std::shared_ptr<SASTask> task) {
 	for (unsigned int i = 0; i < nodes.size(); i++) {
 		unsigned int j = 0;
 		int n1 = nodes[i].getIndex();
@@ -916,7 +908,7 @@ bool Landmarks::checkIndirectReachability(int orig, int current, int dst, std::v
 	return false;
 }
 
-std::string Landmarks::toString(SASTask* task) {
+std::string Landmarks::toString(std::shared_ptr<SASTask> task) {
 	std::string res = "LANDMARKS:\n";
 	unsigned int n = nodes.size();
 	for (unsigned int i = 0; i < n; i++) {

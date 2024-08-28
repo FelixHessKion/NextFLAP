@@ -10,6 +10,7 @@
 /********************************************************/
 
 #include <vector>
+#include <memory>
 #include "../utils/utils.h"
 #include "../utils/priorityQueue.h"
 #include "planComponents.h"
@@ -22,8 +23,8 @@ public:
 		point = p;
 		scheduledTime = time;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		float otherTime = ((ScheduledTimepoint*)other)->scheduledTime;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		float otherTime = std::dynamic_pointer_cast<ScheduledTimepoint>(other)->scheduledTime;
 		if (scheduledTime < otherTime) return -1;
 		else if (scheduledTime > otherTime) return 1;
 		else return 0;

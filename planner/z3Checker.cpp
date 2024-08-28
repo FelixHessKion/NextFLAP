@@ -7,7 +7,7 @@
 /* Plan validity checking through Z3 solver.            */
 /********************************************************/
 
-bool Z3Checker::checkPlan(Plan* p, bool optimizeMakespan, TControVarValues* cvarValues)
+bool Z3Checker::checkPlan(std::shared_ptr<Plan> p, bool optimizeMakespan, TControVarValues* cvarValues)
 {
     z3::set_param("parallel.enable", true);
     z3::set_param("pp.decimal", true);
@@ -25,8 +25,8 @@ bool Z3Checker::checkPlan(Plan* p, bool optimizeMakespan, TControVarValues* cvar
             defineVariables(planComponents.get(s), s);
         }
         if (optimizeMakespan) 
-            optimizer = new optimize(c);
-        else checker = new solver(c);
+            optimizer = std::make_unique<optimize>(c);
+        else checker = std::make_unique<solver>(c);
         for (TStep s = 0; s < planComponents.size(); s++) {
             defineConstraints(planComponents.get(s), s);
         }
@@ -45,8 +45,8 @@ bool Z3Checker::checkPlan(Plan* p, bool optimizeMakespan, TControVarValues* cvar
             if (valid) 
                 updatePlan(p, checker->get_model(), cvarValues);
         }
-        if (optimizeMakespan) delete optimizer;
-        else delete checker;
+        if (optimizeMakespan) optimizer = nullptr;
+        else checker = nullptr;
         stepVars.clear();
         Z3_finalize_memory();
     }
@@ -57,7 +57,7 @@ bool Z3Checker::checkPlan(Plan* p, bool optimizeMakespan, TControVarValues* cvar
     return valid;
 }
 
-void Z3Checker::defineVariables(Plan* p, TStep s)
+void Z3Checker::defineVariables(std::shared_ptr<Plan> p, TStep s)
 {
     char varName[10];
     this->stepVars.emplace_back(s, p);
@@ -91,9 +91,9 @@ void Z3Checker::defineVariables(Plan* p, TStep s)
     }
 }
 
-void Z3Checker::defineConstraints(Plan* p, TStep s)
+void Z3Checker::defineConstraints(std::shared_ptr<Plan> p, TStep s)
 {
-    SASAction* a = p->action;
+    std::shared_ptr<SASAction> a = p->action;
     TTimePoint start = stepToStartPoint(s), end = stepToEndPoint(s);
 
     for (SASNumericCondition& c : a->startNumCond) {    // Fluents and control vars. conditions
@@ -177,7 +177,7 @@ expr& Z3Checker::getControlVar(int var, TStep s)
 expr& Z3Checker::getProductorVar(TVariable var, TTimePoint tp)
 {
     TStep s = timePointToStep(tp);
-    Plan* p = planComponents.get(s);
+    std::shared_ptr<Plan> p = planComponents.get(s);
     if ((tp & 1) == 1) { // End point
         for (TNumericCausalLink& cl : p->endPoint.numCausalLinks) {
             if (cl.var == var) {
@@ -317,7 +317,7 @@ void Z3Checker::showModel(model m)
     }
 }
 
-void Z3Checker::updatePlan(Plan* p, model m, TControVarValues* cvarValues)
+void Z3Checker::updatePlan(std::shared_ptr<Plan> p, model m, TControVarValues* cvarValues)
 {
     TTimePoint tp = 0;
     for (TStep s = 0; s < planComponents.size(); s++) {
@@ -328,7 +328,7 @@ void Z3Checker::updatePlan(Plan* p, model m, TControVarValues* cvarValues)
         TFloatValue endTime = round3d(m.eval(getPointVar(tp++)).as_int64() / 1000.0f);
         //std::cout << "Time point " << stepToStartPoint(s) << ": " << startTime << std::endl;
         //std::cout << "Time point " << stepToEndPoint(s) << ": " << endTime << std::endl;
-        Plan* pc = planComponents.get(s);
+        std::shared_ptr<Plan> pc = planComponents.get(s);
         if (cvarValues != nullptr && pc->cvarValues != nullptr) {
             std::vector<float> valuesList;
             for (int cv = 0; cv < pc->action->controlVars.size(); cv++)

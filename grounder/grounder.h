@@ -12,6 +12,8 @@
 #include "../preprocess/preprocessedTask.h"
 #include "groundedTask.h"
 
+#include <memory>
+
 // EPSILON for temporal scheduling
 #define EPSILON 0.001f
 
@@ -31,13 +33,12 @@ public:
     int index;
     Operator *op;
     unsigned int numParams;
-    std::vector<unsigned int> *paramValues;
-    std::vector<unsigned int> *compatibleObjectsWithParam;
+    std::unique_ptr<std::vector<unsigned int>[]> paramValues;  
+    std::unique_ptr<std::vector<unsigned int>[]> compatibleObjectsWithParam;  
     unsigned int newValueIndex;
     std::vector<GrounderAssignment> preconditions;
     
     void initialize(Operator &o);
-    ~GrounderOperator();
 };
 
 // Class to program facts in the initial state
@@ -60,17 +61,17 @@ public:
 // Class for task grounding
 class Grounder {
 private:
-    PreprocessedTask *prepTask;
-    GroundedTask* gTask;
-    bool **typesMatrix;
+    std::unique_ptr<PreprocessedTask> &prepTask;
+    std::unique_ptr<GroundedTask> gTask;
+    std::unique_ptr<std::unique_ptr<bool[]>[]> typesMatrix;  
     unsigned int numOps;
-    GrounderOperator *ops;
-    std::vector<GrounderOperator*> *opRequireFunction;
+    std::unique_ptr<GrounderOperator[]> ops;
+    std::unique_ptr<std::vector<GrounderOperator*>[]> opRequireFunction;
     std::unordered_map<std::string,unsigned int> variableIndex;
     std::unordered_map<std::string,unsigned int> preferenceIndex;
-    std::vector<ProgrammedValue> *newValues;
-    std::vector<ProgrammedValue> *auxValues;
-    std::vector<ProgrammedValue> *valuesByFunction;
+    std::unique_ptr<std::vector<ProgrammedValue>> newValues;
+    std::unique_ptr<std::vector<ProgrammedValue>> auxValues;
+    std::unique_ptr<std::vector<ProgrammedValue>[]> valuesByFunction;
 	std::unordered_map<std::string, unsigned int> groundedActions;
 	unsigned int numValues;
     unsigned int startNewValues;
@@ -158,7 +159,8 @@ private:
     bool isBoolean(unsigned int value) { return value == gTask->task->CONSTANT_TRUE || value == gTask->task->CONSTANT_FALSE; }
 
 public:
-    GroundedTask* groundTask(PreprocessedTask *prepTask, bool keepStaticData);
+ Grounder(std::unique_ptr<PreprocessedTask> &prepTask);
+ void groundTask(bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut);
 };
 
 #endif

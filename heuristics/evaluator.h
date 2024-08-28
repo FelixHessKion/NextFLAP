@@ -20,21 +20,22 @@
 #include "../planner/linearizer.h"
 #include "../planner/planComponents.h"
 #include "hLand.h"
+#include <memory>
 
 // Entry of a priority queue to sort the plan timepoints
 class ScheduledPoint : public PriorityQueueItem {
 public:
 	TTimePoint p;
 	float time;
-	Plan* plan;
+	std::shared_ptr<Plan> plan;
 
-	ScheduledPoint(TTimePoint tp, float t, Plan* pl) {
+	ScheduledPoint(TTimePoint tp, float t, std::shared_ptr<Plan> pl) {
 		p = tp;
 		time = t;
 		plan = pl;
 	}
-	virtual inline int compare(PriorityQueueItem* other) {
-		double otherTime = ((ScheduledPoint*)other)->time;
+	virtual inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		double otherTime = std::dynamic_pointer_cast<ScheduledPoint>(other)->time;
 		if (time < otherTime) return -1;
 		else if (time > otherTime) return 1;
 		else return 0;
@@ -44,26 +45,26 @@ public:
 // Heuristic evaluator
 class Evaluator {
 private:
-	SASTask* task;
-	std::vector<SASAction*>* tilActions;
+  std::shared_ptr<SASTask> task;
+	std::vector<std::shared_ptr<SASAction>>* tilActions;
 	PlanComponents planComponents;
 	PriorityQueue pq;
 	//bool* usefulActions;
-	LandmarkHeuristic* landmarks;
-	std::vector<LandmarkCheck*> openNodes;				// For hLand calculation
+  std::unique_ptr<LandmarkHeuristic> landmarks;
+	std::vector<std::shared_ptr<LandmarkCheck>> openNodes;				// For hLand calculation
 	bool numericConditionsOrConditionalEffects;
 
-	void calculateFrontierState(TState* fs, Plan* currentPlan);
-	bool findOpenNode(LandmarkCheck* l);
+	void calculateFrontierState(std::shared_ptr<TState> fs, std::shared_ptr<Plan> currentPlan);
+	bool findOpenNode(std::shared_ptr<LandmarkCheck> l);
 
 public:
 	Evaluator();
 	~Evaluator();
-	void initialize(TState* state, SASTask* task, std::vector<SASAction*>* a, bool forceAtEndConditions);
-	void calculateFrontierState(Plan* p);
-	void evaluate(Plan* p);
-	void evaluateInitialPlan(Plan* p);
-	std::vector<SASAction*>* getTILActions() { return tilActions; }
+	void initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions);
+	void calculateFrontierState(std::shared_ptr<Plan> p);
+	void evaluate(std::shared_ptr<Plan> p);
+	void evaluateInitialPlan(std::shared_ptr<Plan> p);
+	std::vector<std::shared_ptr<SASAction>>* getTILActions() { return tilActions; }
 	bool informativeLandmarks();
 };
 

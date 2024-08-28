@@ -18,31 +18,32 @@ using namespace std;
 /********************************************************/
 
 LiteralTranslation::LiteralTranslation(unsigned int numVars) {
-	numericVariables = new unsigned int[numVars];
-	sasVariables = new unsigned int[numVars];
+	numericVariables = std::make_unique<unsigned int[]>(numVars);
+	sasVariables = std::make_unique<unsigned int[]>(numVars);
 	literals.resize(numVars);
 }
 
 LiteralTranslation::~LiteralTranslation() {
-	delete [] numericVariables;
-	delete [] sasVariables;
 }
                                   
 /********************************************************/
 /* CLASS: SASTranslator                                 */
 /********************************************************/
 
-SASTask* SASTranslator::translate(GroundedTask* gTask, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData) {
-    this->gTask = gTask;
+void SASTranslator::translate(std::unique_ptr<GroundedTask> &gTaskIn, bool onlyGenerateMutex, bool generateMutexFile, bool keepStaticData, std::shared_ptr<SASTask> sTaskOut) {
+    this->gTask = std::move(gTaskIn);
     numVars = gTask->variables.size();
     numActions = gTask->actions.size();
     getInitialStateLiterals();
-    mutex = new bool*[numVars];
-    for (unsigned int i = 0; i < numVars; i++)
-        mutex[i] = new bool[numVars] {false};
-    actions = new bool[numActions] {false};
+    mutex = std::make_unique<std::unique_ptr<bool[]>[]>(numVars);
+    for (unsigned int i = 0; i < numVars; i++){
+        mutex[i] = std::make_unique<bool[]>(numVars);
+        std::fill(mutex[i].get(), mutex[i].get()+numVars, false);
+    }
+    actions = std::make_unique<bool[]>(numActions);
+    std::fill(actions.get(), actions.get()+numActions, false);
 	
-	literalInFNA = new bool[numVars];
+	literalInFNA = std::make_unique<bool[]>(numVars);
 	for (unsigned int i = 0; i < numVars; i++) literalInFNA[i] = literalInF[i];
 
 	while (numNewLiterals > 0 || mutexChanges.size() > 0) {
@@ -70,25 +71,23 @@ SASTask* SASTranslator::translate(GroundedTask* gTask, bool onlyGenerateMutex, b
 
 		for (unsigned int i = 0; i < numVars; i++) literalInFNA[i] = literalInF[i];
 	}
-	delete[] literalInFNA;
     if (generateMutexFile) {
     	writeMutexFile();
 	}
 	removeActionsWithMutexConditions();
-	SASTask* sTask = new SASTask();
-	splitMutex(sTask, onlyGenerateMutex);
+	splitMutex(sTaskOut, onlyGenerateMutex);
 	clearMemory();
-	sTask->postProcessActions();
-	sTask->computeInitialState();
-	sTask->computeRequirers();
-	sTask->computeProducers();
-	sTask->computePermanentMutex();
-	sTask->computeNumericVariablesInActions();
-#ifdef DEBUG_SASTRANS_ON		
-	cout << sTask->toString() << endl;
+	sTaskOut->postProcessActions();
+	sTaskOut->computeInitialState();
+	sTaskOut->computeRequirers();
+	sTaskOut->computeProducers();
+	sTaskOut->computePermanentMutex();
+	sTaskOut->computeNumericVariablesInActions();
+#ifdef DEBUG_SASTRANS_ON	
+	cout << sTaskOut->toString() << endl;
 #endif
 	//sTask->computeInitialActionsCost(keepStaticData);
-	return sTask;
+	return;
 }
 
 // Removes invalid actions (with mutex in their conditions)
@@ -163,18 +162,14 @@ bool SASTranslator::isMutex(GroundedCondition &c1, GroundedCondition &c2) {
 
 // Disposes the memory
 void SASTranslator::clearMemory() {
-    for (unsigned int i = 0; i < numVars; i++) 
-        delete [] mutex[i];
-    delete [] mutex;
-    delete [] literalInF;
-    delete [] isLiteral;
-    delete [] actions;
 }
 
 // F* <- I
 void SASTranslator::getInitialStateLiterals() {
-    literalInF = new bool[numVars] {false}; 
-    isLiteral = new bool[numVars] {false};
+    literalInF = std::make_unique<bool[]>(numVars);
+    std::fill(literalInF.get(), literalInF.get()+numVars, false);
+    isLiteral = std::make_unique<bool[]>(numVars);
+    std::fill(isLiteral.get(), isLiteral.get()+numVars, false);
     numNewLiterals = 0;
     for (unsigned int i = 0; i < numVars; i++) {
         GroundedVar &v = gTask->variables[i];
@@ -465,7 +460,7 @@ void SASTranslator::computeMutex(GroundedAction* a, const vector<unsigned int> p
 }
 
 // Makes partitions to divide the graph into different subsets of mutually exclusive literals
-void SASTranslator::splitMutex(SASTask* sTask, bool onlyGenerateMutex) {
+void SASTranslator::splitMutex(std::shared_ptr<SASTask> sTask, bool onlyGenerateMutex) {
     unsigned int numLiterals = 0;
     MutexGraph graph;                                  		// Build the mutex graph
     for (unsigned int i = 0; i < numVars; i++) {
@@ -486,7 +481,7 @@ void SASTranslator::splitMutex(SASTask* sTask, bool onlyGenerateMutex) {
         }
     }
     negatedPrecs = false;									// Check if there are negative preconditions
-	negatedLiteral = new bool[numVars];
+	negatedLiteral = std::make_unique<bool[]>(numVars);
     for (unsigned int i = 0; i < numVars; i++)
     	negatedLiteral[i] = false;
     for (unsigned int i = 0; i < numActions; i++)
@@ -512,12 +507,11 @@ void SASTranslator::splitMutex(SASTask* sTask, bool onlyGenerateMutex) {
 	if (sTask->metricType != 'X')
 		sTask->metric = createMetric(&(gTask->metric), &trans);
 	translateMutex(sTask, &trans);									// Mutex processing
-	delete [] negatedLiteral;
 }
 
-void SASTranslator::translateMutex(SASTask* sTask, LiteralTranslation* trans) {
-	TVariable* sasVars = new TVariable[numVars];
-	TValue* sasValues = new TValue[numVars];
+void SASTranslator::translateMutex(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
+  std::unique_ptr<TVariable[]> sasVars = std::make_unique<TVariable[]>(numVars);
+  std::unique_ptr<TVariable[]> sasValues = std::make_unique<TValue[]>(numVars);
 	for (unsigned int i = 0; i < numVars; i++) {
 		if (trans->literals[i].size() == 1) {
 			unsigned int code = trans->literals[i][0];
@@ -538,7 +532,7 @@ void SASTranslator::translateMutex(SASTask* sTask, LiteralTranslation* trans) {
 	}
 }
 
-void SASTranslator::removeMultipleValues(SASTask* sTask, LiteralTranslation* trans) {
+void SASTranslator::removeMultipleValues(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	for (unsigned int i = 0; i < numVars; i++) {
 		unsigned int size = (unsigned int)trans->literals[i].size();
 		if (size > 1) {
@@ -618,7 +612,7 @@ void SASTranslator::checkNegatedPreconditionLiterals(GroundedAction* a) {
 }
 
 // Changes the literals in the domain by the computed finite-domain variables
-void SASTranslator::updateDomain(SASTask* sTask, MutexGraph *graph, LiteralTranslation* trans) {
+void SASTranslator::updateDomain(std::shared_ptr<SASTask> sTask, MutexGraph *graph, LiteralTranslation* trans) {
 	 vector<unsigned int> values;
      for (unsigned int i = 0; i < graph->numVariables(); i++) {
          graph->getVariable(i, values, MAX_UNSIGNED_INT);
@@ -665,7 +659,7 @@ void SASTranslator::updateDomain(SASTask* sTask, MutexGraph *graph, LiteralTrans
 }
 
 // Simplifies the data structures to store variables and actions
-void SASTranslator::simplifyDomain(SASTask* sTask, LiteralTranslation* trans) {
+void SASTranslator::simplifyDomain(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	sTask->values.clear();
 	unsigned int size = (unsigned int) gTask->task->objects.size();	// Copy the parsed objects to SAS values
 	for (unsigned int i = 0; i < size; i++) {
@@ -686,7 +680,7 @@ void SASTranslator::simplifyDomain(SASTask* sTask, LiteralTranslation* trans) {
 }
 
 // Copies the numeric and (already) finite-domain variables
-void SASTranslator::createNumericAndFiniteDomainVariables(SASTask* sTask, LiteralTranslation* trans) {
+void SASTranslator::createNumericAndFiniteDomainVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	vector<Object> &objects = gTask->task->objects;
 	for (unsigned int i = 0; i < gTask->variables.size(); i++) {
 		GroundedVar &gv = gTask->variables[i];
@@ -708,7 +702,7 @@ void SASTranslator::createNumericAndFiniteDomainVariables(SASTask* sTask, Litera
 }
 
 // Sets the values of the variables in the initial state (and in the TILs)
-void SASTranslator::setInitialValuesForVariables(SASTask* sTask, LiteralTranslation* trans) {
+void SASTranslator::setInitialValuesForVariables(std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	for (unsigned int i = 0; i < gTask->variables.size(); i++) {
 		GroundedVar &gv = gTask->variables[i];
 		if (gv.isNumeric) {													// Numeric variable
@@ -757,8 +751,8 @@ void SASTranslator::setInitialValuesForVariables(SASTask* sTask, LiteralTranslat
 }
 
 // Copies the grounded action, replacing the literals by the SAS variables
-void SASTranslator::createAction(GroundedAction* ga, SASTask* sTask, LiteralTranslation* trans, bool isGoal) {
-	SASAction* a = isGoal ? sTask->createNewGoal() : 
+void SASTranslator::createAction(GroundedAction* ga, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, bool isGoal) {
+	std::shared_ptr<SASAction> a = isGoal ? sTask->createNewGoal() : 
 		sTask->createNewAction(ga->getName(gTask->task), ga->instantaneous, ga->isTIL, ga->isGoal);
 	for (unsigned int i = 0; i < ga->controlVars.size(); i++)
 		generateControlVar(a, &(ga->controlVars[i]));
@@ -817,7 +811,7 @@ void SASTranslator::createAction(GroundedAction* ga, SASTask* sTask, LiteralTran
 	}	
 }
 
-void SASTranslator::generateControlVar(SASAction* a, GroundedControlVar* cv)
+void SASTranslator::generateControlVar(std::shared_ptr<SASAction> a, GroundedControlVar* cv)
 {
 	SASControlVar scv;
 	scv.name = cv->name;
@@ -827,7 +821,7 @@ void SASTranslator::generateControlVar(SASAction* a, GroundedControlVar* cv)
 }
 
 // Checks if a precondition is mofified by the efects
-void SASTranslator::checkModifiedVariable(SASCondition* c, SASAction* a) {
+void SASTranslator::checkModifiedVariable(SASCondition* c, std::shared_ptr<SASAction> a) {
 	for (unsigned int i = 0; i < a->endEff.size(); i++)
 		if (c->var == a->endEff[i].var && c->value != a->endEff[i].value) {
 			c->isModified = true;
@@ -841,7 +835,7 @@ void SASTranslator::checkModifiedVariable(SASCondition* c, SASAction* a) {
 }
 	
 // Copies the action duration, replacing the literals by the SAS variables 
-void SASTranslator::generateDuration(SASAction* a, GroundedDuration* gd, LiteralTranslation* trans) {
+void SASTranslator::generateDuration(std::shared_ptr<SASAction> a, GroundedDuration* gd, LiteralTranslation* trans) {
 	SASDurationCondition d;
 	d.time = generateTime(gd->time);
 	d.comp = generateComparator(gd->comp);
@@ -952,7 +946,7 @@ char SASTranslator::generatePartiallyNumericExpressionType(int type) {
 }
 
 // Copies the condtion, replacing the literals by the SAS variables 
-void SASTranslator::generateCondition(GroundedCondition* cond, SASTask* sTask, LiteralTranslation* trans, vector<SASCondition>* conditionSet) {
+void SASTranslator::generateCondition(GroundedCondition* cond, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans, vector<SASCondition>* conditionSet) {
 	unsigned int sasVar, sasValue, code;
 	if (trans->literals[cond->varIndex].size() > 0) {	// Literal converted to one value of one or more SAS variables 
 		bool truePrec = cond->valueIndex == gTask->task->CONSTANT_TRUE;
@@ -979,7 +973,7 @@ void SASTranslator::generateCondition(GroundedCondition* cond, SASTask* sTask, L
 }
 
 // Copies the effect, replacing the literals by the SAS variables 
-void SASTranslator::generateEffect(vector<GroundedCondition>* effects, unsigned int effIndex, SASTask* sTask, 
+void SASTranslator::generateEffect(vector<GroundedCondition>* effects, unsigned int effIndex, std::shared_ptr<SASTask> sTask, 
 	LiteralTranslation* trans, vector<SASCondition>* conditionSet) {
 	unsigned int sasVar, sasValue, code;
 	GroundedCondition* cond = &(effects->at(effIndex));
@@ -1025,7 +1019,7 @@ bool SASTranslator::modifiedVariable(unsigned int sasVar, vector<GroundedConditi
 }
 
 // Generates the equivalent SASNumericCondition from the given GroundedNumericCondition
-SASNumericCondition SASTranslator::generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, SASAction* a) {
+SASNumericCondition SASTranslator::generateNumericCondition(GroundedNumericCondition* cond, LiteralTranslation* trans, std::shared_ptr<SASAction> a) {
 	SASNumericCondition c;
 	c.comp = generateComparator(cond->comparator);
 	for (unsigned int i = 0; i < cond->terms.size(); i++) {
@@ -1074,7 +1068,7 @@ char SASTranslator::generateAssignment(int assignment) {
 }
 
 // Generates the equivalent SASPreference from the given GroundedPreference
-SASPreference SASTranslator::generatePreference(GroundedPreference* pref, SASTask* sTask, LiteralTranslation* trans) {
+SASPreference SASTranslator::generatePreference(GroundedPreference* pref, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	SASPreference p;
 	p.index = pref->nameIndex;
 	p.preference = generateGoalDescription(&(pref->preference), sTask, trans);
@@ -1082,7 +1076,7 @@ SASPreference SASTranslator::generatePreference(GroundedPreference* pref, SASTas
 }
 
 // Generates the equivalent SASGoalDescription from the given GroundedGoalDescription
-SASGoalDescription SASTranslator::generateGoalDescription(GroundedGoalDescription* gd, SASTask* sTask, LiteralTranslation* trans) {
+SASGoalDescription SASTranslator::generateGoalDescription(GroundedGoalDescription* gd, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	SASGoalDescription g;
 	g.time = generateTime(gd->time);
 	switch (gd->type) {
@@ -1146,7 +1140,7 @@ SASGoalDescription SASTranslator::generateGoalDescription(GroundedGoalDescriptio
 }
 
 // Generates the equivalent SASConstraint from the given GroundedConstraint
-SASConstraint SASTranslator::createConstraint(GroundedConstraint* gc, SASTask* sTask, LiteralTranslation* trans) {
+SASConstraint SASTranslator::createConstraint(GroundedConstraint* gc, std::shared_ptr<SASTask> sTask, LiteralTranslation* trans) {
 	SASConstraint c;
 	switch (gc->type) {
 	case RT_AND:
@@ -1221,7 +1215,7 @@ SASConstraint SASTranslator::createConstraint(GroundedConstraint* gc, SASTask* s
 
 // Writes the file with the list of static mutex
 void SASTranslator::writeMutexFile() {
-	ParsedTask* task = gTask->task;
+	std::unique_ptr<ParsedTask> & task = gTask->task;
 	ofstream f;
     f.open("mutex.txt");
     for (unsigned int v1 = 0; v1 < numVars; v1++) {

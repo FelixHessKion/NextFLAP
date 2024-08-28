@@ -12,6 +12,8 @@
 #include "../utils/utils.h"
 #include "state.h"
 
+#include <memory>
+
 /*
 #define SEARCH_NRPG 0
 #define SEARCH_LAND 1
@@ -52,7 +54,7 @@ private:
 
 public:
 	TTime updatedTime;							// Final scheduled time, after applying updates in child plans
-	std::vector<TFluentInterval>* numVarValues;	// Numeric var. values. Vector is nullptr if the action does not modify numeric vbles.
+  std::shared_ptr<std::vector<TFluentInterval>> numVarValues;	// Numeric var. values. Vector is nullptr if the action does not modify numeric vbles.
 	std::vector<TCausalLink> causalLinks;		// New causal links. TStep is the support action. These CLs are sorted like the
 												// action prec. at that time point, followed by over all precs.
 	std::vector<TNumericCausalLink> numCausalLinks;
@@ -72,14 +74,14 @@ private:
 
 public:
 	TPlanId id;
-	Plan* parentPlan;						// Pointer to its parent plan
-	std::vector<Plan*>* childPlans;			// Vector of child plans. This vector is nullptr if
+  std::weak_ptr<Plan> parentPlan;						// Pointer to its parent plan
+  std::shared_ptr<std::vector<std::shared_ptr<Plan>>> childPlans;			// Vector of child plans. This vector is nullptr if
 											// the plan has not been expanded yet
-	SASAction* action;						// New action added
+	std::shared_ptr<SASAction> action;						// New action added
 	bool fixedInit;							// True if the initial time is fixed (action cannot be delayed)
 	TInterval actionDuration;				// Action duration
-	std::vector<TInterval>* cvarValues;		// Control var. values. Vector is nullptr if the action has no control vars.
-	std::vector<TPlanUpdate>* planUpdates;	// Changes in previous steps of the plan
+  std::unique_ptr<std::vector<TInterval>> cvarValues;		// Control var. values. Vector is nullptr if the action has no control vars.
+  std::unique_ptr<std::vector<TPlanUpdate>> planUpdates;	// Changes in previous steps of the plan
 	std::vector<TOrdering> orderings;		// New orderings (first time point [lower 16 bits] -> second time point [higher 16 bits])
 	PlanPoint startPoint;					// At-start plan data
 	PlanPoint endPoint;						// At-end plan data
@@ -87,22 +89,21 @@ public:
 	int g;									// Plan length
 	int h;									// Heuristic value
 	int hLand;
-	TState* fs;								// Frontier state
+	std::shared_ptr<TState> fs;								// Frontier state
 	bool z3Checked;							// Plan checked by z3 solver?
 	bool invalid;							// Invalid plan (after z3 checking)
 	//int numUsefulActions;					// Number of useful actions included in the plan
-	std::vector<int>* holdCondEff;
+  std::shared_ptr<std::vector<int>> holdCondEff;
 
-	Plan(SASAction* action, Plan* parentPlan, TPlanId idPlan, bool* holdCondEff);
-	~Plan();
+	Plan(std::shared_ptr<SASAction> action, std::weak_ptr<Plan> parentPlan, TPlanId idPlan, std::shared_ptr<bool[]> holdCondEff);
 	void setDuration(TFloatValue min, TFloatValue max);
 	void setTime(TTime init, TTime end, bool fixed);
-	int compare(Plan* p);
+	int compare(std::shared_ptr<Plan> p);
 	bool isRoot();
 	inline bool expanded() { return childPlans != nullptr; }
 	void addFluentIntervals();
 	inline bool isSolution() { return action != nullptr && action->isGoal; }
-	void addChildren(std::vector<Plan*>& suc);
+	void addChildren(std::vector<std::shared_ptr<Plan>>& suc);
 	void addPlanUpdate(TTimePoint tp, TFloatValue time);
 	int getCheckDistance();
 	//int getH(int queue);

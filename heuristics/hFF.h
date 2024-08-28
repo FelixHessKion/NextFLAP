@@ -6,6 +6,8 @@
 #include "../sas/sasTask.h"
 #include "../planner/state.h"
 
+#include <memory>
+
 class FF_RPGCondition : public PriorityQueueItem {
 public:
 	TVariable var;
@@ -16,8 +18,8 @@ public:
 		value = val;
 		level = l;
 	}
-	inline int compare(PriorityQueueItem* other) {
-		return ((FF_RPGCondition*)other)->level - level;
+	inline int compare(std::shared_ptr<PriorityQueueItem> other) {
+		return std::dynamic_pointer_cast<FF_RPGCondition>(other)->level - level;
 	}
 	virtual ~FF_RPGCondition() { }
 };
@@ -31,32 +33,32 @@ public:
 
 class FF_RPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::vector< std::vector<int> > literalLevels;
     std::vector<int> actionLevels;
     unsigned int numLevels;
-    std::vector<FF_RPGVarValue>* lastLevel;
-    std::vector<FF_RPGVarValue>* newLevel;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> lastLevel;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> newLevel;
     std::vector<TVarValue> reachedValues;
     
     void initialize();
-    void addEffects(SASAction* a);
+    void addEffects(std::shared_ptr<SASAction> a);
     void addEffect(TVariable var, TValue value);
 	void expand();
 	void addSubgoals(std::vector<TVarValue>* goals, PriorityQueue* openConditions);
 	void addSubgoal(TVariable var, TValue value, PriorityQueue* openConditions);
-	void addSubgoals(SASAction* a, PriorityQueue* openConditions);
-	uint16_t getDifficulty(SASAction* a);
+	void addSubgoals(std::shared_ptr<SASAction> a, PriorityQueue* openConditions);
+	uint16_t getDifficulty(std::shared_ptr<SASAction> a);
 	uint16_t getDifficulty(SASCondition* c);
-	void addTILactions(std::vector<SASAction*>* tilActions);
+	void addTILactions(std::vector<std::shared_ptr<SASAction>>* tilActions);
 	uint16_t computeHeuristic(PriorityQueue* openConditions);
 	void resetReachedValues();
-	bool isExecutable(SASAction* a);
+	bool isExecutable(std::shared_ptr<SASAction> a);
 
 public:
-	std::vector<SASAction*> relaxedPlan;
+	std::vector<std::shared_ptr<SASAction>> relaxedPlan;
 
-	FF_RPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task);
+	FF_RPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task);
 	uint16_t evaluate();
 };
 

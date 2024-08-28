@@ -18,15 +18,15 @@ LandmarkCheck::LandmarkCheck(LandmarkNode* n) {
 	checked = false;
 }
 
-void LandmarkCheck::addNext(LandmarkCheck* n) {
+void LandmarkCheck::addNext(std::shared_ptr<LandmarkCheck> n) {
 	next.push_back(n);
 }
 
-void LandmarkCheck::addPrev(LandmarkCheck* n) {
+void LandmarkCheck::addPrev(std::weak_ptr<LandmarkCheck> n) {
 	prev.push_back(n);
 }
 
-string LandmarkCheck::toString(SASTask* task, bool showNext) {
+string LandmarkCheck::toString(std::shared_ptr<SASTask> task, bool showNext) {
 	std::string res = "(";
 	res += task->variables[getVar()].name + "=" + task->values[getValue()].name;
 	if (!single) {
@@ -45,10 +45,10 @@ string LandmarkCheck::toString(SASTask* task, bool showNext) {
 	return res;
 }
 
-void LandmarkCheck::removePredecessor(LandmarkCheck* n) {
+void LandmarkCheck::removePredecessor(std::shared_ptr<LandmarkCheck> n) {
 	unsigned int i = 0;
 	while (i < prev.size()) {
-		if (prev[i] == n) {
+		if (prev[i].lock() == n) {
 			//cout << "  Deleted predecessor" << endl;
 			prev.erase(prev.begin() + i);
 		}
@@ -58,7 +58,7 @@ void LandmarkCheck::removePredecessor(LandmarkCheck* n) {
 	}
 }
 
-void LandmarkCheck::removeSuccessor(LandmarkCheck* n) {
+void LandmarkCheck::removeSuccessor(std::shared_ptr<LandmarkCheck> n) {
 	unsigned int i = 0;
 	while (i < next.size()) {
 		if (next[i] == n) {
@@ -70,12 +70,12 @@ void LandmarkCheck::removeSuccessor(LandmarkCheck* n) {
 	}
 }
 
-bool LandmarkCheck::isGoal(SASTask* task) {
+bool LandmarkCheck::isGoal(std::shared_ptr<SASTask> task) {
 	if (vars.size() != 1) return false;
 	TVariable v = getVar();
 	TValue value = getValue();
 	for (unsigned int i = 0; i < task->goals.size(); i++) {
-		SASAction* g = &(task->goals[i]);
+		std::shared_ptr<SASAction> g = task->goals[i];
 		for (unsigned int j = 0; j < g->startCond.size(); j++)
 			if (v == g->startCond[j].var && value == g->startCond[j].value) return true;
 		for (unsigned int j = 0; j < g->overCond.size(); j++)
@@ -86,7 +86,7 @@ bool LandmarkCheck::isGoal(SASTask* task) {
 	return false;
 }
 
-bool LandmarkCheck::isInitialState(TState* state) {
+bool LandmarkCheck::isInitialState(std::shared_ptr<TState> state) {
 	if (isSingle()) {
 		return state->state[getVar()] == getValue();
 	}
@@ -99,7 +99,7 @@ bool LandmarkCheck::isInitialState(TState* state) {
 	}
 }
 
-bool LandmarkCheck::goOn(TState* s) {
+bool LandmarkCheck::goOn(std::shared_ptr<TState> s) {
 	for (unsigned int i = 0; i < vars.size(); i++) {
 		if (s->state[vars[i]] == values[i])
 			return true;
@@ -119,27 +119,27 @@ LandmarkHeuristic::LandmarkHeuristic() {
 LandmarkHeuristic::~LandmarkHeuristic() {
 }
 
-void LandmarkHeuristic::initialize(SASTask* task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task;
-	TState state(task);
-	initialize(&state, task, tilActions);
+  std::shared_ptr<TState> state = std::make_shared<TState>(task);
+	initialize(state, task, tilActions);
 }
 
-void LandmarkHeuristic::initialize(TState* state, SASTask* task, std::vector<SASAction*>* tilActions) {
+void LandmarkHeuristic::initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	this->task = task; 
-	Landmarks landmarks(state, task, tilActions);
-	landmarks.filterTransitiveOrders(task);
+  std::shared_ptr<Landmarks> landmarks = std::make_shared<Landmarks>(state, task, tilActions);
+	landmarks->filterTransitiveOrders(task);
 #ifdef DEBUG_HLAND_ON
-	cout << landmarks.toString(task) << endl;
+	cout << landmarks->toString(task) << endl;
 #endif
-	unsigned int numLandNodes = landmarks.numNodes();
+	unsigned int numLandNodes = landmarks->numNodes();
 	//cout << ";" << numLandNodes << " landmarks" << endl;
 	for (unsigned int i = 0; i < numLandNodes; i++) {
-		LandmarkCheck* l = new LandmarkCheck(landmarks.getNode(i));
+    std::shared_ptr<LandmarkCheck> l = std::make_shared<LandmarkCheck>(landmarks->getNode(i));
 		nodes.push_back(l);
 	}
 	for (unsigned int i = 0; i < numLandNodes; i++) {
-		LandmarkNode* ln = landmarks.getNode(i);
+		LandmarkNode* ln = landmarks->getNode(i);
 		unsigned int numAdj = ln->numAdjacents();
 		for (unsigned int j = 0; j < numAdj; j++) {
 			int adjIndex = ln->getAdjacent(j)->getIndex();
@@ -147,17 +147,17 @@ void LandmarkHeuristic::initialize(TState* state, SASTask* task, std::vector<SAS
 			nodes[adjIndex]->addPrev(nodes[ln->getIndex()]);
 		}
 	}
-	std::vector<LandmarkCheck*> toDelete;
+	std::vector<std::shared_ptr<LandmarkCheck>> toDelete;
 	for (unsigned int i = 0; i < numLandNodes; i++) {
 		if (nodes[i]->numPrev() == 0) {
 			addRootNode(nodes[i], state, &toDelete);
 		}
 	}
 	for (unsigned int i = 0; i < toDelete.size(); i++) {
-		LandmarkCheck* n = toDelete[i];
+		std::shared_ptr<LandmarkCheck> n = toDelete[i];
 		//cout << "Deleting node: " << n->toString(task, false) << endl;
 		for (unsigned int j = 0; j < n->numPrev(); j++)
-			n->getPrev(j)->removeSuccessor(n);
+			n->getPrev(j).lock()->removeSuccessor(n);
 		for (unsigned int j = 0; j < n->numNext(); j++)
 			n->getNext(j)->removePredecessor(n);
 		for (unsigned int j = 0; j < nodes.size(); j++) {
@@ -183,9 +183,9 @@ void LandmarkHeuristic::initialize(TState* state, SASTask* task, std::vector<SAS
 	}*/
 }
 
-bool LandmarkHeuristic::hasRootPredecessor(LandmarkCheck* n) {
+bool LandmarkHeuristic::hasRootPredecessor(std::shared_ptr<LandmarkCheck> n) {
 	for (unsigned int i = 0; i < n->numPrev(); i++) {
-		LandmarkCheck* p = n->getPrev(i);
+		std::shared_ptr<LandmarkCheck> p = n->getPrev(i).lock();
 		bool found = false;
 		for (unsigned int j = 0; j < rootNodes.size(); j++) {
 			if (rootNodes[j] == p) {
@@ -199,7 +199,7 @@ bool LandmarkHeuristic::hasRootPredecessor(LandmarkCheck* n) {
 	return false;
 }
 
-void LandmarkHeuristic::addRootNode(LandmarkCheck* n, TState* state, std::vector<LandmarkCheck*>* toDelete) {
+void LandmarkHeuristic::addRootNode(std::shared_ptr<LandmarkCheck> n, std::shared_ptr<TState> state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete) {
 	bool found = false;
 	if (n->goOn(state)) {
 		for (unsigned int i = 0; i < toDelete->size(); i++) {
@@ -239,12 +239,12 @@ uint16_t LandmarkHeuristic::evaluate() {
 	return h;
 }
 
-void LandmarkHeuristic::copyRootNodes(std::vector<LandmarkCheck*>* v) {
+void LandmarkHeuristic::copyRootNodes(std::vector<std::shared_ptr<LandmarkCheck>>* v) {
 	v->clear();
 	v->insert(v->end(), rootNodes.begin(), rootNodes.end());
 }
 
-std::string LandmarkHeuristic::toString(SASTask* task) {
+std::string LandmarkHeuristic::toString(std::shared_ptr<SASTask> task) {
 	std::string res = "LANDMARKS:\n";
 	for (unsigned int i = 0; i < nodes.size(); i++) {
 		res += "* " + nodes[i]->toString(task, true) + "\n";

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 /********************************************************/
 /* Oscar Sapena Vercher - DSIC - UPV                    */
@@ -68,14 +69,14 @@ public:
 class SyntaxAnalyzer {
 private:
     char* fileName;
-    char* buffer;
+    std::unique_ptr<char[]> buffer;
     int lineNumber;
     int position;
     int bufferLength;
-    std::vector<Token*> tokens;
+    std::vector<std::shared_ptr<Token>> tokens;
     std::unordered_map<std::string, Symbol> symbols;
     void skipSpaces();
-    Token* matchToken();
+    std::shared_ptr<Token> matchToken();
     bool matchNumber(float *value);
 public:
     int tokenIndex;
@@ -83,16 +84,16 @@ public:
     SyntaxAnalyzer(char* fileName);
     SyntaxAnalyzer(std::string &pddlStr);
     ~SyntaxAnalyzer();
-    Token* nextToken();
-    Token* readSymbol(Symbol s);
-    Token* readSymbol(int numSymbols, ...);
+    std::shared_ptr<Token> nextToken();
+    std::shared_ptr<Token> readSymbol(Symbol s);
+    std::shared_ptr<Token> readSymbol(int numSymbols, ...);
     void openPar();
     void closePar();
     void readColon();
     std::string readName();
     void notifyError(const std::string &msg);
     // Checks whether the token is the given type
-    inline bool isSym(Token* token, Symbol s) {
+    inline bool isSym(std::shared_ptr<Token> token, Symbol s) {
         if (token->symbol == s) return true;
         if (s == Symbol::NAME) {
             // Keywords that can be considered as fluent names

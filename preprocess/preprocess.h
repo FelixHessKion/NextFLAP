@@ -12,6 +12,7 @@
 
 #include "../parser/parsedTask.h"
 #include "preprocessedTask.h"
+#include <memory>
 
 struct FeatureList {
     int universalQuantifierPrec; 
@@ -27,8 +28,8 @@ struct FeatureList {
 
 class Preprocess {
 private:
-    ParsedTask* task;
-    PreprocessedTask* prepTask;
+    std::unique_ptr<ParsedTask> &task;
+    std::unique_ptr<PreprocessedTask> prepTask;
     void preprocessOperators();
     void checkPreconditionFeatures(Precondition &prec, FeatureList* features);
     void checkPreconditionFeatures(DurativeCondition &prec, FeatureList* features);
@@ -100,10 +101,10 @@ private:
     std::vector<Operator> buildOperatorPreconditionAnd(GoalDescription &goal, Action &a, Operator *op, unsigned int numTerm);
     std::vector<Operator> buildOperatorPreconditionAnd(GoalDescription &goal, DurativeAction &a, Operator *op, unsigned int numTerm);
     bool checkValidOperator(Operator &op, unsigned int numParameters);
-    bool setParameterValues(unsigned int paramValues[], unsigned int equivalences[], const std::vector<OpEquality> &equality);
-    bool checkEqualities(unsigned int paramValues[], unsigned int equivalences[], 
+    bool setParameterValues(std::unique_ptr<unsigned int[]> &paramVaues, std::unique_ptr<unsigned int[]> &equivalences, const std::vector<OpEquality> &equality);
+    bool checkEqualities(std::unique_ptr<unsigned int[]> &paramVaues, std::unique_ptr<unsigned int[]> &equivalences, 
         std::vector<OpEquality> &equality, unsigned int numParameters);
-    bool checkPreconditions(unsigned int paramValues[], std::vector<OpFluent> &precs);
+    bool checkPreconditions(std::unique_ptr<unsigned int[]> &paramVaues, std::vector<OpFluent> &precs);
     void terminateBuildingOperator(Operator &op, Action &a, std::string name);
     void terminateBuildingOperator(Operator &op, DurativeAction &a, std::string name);
     void buildOperatorEffect(Operator &op, Effect &effect);
@@ -122,9 +123,9 @@ private:
     void conjuctionOptimization(DurativeEffect* eff);
 
 public:
-    Preprocess();
+    Preprocess(std::unique_ptr<ParsedTask> &parsedTask);
     ~Preprocess();
-    PreprocessedTask* preprocessTask(ParsedTask* parsedTask);
+    void preprocessTask(std::unique_ptr<PreprocessedTask> &prepTaskOut);
 };
 
 #endif

@@ -30,18 +30,14 @@ GrounderAssignment::GrounderAssignment(OpFluent &f) {
 void GrounderOperator::initialize(Operator &o) {
     op = &o;
     numParams = o.parameters.size();
-    paramValues = new vector<unsigned int>[numParams];
-    compatibleObjectsWithParam = new vector<unsigned int>[numParams];
+    paramValues = std::make_unique<std::vector<unsigned int>[]>(numParams);    
+    compatibleObjectsWithParam = std::make_unique<std::vector<unsigned int>[]>(numParams);
     for (unsigned int i = 0; i < o.atStart.prec.size(); i++)
         preconditions.emplace_back(o.atStart.prec[i]);
     for (unsigned int i = 0; i < o.overAllPrec.size(); i++)
         preconditions.emplace_back(o.overAllPrec[i]);
 }
 
-GrounderOperator::~GrounderOperator() {
-    delete[] paramValues;
-    delete[] compatibleObjectsWithParam;
-}
 
 /********************************************************/
 /* CLASS: ProgrammedValue                              */
@@ -56,12 +52,13 @@ ProgrammedValue::ProgrammedValue(unsigned int index, unsigned int varIndex, unsi
 /********************************************************/
 /* CLASS: Grounder                                      */
 /********************************************************/
+Grounder::Grounder(std::unique_ptr<PreprocessedTask> &prepTask): prepTask(prepTask){
+}
 
 // Grounding process
-GroundedTask* Grounder::groundTask(PreprocessedTask *prepTask, bool keepStaticData) {
+void Grounder::groundTask(bool keepStaticData, std::unique_ptr<GroundedTask> &gTaskOut) {
     currentLevel = 0;
-    this->prepTask = prepTask;
-    gTask = new GroundedTask(prepTask->task);
+    gTask = std::make_unique<GroundedTask>(prepTask->task);
     initTypesMatrix();
     initOperators();
     initInitialState();
@@ -104,33 +101,25 @@ GroundedTask* Grounder::groundTask(PreprocessedTask *prepTask, bool keepStaticDa
     checkNumericEffectsNotRequired();
     clearMemory();
     if (gTask->goals.empty()) {
-        delete gTask;
         gTask = nullptr;
         throwError("Goals not reached");
     }
-    return gTask;
+    gTaskOut = std::move(gTask);
+    return;
 }
 
 // Creates the matrix of types for a fast checking of types compatibility
 void Grounder::initTypesMatrix() {
     unsigned int numTypes = prepTask->task->types.size();
-    typesMatrix = new bool*[numTypes];
+    typesMatrix = std::make_unique<std::unique_ptr<bool[]>[]>(numTypes);  
     for (unsigned int i = 0; i < numTypes; i++)
-        typesMatrix[i] = new bool[numTypes]();
+        typesMatrix[i] = std::make_unique<bool[]>(numTypes);  
     for (unsigned int i = 0; i < numTypes; i++)
         addTypeToMatrix(i, i);
 }
 
 // Deletes the allocated memory
 void Grounder::clearMemory() {
-    for (unsigned int i = 0; i < prepTask->task->types.size(); i++)
-        delete[] typesMatrix[i];
-    delete[] typesMatrix;
-    delete[] opRequireFunction;
-    delete[] ops;
-    delete[] valuesByFunction;
-    delete newValues;
-    delete auxValues;
 }
 
 // Recursively initializes the matrix of types
@@ -144,7 +133,7 @@ void Grounder::addTypeToMatrix(unsigned int typeIndex, unsigned int subtypeIndex
 // Initializes the operators for grounding
 void Grounder::initOperators() {
     numOps = prepTask->operators.size();
-    ops = new GrounderOperator[numOps];
+    ops = std::make_unique<GrounderOperator[]>(numOps);
     unsigned int numObjects = prepTask->task->objects.size();
     for (unsigned int i = 0; i < numOps; i++) {
         GrounderOperator &g = ops[i];
@@ -156,7 +145,7 @@ void Grounder::initOperators() {
                     g.compatibleObjectsWithParam[j].push_back(k);
     }
     unsigned int numFunctions = prepTask->task->functions.size();
-    opRequireFunction = new vector<GrounderOperator*>[numFunctions];
+    opRequireFunction = std::make_unique<vector<GrounderOperator*>[]>(numFunctions);
     for (unsigned int i = 0; i < numOps; i++) {
         Operator* op = ops[i].op;
         vector<OpFluent> &atStart = op->atStart.prec;
@@ -187,9 +176,9 @@ void Grounder::addOpToRequireFunction(GrounderOperator *op, unsigned int f) {
 // Sets the initial state in the first level of the relaxed planning graph
 void Grounder::initInitialState() {
     unsigned int numFunctions = prepTask->task->functions.size();
-    newValues = new vector<ProgrammedValue>();
-    auxValues = new vector<ProgrammedValue>();
-    valuesByFunction = new vector<ProgrammedValue>[numFunctions];
+    newValues = std::make_unique<vector<ProgrammedValue>>();
+    auxValues = std::make_unique<vector<ProgrammedValue>>();
+    valuesByFunction = std::make_unique<vector<ProgrammedValue>[]>(numFunctions);
     unsigned int initStateSize = prepTask->task->init.size();
     for (unsigned int i = 0; i < initStateSize; i++)
         createVariable(prepTask->task->init[i]);
@@ -375,9 +364,9 @@ void Grounder::swapLevels() {
         ProgrammedValue &pv = auxValues->at(i);
         valuesByFunction[gTask->variables[pv.varIndex].fncIndex].push_back(pv);
     }
-    vector<ProgrammedValue> *aux = newValues;
-    newValues = auxValues;
-    auxValues = aux;
+    std::unique_ptr<vector<ProgrammedValue>> aux = std::move(newValues);
+    newValues = std::move(auxValues);
+    auxValues = std::move(aux);
     auxValues->clear();
 }
 

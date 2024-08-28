@@ -33,8 +33,8 @@ PlanBuilderCausalLink::PlanBuilderCausalLink(TVarValue vv, TTimePoint p1, TTimeP
 /* CLASS: PlanBuilder                                   */
 /********************************************************/
 
-PlanBuilder::PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
-	int numSupportState, PlanEffects* planEffects, SASTask* task)
+PlanBuilder::PlanBuilder(std::shared_ptr<SASAction> a, TStep lastStep, std::vector< std::vector<unsigned int> >* matrix,
+	int numSupportState, PlanEffects* planEffects, std::shared_ptr<SASTask> task)
 {
 	this->task = task;
 	action = a;
@@ -48,15 +48,13 @@ PlanBuilder::PlanBuilder(SASAction* a, TStep lastStep, std::vector< std::vector<
 	if (a->conditionalEff.empty()) this->condEffHold = nullptr;
 	else {
 		int size = a->conditionalEff.size();
-		this->condEffHold = new bool[size];
+		this->condEffHold = std::make_shared<bool[]>(size);
 		//for (int i = 0; i < size; i++) this->condEffHold[i] = false;
 	}
 }
 
 PlanBuilder::~PlanBuilder()
 {
-	if (condEffHold != nullptr)
-		delete[] condEffHold;
 }
 
 // Deletes the las inserted causal link
@@ -104,9 +102,9 @@ bool PlanBuilder::addNumLink(TVariable v, TTimePoint p1, TTimePoint p2)
 bool PlanBuilder::invalidTILorder(TTimePoint p1, TTimePoint p2) {
 	TStep s1 = timePointToStep(p1), s2 = timePointToStep(p2);
 	if (s1 < planEffects->planComponents->size() && s2 < planEffects->planComponents->size()) {
-		Plan* plan1 = planEffects->planComponents->get(s1);
+		std::shared_ptr<Plan> plan1 = planEffects->planComponents->get(s1);
 		if (plan1->fixedInit) {
-			Plan* plan2 = planEffects->planComponents->get(s2);
+			std::shared_ptr<Plan> plan2 = planEffects->planComponents->get(s2);
 			if (plan2->fixedInit) {
 				TFloatValue time1 = (p1 & 1) == 0 ? plan1->startPoint.updatedTime : plan1->endPoint.updatedTime;
 				TFloatValue time2 = (p2 & 1) == 0 ? plan2->startPoint.updatedTime : plan2->endPoint.updatedTime;
@@ -143,7 +141,7 @@ unsigned int PlanBuilder::topologicalOrder(TTimePoint orig, std::vector<TTimePoi
 }
 
 // Check if there are steps in the plan that need to be delayed
-bool PlanBuilder::delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
+bool PlanBuilder::delaySteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& pointToDelay, std::vector<TFloatValue>& newTime,
 	std::vector<TTimePoint>& linearOrder)
 {
 	// Following the linear order, try to delay the points that do not meet the constraints. If one action cannot be
@@ -155,31 +153,30 @@ bool PlanBuilder::delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std
 	for (int i = 0; i < pointToDelay.size(); i++) {
 		TTimePoint tp = pointToDelay[i];
 		if ((tp & 1) == 1) { // End of the action -> delay its begining
-			Plan* step = planEffects->planComponents->get(timePointToStep(tp));
+			std::shared_ptr<Plan> step = planEffects->planComponents->get(timePointToStep(tp));
 			TFloatValue startTime = step->startPoint.updatedTime + newTime[i] - step->endPoint.updatedTime;
-			pq.add(new PBTimepointToDelay(tp - 1, startTime, indexInLinearOrder[tp - 1]));
+			pq.add(std::make_shared<PBTimepointToDelay>(tp - 1, startTime, indexInLinearOrder[tp - 1]));
 		}
 		else {
-			pq.add(new PBTimepointToDelay(pointToDelay[i], newTime[i], indexInLinearOrder[pointToDelay[i]]));
+			pq.add(std::make_shared<PBTimepointToDelay>(pointToDelay[i], newTime[i], indexInLinearOrder[pointToDelay[i]]));
 		}
 	}
 	std::vector<TFloatValue> resNewTimes(linearOrder.size(), FLOAT_INFINITY);
 	bool ok = true;
 	TStep currentStep = timePointToStep(lastTimePoint);
 	while (pq.size() > 0 && ok) {
-		PBTimepointToDelay* pqItem = (PBTimepointToDelay*)pq.poll();
+    std::shared_ptr<PBTimepointToDelay> pqItem = std::dynamic_pointer_cast<PBTimepointToDelay>(pq.poll());
 		TTimePoint tp = pqItem->tp;
 		TFloatValue pqNewTime = pqItem->newTime;
 		int pqOrder = pqItem->linearOrderIndex;
 		//cout << "Timepoint: " << tp << ", Order: " << pqOrder << ", Time: " << pqNewTime << endl;
-		delete pqItem;
 		if (resNewTimes[tp] != FLOAT_INFINITY && resNewTimes[tp] < pqNewTime) { // New delay -> avoid inf. loops
 			ok = false; // Let Z3 to solve
 			break;
 		}
 		if (resNewTimes[tp] == FLOAT_INFINITY) { // Update the time if it is needed
 			TStep indexStepToDelay = timePointToStep(tp);
-			Plan* stepToDelay = indexStepToDelay < currentStep ? planEffects->planComponents->get(indexStepToDelay) : p;
+			std::shared_ptr<Plan> stepToDelay = indexStepToDelay < currentStep ? planEffects->planComponents->get(indexStepToDelay) : p;
 			bool update = (tp & 1) == 0 ? stepToDelay->startPoint.updatedTime < pqNewTime : 
 				stepToDelay->endPoint.updatedTime < pqNewTime;
 			if (update) { // Update needed
@@ -195,7 +192,7 @@ bool PlanBuilder::delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std
 						TTimePoint nextTimepoint = linearOrder[nextIndex];
 						if (existOrder(tp + 1, nextTimepoint)) {
 							//cout << "* Timepoint " << nextTimepoint << " added by " << (tp + 1) << endl;
-							pq.add(new PBTimepointToDelay(nextTimepoint, resNewTimes[tp + 1] + EPSILON, nextIndex));
+							pq.add(std::make_shared<PBTimepointToDelay>(nextTimepoint, resNewTimes[tp + 1] + EPSILON, nextIndex));
 						}
 					}
 				}
@@ -205,13 +202,13 @@ bool PlanBuilder::delaySteps(Plan* p, std::vector<TTimePoint>& pointToDelay, std
 					TTimePoint nextTimepoint = linearOrder[nextIndex];
 					if (existOrder(tp, nextTimepoint)) {
 						//cout << "* Timepoint " << nextTimepoint << " added by " << tp << endl;
-						pq.add(new PBTimepointToDelay(nextTimepoint, resNewTimes[tp] + EPSILON, nextIndex));
+						pq.add(std::make_shared<PBTimepointToDelay>(nextTimepoint, resNewTimes[tp] + EPSILON, nextIndex));
 					}
 				}
 			}	
 		}
 	}
-	while (pq.size() > 0) delete (PBTimepointToDelay*)pq.poll();
+	while (pq.size() > 0) pq.poll();
 	if (ok) {
 		for (int tp = 0; tp < resNewTimes.size(); tp++) {
 			if (resNewTimes[tp] != FLOAT_INFINITY) {
@@ -258,49 +255,49 @@ bool PlanBuilder::addOrdering(TTimePoint p1, TTimePoint p2) {
 }
 
 // Creates the new plan
-Plan* PlanBuilder::generatePlan(Plan* basePlan, TPlanId idPlan) {
-	Plan* p = new Plan(this->action, basePlan, idPlan, this->condEffHold);
+std::shared_ptr<Plan> PlanBuilder::generatePlan(std::shared_ptr<Plan> basePlan, TPlanId idPlan) {
+	std::shared_ptr<Plan> resultPlan = std::make_shared<Plan>(this->action, basePlan, idPlan, this->condEffHold);
 	IntervalCalculations ic(this->action, this->numSupportState, planEffects, task);
-	ic.applyStartEffects(p, this->condEffHold);
-	ic.applyEndEffects(p, this->condEffHold);
+	ic.applyStartEffects(resultPlan, this->condEffHold);
+	ic.applyEndEffects(resultPlan, this->condEffHold);
 	if (!ic.supportedNumericEndConditions(this->condEffHold)) {
-		delete p;
-		return nullptr;
+    resultPlan = nullptr;
+    return resultPlan;
 	}
-	ic.copyControlVars(p);
-	ic.copyDuration(p);
-	setActionStartTime(p);
+	ic.copyControlVars(resultPlan);
+	ic.copyDuration(resultPlan);
+	setActionStartTime(resultPlan);
 	//std::vector<TTimePoint> linearOrder;
 	//topologicalOrder(&linearOrder);
 	for (PlanBuilderCausalLink& pbcl : causalLinks) {
 		if (pbcl.getValue() == MAX_UINT16)
-			addNumericCausalLinkToPlan(p, pbcl.firstPoint(), pbcl.secondPoint(), pbcl.getVar());
+			addNumericCausalLinkToPlan(resultPlan, pbcl.firstPoint(), pbcl.secondPoint(), pbcl.getVar());
 		else
-			addCausalLinkToPlan(p, pbcl.firstPoint(), pbcl.secondPoint(), pbcl.varValue);
+			addCausalLinkToPlan(resultPlan, pbcl.firstPoint(), pbcl.secondPoint(), pbcl.varValue);
 	}
 	for (TOrdering o : orderings) {
 		//cout << "Adding ordering: " << firstPoint(o) << "->" << secondPoint(o) << endl;
-		p->orderings.push_back(o);
+		resultPlan->orderings.push_back(o);
 	}
-	return p;
+	return resultPlan;
 }
 
 // Adds a new causal link to the plan
-void PlanBuilder::addCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVarValue varValue)
+void PlanBuilder::addCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVarValue varValue)
 {
 	PlanPoint& pPoint = ((p2 & 1) == 0) ? p->startPoint : p->endPoint;
 	pPoint.addCausalLink(p1, varValue);
 }
 
 // Adds a new numeric causal link to the plan
-void PlanBuilder::addNumericCausalLinkToPlan(Plan* p, TTimePoint p1, TTimePoint p2, TVariable var)
+void PlanBuilder::addNumericCausalLinkToPlan(std::shared_ptr<Plan> p, TTimePoint p1, TTimePoint p2, TVariable var)
 {
 	PlanPoint& pPoint = ((p2 & 1) == 0) ? p->startPoint : p->endPoint;
 	pPoint.addNumericCausalLink(p1, var);
 }
 
 // Sets the start time of the new action (as soon as possible)
-void PlanBuilder::setActionStartTime(Plan* p)
+void PlanBuilder::setActionStartTime(std::shared_ptr<Plan> p)
 {
 	TTimePoint startNewStep = lastTimePoint - 1;
 	p->startPoint.setInitialTime(EPSILON);
@@ -308,7 +305,7 @@ void PlanBuilder::setActionStartTime(Plan* p)
 		TTimePoint endPoint = secondPoint(o);
 		if (endPoint == startNewStep) { // []------>[   New step   ]
 			TTimePoint startPoint = firstPoint(o);
-			Plan* prevStep = planEffects->planComponents->get(timePointToStep(startPoint));
+			std::shared_ptr<Plan> prevStep = planEffects->planComponents->get(timePointToStep(startPoint));
 			if ((startPoint & 1) == 0) { // [---prevStep---]----->[   NewStep   ]
 				TFloatValue time = prevStep->startPoint.updatedTime + EPSILON;
 				if (p->startPoint.updatedTime < time) {
@@ -324,7 +321,7 @@ void PlanBuilder::setActionStartTime(Plan* p)
 		}
 		else if (endPoint == lastTimePoint) { // []-------[---NewStep--->]
 			TTimePoint startPoint = firstPoint(o);
-			Plan* prevStep = planEffects->planComponents->get(timePointToStep(startPoint));
+			std::shared_ptr<Plan> prevStep = planEffects->planComponents->get(timePointToStep(startPoint));
 			if ((startPoint & 1) == 0) { // [---prevStep---]-----[---NewStep--->]
 				TFloatValue time = prevStep->startPoint.updatedTime + EPSILON;
 				if (p->startPoint.updatedTime + p->actionDuration.minValue < time) {
@@ -348,7 +345,7 @@ void PlanBuilder::setActionStartTime(Plan* p)
 }
 
 // Checks if the steps ordered after the new one must be delayed
-bool PlanBuilder::checkFollowingSteps(Plan* p, std::vector<TTimePoint>& linearOrder)
+bool PlanBuilder::checkFollowingSteps(std::shared_ptr<Plan> p, std::vector<TTimePoint>& linearOrder)
 {
 	std::vector<TTimePoint> pointToDelay;
 	std::vector<TFloatValue> newTime;
@@ -357,7 +354,7 @@ bool PlanBuilder::checkFollowingSteps(Plan* p, std::vector<TTimePoint>& linearOr
 		TTimePoint startPoint = firstPoint(o);
 		if (startPoint == startNewStep) {       // [---NewStep---]----->[]
 			TTimePoint endPoint = secondPoint(o);
-			Plan* nextStep = planEffects->planComponents->get(timePointToStep(endPoint));
+			std::shared_ptr<Plan> nextStep = planEffects->planComponents->get(timePointToStep(endPoint));
 			if ((endPoint & 1) == 0) { // [---NewStep---]----->[         ]
 				TFloatValue nextTime = nextStep->startPoint.updatedTime;
 				if (p->startPoint.updatedTime + EPSILON > nextTime) { // The begining of the next step must be delayed
@@ -375,7 +372,7 @@ bool PlanBuilder::checkFollowingSteps(Plan* p, std::vector<TTimePoint>& linearOr
 		}
 		else if (startPoint == lastTimePoint) { // [   NewStep   ]----->[]
 			TTimePoint endPoint = secondPoint(o);
-			Plan* nextStep = planEffects->planComponents->get(timePointToStep(endPoint));
+			std::shared_ptr<Plan> nextStep = planEffects->planComponents->get(timePointToStep(endPoint));
 			if ((endPoint & 1) == 0) { // [   NewStep   ]----->[         ]
 				TFloatValue nextTime = nextStep->startPoint.updatedTime;
 				if (p->startPoint.updatedTime + p->actionDuration.minValue + EPSILON > nextTime) { // The begining of the next step must be delayed

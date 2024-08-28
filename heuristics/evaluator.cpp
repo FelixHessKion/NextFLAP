@@ -16,8 +16,8 @@ using namespace std;
 /********************************************************/
 
 // Evaluates a plan. Its heuristic value is stored in the plan (p->h)
-void Evaluator::evaluate(Plan* p) {
-	int limit = p->parentPlan->h;
+void Evaluator::evaluate(std::shared_ptr<Plan> p) {
+	int limit = p->parentPlan.lock()->h;
 	if (numericConditionsOrConditionalEffects) {
 		NumericRPG rpg(p->fs, tilActions, task, limit);
 		p->h = rpg.evaluate();
@@ -31,7 +31,7 @@ void Evaluator::evaluate(Plan* p) {
 }
 
 // Evaluates the initial plan. Its heuristic value is stored in the plan (p->h)
-void Evaluator::evaluateInitialPlan(Plan* p)
+void Evaluator::evaluateInitialPlan(std::shared_ptr<Plan> p)
 {
 	int numActions = (int)task->actions.size(), limit = 100;
 	//usefulActions = new bool[numActions];
@@ -46,7 +46,7 @@ bool Evaluator::informativeLandmarks()
 }
 
 // Calculates the frontier state of a given plan. It also computes the number of useful actions included in the plan
-void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
+void Evaluator::calculateFrontierState(std::shared_ptr<TState> fs, std::shared_ptr<Plan> currentPlan)
 {
 	if (landmarks != nullptr) {
 		landmarks->uncheckNodes();
@@ -55,9 +55,9 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 	std::unordered_set<int> visitedActions;
 	pq.clear();
 	for (unsigned int i = 1; i < planComponents.size(); i++) {
-		Plan* p = planComponents.get(i);
-		pq.add(new ScheduledPoint(stepToStartPoint(i), p->startPoint.updatedTime, p));
-		pq.add(new ScheduledPoint(stepToEndPoint(i), p->endPoint.updatedTime, p));
+		std::shared_ptr<Plan> p = planComponents.get(i);
+		pq.add(std::make_shared<ScheduledPoint>(stepToStartPoint(i), p->startPoint.updatedTime, p));
+		pq.add(std::make_shared<ScheduledPoint>(stepToEndPoint(i), p->endPoint.updatedTime, p));
 		if (!p->action->isTIL && !p->action->isGoal) {
 			int index = p->action->index;
 			if (visitedActions.find(index) == visitedActions.end()) {
@@ -68,13 +68,13 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 			}
 		}
 	}
-	LandmarkCheck* l, * al;
+	std::shared_ptr<LandmarkCheck> l, al;
 	while (pq.size() > 0) {
-		ScheduledPoint* p = (ScheduledPoint*)pq.poll();
-		SASAction* a = p->plan->action;
+		std::shared_ptr<ScheduledPoint> p = std::dynamic_pointer_cast<ScheduledPoint>(pq.poll());
+		std::shared_ptr<SASAction> a = p->plan->action;
 		bool atStart = (p->p & 1) == 0;
 		std::vector<SASCondition>* eff = atStart ? &a->startEff : &a->endEff;
-		std::vector<TFluentInterval>* numEff = atStart ? p->plan->startPoint.numVarValues : p->plan->endPoint.numVarValues;
+    std::shared_ptr<std::vector<TFluentInterval>> numEff = atStart ? p->plan->startPoint.numVarValues : p->plan->endPoint.numVarValues;
 		for (SASCondition& c : *eff) {
 			fs->state[c.var] = c.value;
 		}
@@ -87,7 +87,6 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 				}
 			}
 		}
-		delete p;
 		if (numEff != nullptr) {
 			for (TFluentInterval& f : *numEff) {
 				fs->minState[f.numVar] = f.interval.minValue;
@@ -122,7 +121,7 @@ void Evaluator::calculateFrontierState(TState* fs, Plan* currentPlan)
 	*/
 }
 
-bool Evaluator::findOpenNode(LandmarkCheck* l)
+bool Evaluator::findOpenNode(std::shared_ptr<LandmarkCheck> l)
 {
 	for (unsigned int i = 0; i < openNodes.size(); i++) {
 		if (openNodes[i] == l) return true;
@@ -132,37 +131,34 @@ bool Evaluator::findOpenNode(LandmarkCheck* l)
 
 Evaluator::Evaluator()
 {
-	landmarks = nullptr;
 }
 
 // Destroyer
 Evaluator::~Evaluator()
 {
 	//delete[] usefulActions;
-	if (landmarks != nullptr) delete landmarks;
 }
 
 // Evaluator initialization
-void Evaluator::initialize(TState* state, SASTask* task, std::vector<SASAction*>* a, bool forceAtEndConditions) {
-	this->task = task;
+void Evaluator::initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* a, bool forceAtEndConditions) {
+    this->task = task;
 	numericConditionsOrConditionalEffects = false;
-	for (SASAction& a : task->actions) {
-		if (a.startNumCond.size() > 0 || a.overNumCond.size() > 0 || a.endNumCond.size() > 0) {
+	for (std::shared_ptr<SASAction> a : task->actions) {
+		if (a->startNumCond.size() > 0 || a->overNumCond.size() > 0 || a->endNumCond.size() > 0) {
 			numericConditionsOrConditionalEffects = true;
 			break;
 		}
-		if (a.conditionalEff.size() > 0) {
+		if (a->conditionalEff.size() > 0) {
 			numericConditionsOrConditionalEffects = true;
 			break;
 		}
 	}
 	tilActions = a;
-	landmarks = new LandmarkHeuristic();
+	landmarks = std::make_unique<LandmarkHeuristic>();
 	if (state == nullptr) landmarks->initialize(task, a);
 	else landmarks->initialize(state, task, a);
 	//cout << ";" << landmarks->getNumNodes() << " landmarks (" << landmarks->getNumInformativeNodes() << " informative)" << endl;
 	if (landmarks->getNumInformativeNodes() <= 0) {
-		delete landmarks;
 		landmarks = nullptr;
 		SIGNIFICATIVE_LANDMARKS = false;
 	}
@@ -172,10 +168,10 @@ void Evaluator::initialize(TState* state, SASTask* task, std::vector<SASAction*>
 }
 
 // Calculates the frontier state of a given plan. This state is stored in the plan (p->fs)
-void Evaluator::calculateFrontierState(Plan* p)
+void Evaluator::calculateFrontierState(std::shared_ptr<Plan> p)
 {
 	//p->numUsefulActions = 0;
 	planComponents.calculate(p);
-	p->fs = new TState(task);			// Make a copy of the initial state
+	p->fs = std::make_shared<TState>(task);			// Make a copy of the initial state
 	calculateFrontierState(p->fs, p);
 }

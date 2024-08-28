@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include "../utils/utils.h"
 
 #define FICTITIOUS_FUNCTION		999999U
@@ -262,9 +263,9 @@ public:
 
 class SASConditionalProducer {
 public:
-	SASAction* a;
+	std::shared_ptr<SASAction> a;
 	unsigned int numEff;
-	SASConditionalProducer(SASAction* a, unsigned int numEff) {
+	SASConditionalProducer(std::shared_ptr<SASAction> a, unsigned int numEff) {
 		this->a = a;
 		this->numEff = numEff;
 	}
@@ -273,12 +274,12 @@ public:
 class SASTask {    
 private:
     std::unordered_map<TMutex, bool> mutex;
-    std::unordered_map<TVarValue, std::vector<TVarValue>*> mutexWithVarValue;
+    std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>> mutexWithVarValue;
     std::unordered_map<TMutex, bool> permanentMutex;
     std::unordered_map<TMutex, bool> permanentMutexActions;
     std::unordered_map<std::string, unsigned int> valuesByName;
     std::vector<TVarValue> goalList;
-    bool* staticNumFunctions;
+    std::unique_ptr<bool[]> staticNumFunctions;
     std::vector<GoalDeadline> goalDeadlines;
 
 	inline static TMutex getMutexCode(TVariable var1, TValue value1, TVariable var2, TValue value2) {
@@ -287,13 +288,13 @@ private:
         code = (code << 16) + value2;
         return code;
     }
-	//void computeActionCost(SASAction* a, bool* variablesOnMetric);
+	//void computeActionCost(std::shared_ptr<SASAction> a, bool* variablesOnMetric);
 	bool checkVariablesUsedInMetric(SASMetric* m, bool* variablesOnMetric);
 	bool checkVariableExpression(SASNumericExpression* e, bool* variablesOnMetric);
 	float computeFixedExpression(SASNumericExpression* e);
 	float evaluateMetric(SASMetric* m, float* numState, float makespan);
-	bool checkActionMutex(SASAction* a1, SASAction* a2);
-	bool checkActionOrdering(SASAction* a1, SASAction* a2);
+	bool checkActionMutex(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2);
+	bool checkActionOrdering(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2);
 	void computeMutexWithVarValues();
 	void checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>* goals);
 	void checkEffectReached(SASCondition* c, std::unordered_map<TVarValue,bool>* goals,
@@ -307,35 +308,35 @@ public:
     std::vector<SASVariable> variables;
     std::vector<SASValue> values;
 	std::vector<NumericVariable> numVariables;
-	std::vector<SASAction> actions;
+	std::vector<std::shared_ptr<SASAction>> actions;
 	std::vector<std::string> preferenceNames;
-	std::vector<SASAction> goals;
+	std::vector<std::shared_ptr<SASAction>> goals;
 	std::vector<SASConstraint> constraints;
 	char metricType;								// '>' = Maximize, '<' = Minimize , 'X' = no metric specified
 	SASMetric metric;
 	bool metricDependsOnDuration;					// True if the metric depends on the plan duration
-	std::vector<SASAction*>** requirers;
-	std::vector<SASAction*>* numRequirers;
-	std::vector<SASAction*>* numGoalRequirers;
-	std::vector<SASAction*>** producers;
-	std::vector<SASConditionalProducer>** condProducers;
-	std::vector<SASAction*> actionsWithoutConditions;
-	TValue* initialState;							// Values of the SAS variables in the initial state
-	float* numInitialState;							// Values of the numeric variables in the initial state
+  std::unique_ptr<std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]>[]> requirers;
+  std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numRequirers;
+	std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]> numGoalRequirers;
+	std::unique_ptr<std::unique_ptr<std::vector<std::shared_ptr<SASAction>>[]>[]> producers;
+	std::unique_ptr<std::unique_ptr<std::vector<SASConditionalProducer>[]>[]> condProducers;
+	std::vector<std::shared_ptr<SASAction>> actionsWithoutConditions;
+  std::unique_ptr<TValue[]> initialState;							// Values of the SAS variables in the initial state
+	std::unique_ptr<float[]> numInitialState;							// Values of the numeric variables in the initial state
+	// float* numInitialState;							// Values of the numeric variables in the initial state
 	bool variableCosts;								// True if there are actions with a cost that depends on the state
 	int numGoalsInPlateau;
 	char domainType;
 	bool tilActions;
-	std::vector<TVariable>* numVarReqAtStart;  // For each action, numeric variables that are required in the start point of the action
-	std::vector<TVariable>* numVarReqAtEnd;	   // For each action, numeric variables that are required in the end point of the action
-	std::vector<TVariable>* numVarReqGoal;		// For each goal, numeric variables that are required in the goal
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqAtStart;  // For each action, numeric variables that are required in the start point of the action
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqAtEnd;	   // For each action, numeric variables that are required in the end point of the action
+	std::unique_ptr<std::vector<TVariable>[]> numVarReqGoal;		// For each goal, numeric variables that are required in the goal
 
     SASTask();
-	~SASTask();
 	void addMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
     bool isMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
     bool isPermanentMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2);
-    bool isPermanentMutex(SASAction* a1, SASAction* a2);
+    bool isPermanentMutex(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2);
     SASVariable* createNewVariable();
     SASVariable* createNewVariable(std::string name);
     inline static TVarValue getVariableValueCode(unsigned int var, unsigned int value) {
@@ -351,26 +352,26 @@ public:
 	unsigned int findOrCreateNewValue(std::string name, unsigned int fncIndex);
 	unsigned int getValueByName(const std::string &name);
 	NumericVariable* createNewNumericVariable(std::string name);
-	SASAction* createNewAction(std::string name, bool instantaneous, bool isTIL, bool isGoal);
-	SASAction* createNewGoal();
+	std::shared_ptr<SASAction> createNewAction(std::string name, bool instantaneous, bool isTIL, bool isGoal);
+	std::shared_ptr<SASAction> createNewGoal();
 	void computeInitialState();
 	void computeRequirers();
 	void computeProducers();
 	void computeNumericVariablesInActions();
-	void computeNumericVariablesInActions(SASAction& a);
-	void computeNumericVariablesInGoals(SASAction& a);
+	void computeNumericVariablesInActions(std::shared_ptr<SASAction> a);
+	void computeNumericVariablesInGoals(std::shared_ptr<SASAction> a);
 	void computeNumericVariablesInActions(SASNumericCondition* c, std::vector<TVariable>* vars);
 	void computeNumericVariablesInActions(SASNumericExpression* e, std::vector<TVariable>* vars);
 	void computePermanentMutex();
 	void postProcessActions();
-	void addToRequirers(TVariable v, TValue val, SASAction* a);
-	void addToProducers(TVariable v, TValue val, SASAction* a);
-	void addToCondProducers(TVariable v, TValue val, SASAction* a, unsigned int eff);
+	void addToRequirers(TVariable v, TValue val, std::shared_ptr<SASAction> a);
+	void addToProducers(TVariable v, TValue val, std::shared_ptr<SASAction> a);
+	void addToCondProducers(TVariable v, TValue val, std::shared_ptr<SASAction> a, unsigned int eff);
 	//void computeInitialActionsCost(bool keepStaticData);
-	//float computeActionCost(SASAction* a, float* numState, float makespan);
+	//float computeActionCost(std::shared_ptr<SASAction> a, float* numState, float makespan);
 	float evaluateNumericExpression(SASNumericExpression* e, float *s, float duration);
 	void updateNumericState(float* s, SASNumericEffect* e, float duration);
-	float getActionDuration(SASAction* a, float* s);
+	float getActionDuration(std::shared_ptr<SASAction> a, float* s);
 	bool holdsNumericCondition(SASNumericCondition& cond, float *s, float duration);
 	inline float evaluateMetric(float* numState, float makespan) {
 		return evaluateMetric(&metric, numState, makespan);
@@ -410,7 +411,7 @@ public:
 	std::string toStringGoalDescription(SASGoalDescription* g, std::vector<SASControlVar>* controlVars);
 	std::string toStringConstraint(SASConstraint* c, std::vector<SASControlVar>* controlVars);
 	std::string toStringMetric(SASMetric* m);
-    std::string toStringAction(SASAction &a);
+    std::string toStringAction(std::shared_ptr<SASAction> a);
     void addGoalDeadline(float time, TVarValue goal);
     inline bool areGoalDeadlines() { return !goalDeadlines.empty(); }
     inline std::vector<GoalDeadline>* getGoalDeadlines() { return &goalDeadlines; };

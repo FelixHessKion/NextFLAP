@@ -11,20 +11,20 @@ class LandmarkCheck {			// Landmarks reachability for heuristic purposes
 private:
 	std::vector<TVariable> vars;
 	std::vector<TValue> values;
-	std::vector<LandmarkCheck*> prev;
-	std::vector<LandmarkCheck*> next;
+	std::vector<std::weak_ptr<LandmarkCheck>> prev;
+	std::vector<std::shared_ptr<LandmarkCheck>> next;
 	bool checked;
 	bool single;
 
 public:
 	LandmarkCheck(LandmarkNode* n);
-	void addNext(LandmarkCheck* n);
-	void addPrev(LandmarkCheck* n);
-	void removeSuccessor(LandmarkCheck* n);
-	void removePredecessor(LandmarkCheck* n);
-	bool isGoal(SASTask* task);
-	bool goOn(TState* s);
-	bool isInitialState(TState* state);
+	void addNext(std::shared_ptr<LandmarkCheck> n);
+	void addPrev(std::weak_ptr<LandmarkCheck> n);
+	void removeSuccessor(std::shared_ptr<LandmarkCheck> n);
+	void removePredecessor(std::shared_ptr<LandmarkCheck> n);
+	bool isGoal(std::shared_ptr<SASTask> task);
+	bool goOn(std::shared_ptr<TState> s);
+	bool isInitialState(std::shared_ptr<TState> state);
 	inline void uncheck() { checked = false; }
 	inline void check() { checked = true; }
 	inline bool isChecked() { return checked; }
@@ -33,29 +33,29 @@ public:
 	inline unsigned int numNext() { return next.size(); }
 	inline TVariable getVar() { return vars[0]; }
 	inline TValue getValue() { return values[0]; }
-	inline LandmarkCheck* getNext(unsigned int i) { return next[i]; }
-	inline LandmarkCheck* getPrev(unsigned int i) { return prev[i]; }
-	std::string toString(SASTask* task, bool showNext);
+	inline std::shared_ptr<LandmarkCheck> getNext(unsigned int i) { return next[i]; }
+	inline std::weak_ptr<LandmarkCheck> getPrev(unsigned int i) { return prev[i]; }
+	std::string toString(std::shared_ptr<SASTask> task, bool showNext);
 };
 
 class LandmarkHeuristic {		// Landmarks heuristic
 private:
-	SASTask* task;
-	std::vector<LandmarkCheck*> nodes;
-	std::vector<LandmarkCheck*> rootNodes;
+	std::shared_ptr<SASTask> task;
+	std::vector<std::shared_ptr<LandmarkCheck>> nodes;
+	std::vector<std::shared_ptr<LandmarkCheck>> rootNodes;
 
-	void addRootNode(LandmarkCheck* n, TState* state, std::vector<LandmarkCheck*>* toDelete);
-	bool hasRootPredecessor(LandmarkCheck* n);
+	void addRootNode(std::shared_ptr<LandmarkCheck> n, std::shared_ptr<TState> state, std::vector<std::shared_ptr<LandmarkCheck>>* toDelete);
+	bool hasRootPredecessor(std::shared_ptr<LandmarkCheck> n);
 
 public:
 	LandmarkHeuristic(); 
 	~LandmarkHeuristic();
-	void initialize(SASTask* task, std::vector<SASAction*>* tilActions);
-	void initialize(TState* state, SASTask* task, std::vector<SASAction*>* tilActions);
+	void initialize(std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void initialize(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	void uncheckNodes();
 	uint16_t evaluate();
-	void copyRootNodes(std::vector<LandmarkCheck*>* v);
-	std::string toString(SASTask* task);
+	void copyRootNodes(std::vector<std::shared_ptr<LandmarkCheck>>* v);
+	std::string toString(std::shared_ptr<SASTask> task);
 	inline unsigned int getNumNodes() { return nodes.size(); }
 	inline uint16_t countUncheckedNodes() {
 		uint16_t n = 0;

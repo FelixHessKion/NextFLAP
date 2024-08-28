@@ -8,14 +8,14 @@
 /* step is called plan component.)                      */
 /********************************************************/
 
-void PlanComponents::calculate(Plan* base)
+void PlanComponents::calculate(std::shared_ptr<Plan> base)
 {
 	if (base == nullptr) {
 		basePlanComponents.clear();
 		numSteps = 0;
 	}
 	else {
-		calculate(base->parentPlan);
+		calculate(base->parentPlan.lock());
 		base->startPoint.copyInitialTime();
 		base->endPoint.copyInitialTime();
 		basePlanComponents.push_back(base);
@@ -23,7 +23,7 @@ void PlanComponents::calculate(Plan* base)
 		if (base->planUpdates != nullptr) {
 			for (TPlanUpdate& u : *(base->planUpdates)) {
 				TStep stepIndex = timePointToStep(u.timePoint);
-				Plan* step = basePlanComponents[stepIndex];
+				std::shared_ptr<Plan> step = basePlanComponents[stepIndex];
 				if ((u.timePoint & 1) == 0) step->startPoint.updatedTime = u.newTime;
 				else step->endPoint.updatedTime = u.newTime;
 			}

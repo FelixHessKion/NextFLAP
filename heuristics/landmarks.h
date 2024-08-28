@@ -6,36 +6,37 @@
 #include <algorithm>
 #include "../planner/state.h"
 #include "temporalRPG.h"
+#include <memory>
 
 class LTNode;
 
 class USet {				// Disjunctive landmark
 public:
 	int id;
-	std::vector<LMFluent*> fluentSet;
-	LTNode* node;
+	std::vector<std::shared_ptr<LMFluent>> fluentSet;
+	std::shared_ptr<LTNode> node;
 	int value;
 
 	USet() { }
-	USet(USet* s) {
+	USet(std::shared_ptr<USet> s) {
 		id = s->id;
 		for (unsigned int i = 0; i < s->fluentSet.size(); i++)
 			fluentSet.push_back(s->fluentSet[i]);
 		node = s->node;
 		value = s->value;
 	}
-	void initialize(LMFluent* l, int fncIndex) {
+	void initialize(std::shared_ptr<LMFluent> l, int fncIndex) {
 		id = fncIndex;
 		fluentSet.push_back(l);
 		node = nullptr;
 		value = 0;
 	}
-	void addElement(LMFluent* l) {
+	void addElement(std::shared_ptr<LMFluent> l) {
 		if (!contains(l)) {
 			fluentSet.push_back(l);
 		}
 	}
-	bool contains(LMFluent* l) {
+	bool contains(std::shared_ptr<LMFluent> l) {
 		for (unsigned int i = 0; i < fluentSet.size(); i++) {
 			if (fluentSet[i]->index == l->index) {
 				return true;
@@ -56,7 +57,7 @@ public:
 		}
 		return false;
 	}
-	bool isEqual(USet* u) {
+	bool isEqual(std::shared_ptr<USet> u) {
 		if (id != u->id || fluentSet.size() != u->fluentSet.size()) return false;
 		for (unsigned int i = 0; i < fluentSet.size(); i++) {
 			if (fluentSet[i]->variable != u->fluentSet[i]->variable ||
@@ -65,7 +66,7 @@ public:
 		}
 		return true;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		std::string res = "[";
 		if (!fluentSet.empty()) res += fluentSet[0]->toString(task);
 		for (unsigned int i = 1; i < fluentSet.size(); i++) {
@@ -77,30 +78,30 @@ public:
 
 class LTNode {				// Landmark node
 private:
-	LMFluent* fluent;
-	USet* disjunction;
+  std::shared_ptr<LMFluent> fluent;
+	std::shared_ptr<USet> disjunction;
 	bool singleLiteral;
 	unsigned int index;
 
 public:
 	LTNode() { index = MAX_INT32; }
-	LTNode(LMFluent* f, unsigned int i) {
-		fluent = new LMFluent(*f);
+	LTNode(std::shared_ptr<LMFluent> f, unsigned int i) {
+		fluent = std::make_shared<LMFluent>(*f);
 		disjunction = nullptr;
 		singleLiteral = true;
 		index = i;
 	}
-	LTNode(USet* u, unsigned int i) {
+	LTNode(std::shared_ptr<USet> u, unsigned int i) {
 		fluent = nullptr;
 		disjunction = u;
 		singleLiteral = false;
 		index = i;
 	}
 	inline unsigned int getIndex() { return index; }
-	inline LMFluent* getFluent() { return fluent; }
-	inline USet* getSet() { return disjunction; }
+	inline std::shared_ptr<LMFluent> getFluent() { return fluent; }
+	inline std::shared_ptr<USet> getSet() { return disjunction; }
 	inline bool single() { return singleLiteral; }
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		if (singleLiteral) return "Node " + std::to_string(index) + ": " + fluent->toString(task);
 		else return "Node " + std::to_string(index) + ": " + disjunction->toString(task);
 	}
@@ -108,29 +109,29 @@ public:
 
 class LMOrdering {			// Landmark ordering
 public:
-	LTNode* node1;
-	LTNode* node2;
+	std::shared_ptr<LTNode> node1;
+	std::shared_ptr<LTNode> node2;
 	int ordType;
-	void initialize(LTNode* l1, LTNode* l2, int t) {
+	void initialize(std::shared_ptr<LTNode> l1, std::shared_ptr<LTNode> l2, int t) {
 		node1 = l1;
 		node2 = l2;
 		ordType = t;
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		return node1->toString(task) + " -> " + node2->toString(task);
 	}
 };
 
 class LandmarkRPG {
 private:
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::unordered_map<TVarValue, bool> achievedFluent;
-	bool* achievedAction;
-	std::vector<TVarValue>* lastLevel;
-	std::vector<TVarValue>* newLevel;
+  std::unique_ptr<bool[]> achievedAction;
+	std::unique_ptr<std::vector<TVarValue>> lastLevel;
+	std::unique_ptr<std::vector<TVarValue>> newLevel;
 	std::vector<TVarValue> remainingGoals;
 
-	void initialize(TState* s);
+	void initialize(std::shared_ptr<TState> s);
 	void addGoal(SASCondition* c);
 	inline bool fluentAchieved(TVariable v, TValue value) {
 		return fluentAchieved(SASTask::getVariableValueCode(v, value));
@@ -138,52 +139,52 @@ private:
 	inline bool fluentAchieved(TVarValue vv) {
 		return achievedFluent.find(vv) != achievedFluent.end();
 	}
-	bool isExecutable(SASAction* a, TVariable v, TValue value);
-	bool isExecutable(SASAction* a, std::vector<TVariable>* v, std::vector<TValue>* value);
-	bool isExecutable(SASAction* a);
-	void addActionEffects(SASAction* a);
+	bool isExecutable(std::shared_ptr<SASAction> a, TVariable v, TValue value);
+	bool isExecutable(std::shared_ptr<SASAction> a, std::vector<TVariable>* v, std::vector<TValue>* value);
+	bool isExecutable(std::shared_ptr<SASAction> a);
+	void addActionEffects(std::shared_ptr<SASAction> a);
 	void swapLevels();
 	void clearMemory();
-	bool allowedAction(SASAction* a, std::vector<SASAction*>* actions);
+	bool allowedAction(std::shared_ptr<SASAction> a, std::vector<std::shared_ptr<SASAction>>* actions);
 
 public:
-	bool verifyFluent(TVariable v, TValue value, TState* s, SASTask* task);
-	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, TState* s, SASTask* task);
-	bool verifyActions(std::vector<SASAction*>* actions, TState* s, SASTask* task);
+	bool verifyFluent(TVariable v, TValue value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
+	bool verifyFluents(std::vector<TVariable>* v, std::vector<TValue>* value, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
+	bool verifyActions(std::vector<std::shared_ptr<SASAction>>* actions, std::shared_ptr<TState> s, std::shared_ptr<SASTask> task);
 };
 
 class LandmarkTree {
 private:
-	TState* state;
+	std::shared_ptr<TState> state;
 	TemporalRPG rpg;
-	SASTask* task;
+	std::shared_ptr<SASTask> task;
 	std::vector<int> fluentNode;
-	std::vector< std::vector< LMFluent* > > objs;
-	std::vector< std::vector< USet* > > disjObjs;
+	std::vector<std::vector<std::shared_ptr<LMFluent>>> objs;
+	std::vector< std::vector< std::shared_ptr<USet> > > disjObjs;
 	bool** reasonableOrderings;
-	bool** matrix;
+  std::unique_ptr<std::unique_ptr<bool[]>[]> matrix;
 	bool** mutexMatrix;
 	std::vector<LMOrdering> reasonableOrderingsGoalsList;
 
-	void addGoalNode(SASCondition* c, TState* state);
+	void addGoalNode(SASCondition* c, std::shared_ptr<TState> state);
 	void exploreRPG();
-	void actionProcessing(std::vector<SASAction*>* a, LTNode* g, int level);
-	void checkPreconditions(SASAction* a, int* common);
-	bool verify(LMFluent* p);
-	bool verify(std::vector<LMFluent*>* v);
-	bool verify(std::vector<SASAction*>* a);
-	void groupUSet(std::vector<USet*>* res, std::vector<LMFluent*>* u, std::vector<SASAction*>* a);
-	void analyzeSet(USet* s, std::vector<SASAction*>* a, std::vector<USet*>* u1);
-	int equalParameters(LMFluent* l, std::vector<LMFluent*>* actionFluents);
-	USet* findDisjObject(USet* u, int level);
+	void actionProcessing(std::vector<std::shared_ptr<SASAction>>* a, std::shared_ptr<LTNode> g, int level);
+	void checkPreconditions(std::shared_ptr<SASAction> a, std::unique_ptr<int[]> &common);
+	bool verify(std::shared_ptr<LMFluent> p);
+	bool verify(std::vector<std::shared_ptr<LMFluent>>* v);
+	bool verify(std::vector<std::shared_ptr<SASAction>>* a);
+	void groupUSet(std::vector<std::shared_ptr<USet>>* res, std::vector<std::shared_ptr<LMFluent>>* u, std::vector<std::shared_ptr<SASAction>>* a);
+	void analyzeSet(std::shared_ptr<USet> s, std::vector<std::shared_ptr<SASAction>>* a, std::vector<std::shared_ptr<USet>>* u1);
+	int equalParameters(std::shared_ptr<LMFluent> l, std::vector<std::shared_ptr<LMFluent>>* actionFluents);
+	std::shared_ptr<USet> findDisjObject(std::shared_ptr<USet> u, int level);
 	void postProcessing();
-	void getActions(std::vector<SASAction*>* aList, LMFluent* l1, LMFluent* l2);
+	void getActions(std::vector<std::shared_ptr<SASAction>>* aList, std::shared_ptr<LMFluent> l1, std::shared_ptr<LMFluent> l2);
 
 public:
-	std::vector<LTNode*> nodes;
+	std::vector<std::shared_ptr<LTNode>> nodes;
 	std::vector<LMOrdering> edges;
 
-	LandmarkTree(TState* state, SASTask* task, std::vector<SASAction*>* tilActions);
+	LandmarkTree(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
 	~LandmarkTree();
 };
 
@@ -195,14 +196,14 @@ private:
 	std::vector<LandmarkNode*> nextNodes;
 
 public:
-	LandmarkNode(int index, LTNode* n) {
+	LandmarkNode(int index, std::shared_ptr<LTNode> n) {
 		this->index = index;
 		if (n->single()) {
 			variables.push_back(n->getFluent()->variable);
 			values.push_back(n->getFluent()->value);
 		}
 		else {
-			std::vector<LMFluent*>* fs = &(n->getSet()->fluentSet);
+			std::vector<std::shared_ptr<LMFluent>>* fs = &(n->getSet()->fluentSet);
 			for (unsigned int i = 0; i < fs->size(); i++) {
 				variables.push_back(fs->at(i)->variable);
 				values.push_back(fs->at(i)->value);
@@ -215,7 +216,7 @@ public:
 			nextNodes.push_back(nextNode);
 		}
 	}
-	std::string toString(SASTask* task) {
+	std::string toString(std::shared_ptr<SASTask> task) {
 		std::string res = "Node " + std::to_string(index) + ": (" + task->variables[variables[0]].name
 			+ "," + task->values[values[0]].name + ")";
 		for (unsigned int i = 1; i < variables.size(); i++) {
@@ -254,11 +255,11 @@ private:
 	bool checkIndirectReachability(int orig, int current, int dst, std::vector<bool>* visited);
 
 public:
-	Landmarks(TState* state, SASTask* task, std::vector<SASAction*>* tilActions);
-	void filterTransitiveOrders(SASTask* task);
+	Landmarks(std::shared_ptr<TState> state, std::shared_ptr<SASTask> task, std::vector<std::shared_ptr<SASAction>>* tilActions);
+	void filterTransitiveOrders(std::shared_ptr<SASTask> task);
 	unsigned int numNodes() { return nodes.size(); }
 	LandmarkNode* getNode(unsigned int index) { return &(nodes[index]); }
-	std::string toString(SASTask* task);
+	std::string toString(std::shared_ptr<SASTask> task);
 };
 
 #endif

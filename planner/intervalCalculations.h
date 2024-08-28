@@ -30,7 +30,7 @@ public:
 // Class for calculations with numeric intervals
 class IntervalCalculations {
 private:
-    SASAction* a;
+    std::shared_ptr<SASAction> a;
     std::vector<TInterval> fluentValues;
     TInterval duration;
     std::vector<TInterval> cvarValues;
@@ -44,17 +44,17 @@ private:
     void constrainAtEndFluent(TVariable v);
 
 public:
-    IntervalCalculations(SASAction* a, int numState, FluentIntervalData* fluentData, SASTask* task);
-    bool supportedNumericStartConditions(bool* holdCondEff);
-    bool supportedNumericEndConditions(bool* holdCondEff);
+    IntervalCalculations(std::shared_ptr<SASAction> a, int numState, FluentIntervalData* fluentData, std::shared_ptr<SASTask> task);
+    bool supportedNumericStartConditions(std::shared_ptr<bool[]> holdCondEff);
+    bool supportedNumericEndConditions(std::shared_ptr<bool[]> holdCondEff);
     bool supportedNumericConditions(SASConditionalEffect* e);
     void constrainAtStartFluents();
-    void applyStartEffects(Plan *p, bool* holdCondEff);
-    void applyStartEffects(std::vector<TNumVarChange>* v, bool* holdCondEff);
-    void applyEndEffects(Plan* p, bool* holdCondEff);
-    void applyEndEffects(std::vector<TNumVarChange>* v, bool* holdCondEff);
-    void copyControlVars(Plan* p);
-    void copyDuration(Plan* p);
+    void applyStartEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff);
+    void applyStartEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
+    void applyEndEffects(std::shared_ptr<Plan> p, std::shared_ptr<bool[]> holdCondEff);
+    void applyEndEffects(std::vector<TNumVarChange>* v, std::shared_ptr<bool[]> holdCondEff);
+    void copyControlVars(std::shared_ptr<Plan> p);
+    void copyDuration(std::shared_ptr<Plan> p);
     bool supportedCondition(SASNumericCondition* c);
 };
 

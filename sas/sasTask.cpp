@@ -494,43 +494,8 @@ SASTask::SASTask() {
 	condProducers = nullptr;
 	staticNumFunctions = nullptr;
 	numGoalsInPlateau = 1;
-	numRequirers = nullptr;
-	numGoalRequirers = nullptr;
-	initialState = nullptr;
-	numInitialState = nullptr;
-	numVarReqAtStart = nullptr;
-	numVarReqAtEnd = nullptr;
-	numVarReqGoal = nullptr;
 }
 
-SASTask::~SASTask() {
-	if (requirers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] requirers[i];
-		}
-		delete[] requirers;
-	}
-	if (producers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] producers[i];
-		}
-		delete[] producers;
-	}
-	if (condProducers != nullptr) {
-		for (int i = 0; i < variables.size(); i++) {
-			delete[] condProducers[i];
-		}
-		delete[] condProducers;
-	}
-	if (initialState != nullptr) delete[] initialState;
-	if (numInitialState != nullptr) delete[] numInitialState;
-	if (staticNumFunctions != nullptr) delete[] staticNumFunctions;
-	if (numRequirers != nullptr) delete[] numRequirers;
-	if (numGoalRequirers != nullptr) delete[] numGoalRequirers;
-	if (numVarReqAtStart != nullptr) delete[] numVarReqAtStart;
-	if (numVarReqAtEnd != nullptr) delete[] numVarReqAtEnd;
-	if (numVarReqGoal != nullptr) delete[] numVarReqGoal;
-}
 
 // Adds a mutex relationship between (var1, value1) and (var2, value2)
 void SASTask::addMutex(unsigned int var1, unsigned int value1, unsigned int var2, unsigned int value2) {
@@ -549,7 +514,7 @@ bool SASTask::isPermanentMutex(unsigned int var1, unsigned int value1, unsigned 
     return permanentMutex.find(getMutexCode(var1, value1, var2, value2)) != permanentMutex.end();
 }
 
-bool SASTask::isPermanentMutex(SASAction* a1, SASAction* a2) {
+bool SASTask::isPermanentMutex(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2) {
 	uint64_t n = a1->index;
 	n = (n << 32) + a2->index;
 	return permanentMutexActions.find(n) != permanentMutexActions.end();
@@ -609,9 +574,9 @@ NumericVariable* SASTask::createNewNumericVariable(string name) {
 }
 
 // Adds a new action
-SASAction* SASTask::createNewAction(string name, bool instantaneous, bool isTIL, bool isGoal) {
-	actions.emplace_back(instantaneous, isTIL, isGoal);
-	SASAction* a = &(actions.back());
+std::shared_ptr<SASAction> SASTask::createNewAction(string name, bool instantaneous, bool isTIL, bool isGoal) {
+	actions.emplace_back(std::make_shared<SASAction>(instantaneous, isTIL, isGoal));
+	std::shared_ptr<SASAction> a = actions.back();
 	a->index = actions.size() - 1;
 	a->name = name;
 	a->isGoal = false;
@@ -619,9 +584,9 @@ SASAction* SASTask::createNewAction(string name, bool instantaneous, bool isTIL,
 }
 
 // Adds a new goal
-SASAction* SASTask::createNewGoal() {
-	goals.emplace_back(true, false, true);
-	SASAction* a = &(goals.back());
+std::shared_ptr<SASAction> SASTask::createNewGoal() {
+	goals.emplace_back(std::make_shared<SASAction>(true, false, true));
+	std::shared_ptr<SASAction> a = goals.back();
 	a->index = goals.size() - 1;
 	a->name = "<goal>";
 	a->isGoal = true;
@@ -630,11 +595,11 @@ SASAction* SASTask::createNewGoal() {
 
 // Computes the initial state
 void SASTask::computeInitialState() {
-	initialState = new TValue[variables.size()];
+	initialState = std::make_unique<TValue[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
 		initialState[i] = variables[i].getInitialStateValue();
 	}
-	numInitialState = new float[numVariables.size()];
+	numInitialState = std::make_unique<float[]>(numVariables.size());
 	for (unsigned int i = 0; i < numVariables.size(); i++) {
 		numInitialState[i] = numVariables[i].getInitialStateValue();
 	}
@@ -642,13 +607,13 @@ void SASTask::computeInitialState() {
 
 // Computes the list of actions that requires a (= var value)
 void SASTask::computeRequirers() {
-	requirers = new vector<SASAction*>*[variables.size()];
+	requirers = std::make_unique<std::unique_ptr<vector<std::shared_ptr<SASAction>>[]>[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
-		requirers[i] = new vector<SASAction*>[values.size()];
+		requirers[i] = std::make_unique<vector<std::shared_ptr<SASAction>>[]>(values.size());
 	}
 	unsigned int numActions = actions.size();
 	for (unsigned int i = 0; i < numActions; i++) {
-		SASAction* a = &(actions[i]);
+		std::shared_ptr<SASAction> a = actions[i];
 		for (unsigned int j = 0; j < a->startCond.size(); j++)
 			addToRequirers(a->startCond[j].var, a->startCond[j].value, a);
 		for (unsigned int j = 0; j < a->overCond.size(); j++)
@@ -668,8 +633,8 @@ void SASTask::computeRequirers() {
 }
 
 // Adds a requirer, checking for no duplicates
-void SASTask::addToRequirers(TVariable v, TValue val, SASAction* a) {
-	std::vector<SASAction*> &req = requirers[v][val];
+void SASTask::addToRequirers(TVariable v, TValue val, std::shared_ptr<SASAction> a) {
+	std::vector<std::shared_ptr<SASAction>> &req = requirers[v][val];
 	for (unsigned int i = 0; i < req.size(); i++) {
 		if (req[i] == a) return;
 	}
@@ -678,15 +643,15 @@ void SASTask::addToRequirers(TVariable v, TValue val, SASAction* a) {
 
 // Computes the list of actions that produces (= var value)
 void SASTask::computeProducers() {
-	producers = new vector<SASAction*>*[variables.size()];
-	condProducers = new vector<SASConditionalProducer>*[variables.size()];
+	producers = std::make_unique<std::unique_ptr<vector<std::shared_ptr<SASAction>>[]>[]>(variables.size());
+	condProducers = std::make_unique<std::unique_ptr<vector<SASConditionalProducer>[]>[]>(variables.size());
 	for (unsigned int i = 0; i < variables.size(); i++) {
-		producers[i] = new vector<SASAction*>[values.size()];
-		condProducers[i] = new vector<SASConditionalProducer>[values.size()];
+		producers[i] = std::make_unique<vector<std::shared_ptr<SASAction>>[]>(values.size());
+		condProducers[i] = std::make_unique<vector<SASConditionalProducer>[]>(values.size());
 	}
 	unsigned int numActions = actions.size();
 	for (unsigned int i = 0; i < numActions; i++) {
-		SASAction* a = &(actions[i]);
+		std::shared_ptr<SASAction> a = actions[i];
 		for (unsigned int j = 0; j < a->startEff.size(); j++)
 			addToProducers(a->startEff[j].var, a->startEff[j].value, a);
 		for (unsigned int j = 0; j < a->endEff.size(); j++)
@@ -703,52 +668,52 @@ void SASTask::computeProducers() {
 
 void SASTask::computeNumericVariablesInActions()
 {
-	this->numVarReqAtStart = new std::vector<TVariable>[actions.size()];
-	this->numVarReqAtEnd = new std::vector<TVariable>[actions.size()];
-	this->numRequirers = new std::vector<SASAction*>[numVariables.size()];
-	this->numVarReqGoal = new std::vector<TVariable>[goals.size()];
-	this->numGoalRequirers = new std::vector<SASAction*>[numVariables.size()];
-	for (SASAction& a : actions) {
+	this->numVarReqAtStart = std::make_unique<std::vector<TVariable>[]>(actions.size());
+	this->numVarReqAtEnd = std::make_unique<std::vector<TVariable>[]>(actions.size());
+	this->numRequirers = std::make_unique<std::vector<std::shared_ptr<SASAction>>[]>(numVariables.size());
+	this->numVarReqGoal = std::make_unique<std::vector<TVariable>[]>(goals.size());
+	this->numGoalRequirers = std::make_unique<std::vector<std::shared_ptr<SASAction>>[]>(numVariables.size());
+	for (std::shared_ptr<SASAction> a : actions) {
 		computeNumericVariablesInActions(a);
 	}
-	for (SASAction& a : goals) {
+	for (std::shared_ptr<SASAction> a : goals) {
 		computeNumericVariablesInGoals(a);
 	}
 }
 
-void SASTask::computeNumericVariablesInActions(SASAction& a)
+void SASTask::computeNumericVariablesInActions(std::shared_ptr<SASAction> a)
 {
-	int i = a.index;
-	for (SASNumericCondition& c : a.startNumCond) {
+	int i = a->index;
+	for (SASNumericCondition& c : a->startNumCond) {
 		computeNumericVariablesInActions(&c, &(numVarReqAtStart[i]));
 	}
-	for (SASNumericCondition& c : a.overNumCond) {
+	for (SASNumericCondition& c : a->overNumCond) {
 		computeNumericVariablesInActions(&c, &(numVarReqAtStart[i]));
 		computeNumericVariablesInActions(&c, &(numVarReqAtEnd[i]));
 	}
-	for (SASNumericCondition& c : a.endNumCond) {
+	for (SASNumericCondition& c : a->endNumCond) {
 		computeNumericVariablesInActions(&c, &(numVarReqAtEnd[i]));
 	}
 	for (TVariable v : numVarReqAtStart[i]) {
-		numRequirers[v].push_back(&a);
-		//cout << "Action " << a.name << " requires at start " << numVariables[v].name << endl;
+		numRequirers[v].push_back(a);
+		//cout << "Action " << a->name << " requires at start " << numVariables[v].name << endl;
 	}
 	for (TVariable v : numVarReqAtEnd[i]) {
 		if (std::find(numVarReqAtStart[i].begin(), numVarReqAtStart[i].end(), v) == numVarReqAtStart[i].end())
-			numRequirers[v].push_back(&a);
-		//cout << "Action " << a.name << " requires at end " << numVariables[v].name << endl;
+			numRequirers[v].push_back(a);
+		//cout << "Action " << a->name << " requires at end " << numVariables[v].name << endl;
 	}
 }
 
-void SASTask::computeNumericVariablesInGoals(SASAction& a)
+void SASTask::computeNumericVariablesInGoals(std::shared_ptr<SASAction> a)
 {
-	int i = a.index;
-	for (SASNumericCondition& c : a.startNumCond) {
+	int i = a->index;
+	for (SASNumericCondition& c : a->startNumCond) {
 		computeNumericVariablesInActions(&c, &(numVarReqGoal[i]));
 	}
 	for (TVariable v : numVarReqGoal[i]) {
-		numGoalRequirers[v].push_back(&a);
-		//cout << "Action " << a.name << " requires at start " << numVariables[v].name << endl;
+		numGoalRequirers[v].push_back(a);
+		//cout << "Action " << a->name << " requires at start " << numVariables[v].name << endl;
 	}
 }
 
@@ -775,14 +740,15 @@ void SASTask::computeNumericVariablesInActions(SASNumericExpression* e, std::vec
 void SASTask::computeMutexWithVarValues() {
 	uint32_t vv1, vv2;
 	std::unordered_map<uint64_t, bool>::const_iterator got = mutex.begin();
-	std::unordered_map<uint32_t, std::vector<uint32_t>*>::const_iterator it;
+  std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>>::const_iterator it;  
 	for (; got != mutex.end(); ++got) {
 		uint64_t n = got->first;
 		vv2 = n & 0xFFFFFFFF;
 		vv1 = (uint32_t) (n >> 32);
 		it = mutexWithVarValue.find(vv1);
 		if (it == mutexWithVarValue.end()) {
-			std::vector<uint32_t>* item = new std::vector<uint32_t>();
+      std::shared_ptr<std::vector<TVarValue>> item = std::make_shared<std::vector<TVarValue>>();
+      // std::vector<uint32_t> *item =  new std::vector<uint32_t>();
 			item->push_back(vv2);
 			mutexWithVarValue[vv1] = item;
 		} else {
@@ -803,7 +769,7 @@ void SASTask::checkEffectReached(SASCondition* c, std::unordered_map<TVarValue,b
 
 void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>* goals) {
 	unsigned int numActions = actions.size();
-	bool *visited = new bool[numActions];
+  std::unique_ptr<bool[]> visited = std::make_unique<bool[]>(numActions);
 	for (unsigned int i = 0; i < numActions; i++) visited[i] = false;
 	std::vector<TVarValue> state;
 	std::unordered_map<TVarValue, bool> visitedVarValue;
@@ -814,10 +780,10 @@ void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>
 		TVariable v = getVariableIndex(state[start]);
 		TValue value = getValueIndex(state[start]);
 		start++;
-		std::vector<SASAction*> &req = requirers[v][value];
+		std::vector<std::shared_ptr<SASAction>> &req = requirers[v][value];
 		//cout << variables[v].name << "=" << values[value].name << endl;
 		for (unsigned int i = 0; i < req.size(); i++) {
-			SASAction *a = req[i];
+			std::shared_ptr<SASAction>a = req[i];
 			if (!visited[a->index]) {
 				visited[a->index] = true;
 				//cout << " - " << a->name << endl;
@@ -828,13 +794,12 @@ void SASTask::checkReachability(TVarValue vv, std::unordered_map<TVarValue,bool>
 			}
 		}
 	}
-	delete[] visited;
 }
 
 void SASTask::computePermanentMutex() {
     //clock_t tini = clock();
     computeMutexWithVarValues();
-	std::unordered_map<uint32_t, std::vector<uint32_t>*>::const_iterator it;
+	std::unordered_map<TVarValue, std::shared_ptr<std::vector<TVarValue>>>::const_iterator it;
 	std::unordered_map<uint32_t,bool>::const_iterator ug;
 	for (it = mutexWithVarValue.begin(); it != mutexWithVarValue.end(); ++it) {
 		//cout << it->second->size() << endl;
@@ -851,14 +816,14 @@ void SASTask::computePermanentMutex() {
 	if (permanentMutex.size() > 0) {
 		unsigned int numActions = actions.size();
 		for (unsigned int i = 0; i < numActions - 1; i++) {
-			SASAction* a1 = &(actions[i]);
+			std::shared_ptr<SASAction> a1 = actions[i];
 			for (unsigned int j = i + 1; j < numActions; j++) {
-				if (checkActionMutex(a1, &(actions[j]))) {
-					//cout << a1->name << " <- mutex -> " << actions[j].name << endl;
+				if (checkActionMutex(a1, actions[j])) {
+					//cout << a1->name << " <- mutex -> " << actions[j]->name << endl;
 					uint64_t n = a1->index;
-					n = (n << 32) + actions[j].index;
+					n = (n << 32) + actions[j]->index;
 					permanentMutexActions[n] = true;
-					n = actions[j].index;
+					n = actions[j]->index;
 					n = (n << 32) + a1->index;
 					permanentMutexActions[n] = true;
 				}
@@ -871,24 +836,24 @@ void SASTask::computePermanentMutex() {
 void SASTask::postProcessActions()
 {
 	int numDecEff = 0;
-	for (SASAction& a : actions) {
-		a.postProcess();
+	for (std::shared_ptr<SASAction> a : actions) {
+		a->postProcess();
 		
 		int dec = 0;
-		for (SASNumericEffect& e : a.startNumEff) {
+		for (SASNumericEffect& e : a->startNumEff) {
 			if (e.op == '-') dec++;
 		}
 		if (dec > numDecEff) numDecEff = dec;
 	}
-	for (SASAction& a : goals)
-		a.postProcess();
+	for (std::shared_ptr<SASAction> a : goals)
+		a->postProcess();
 }
 
-bool SASTask::checkActionMutex(SASAction* a1, SASAction* a2) {
+bool SASTask::checkActionMutex(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2) {
 	return checkActionOrdering(a1, a2) && checkActionOrdering(a2, a1);
 }
 
-bool SASTask::checkActionOrdering(SASAction* a1, SASAction* a2) {
+bool SASTask::checkActionOrdering(std::shared_ptr<SASAction> a1, std::shared_ptr<SASAction> a2) {
 	for (unsigned int i = 0; i < a1->startEff.size(); i++) {
 		TVariable v1 = a1->startEff[i].var;
 		TValue value1 = a1->startEff[i].value;
@@ -930,7 +895,7 @@ bool SASTask::checkActionOrdering(SASAction* a1, SASAction* a2) {
 	return false;
 }
 
-void SASTask::addToCondProducers(TVariable v, TValue val, SASAction* a, unsigned int eff) {
+void SASTask::addToCondProducers(TVariable v, TValue val, std::shared_ptr<SASAction> a, unsigned int eff) {
 	std::vector<SASConditionalProducer>& prod = condProducers[v][val];
 	for (unsigned int i = 0; i < prod.size(); i++) {
 		if (prod[i].a == a && prod[i].numEff == eff) return;
@@ -939,8 +904,8 @@ void SASTask::addToCondProducers(TVariable v, TValue val, SASAction* a, unsigned
 }
 
 // Adds a producer, checking for no duplicates
-void SASTask::addToProducers(TVariable v, TValue val, SASAction* a) {
-	std::vector<SASAction*> &prod = producers[v][val];
+void SASTask::addToProducers(TVariable v, TValue val, std::shared_ptr<SASAction> a) {
+	std::vector<std::shared_ptr<SASAction>> &prod = producers[v][val];
 	for (unsigned int i = 0; i < prod.size(); i++) {
 		if (prod[i] == a) return;
 	}
@@ -954,31 +919,31 @@ void SASTask::addToProducers(TVariable v, TValue val, SASAction* a) {
 //   variable in the state (e.g. temperature), and the numeric variable (fuel-used) is used in the metric.
 void SASTask::computeInitialActionsCost(bool keepStaticData) {
 	if (keepStaticData) {	// Static functions have not been deleted, so it is necessary to check which ones are static
-		staticNumFunctions = new bool[numVariables.size()];
+		staticNumFunctions = std::make_shared<bool[]>[numVariables.size()];
 		for (unsigned int i = 0; i < numVariables.size(); i++) {
 			staticNumFunctions[i] = true;
 		}
 		for (unsigned int i = 0; i < actions.size(); i++) {
-			SASAction &a = actions[i];
-			for (unsigned int j = 0; i < a.startNumEff.size(); i++) {
-				staticNumFunctions[a.startNumEff[j].var] = false;
+			SASAction a = actions[i];
+			for (unsigned int j = 0; i < a->startNumEff.size(); i++) {
+				staticNumFunctions[a->startNumEff[j].var] = false;
 			}
-			for (unsigned int j = 0; i < a.endNumEff.size(); i++) {
-				staticNumFunctions[a.endNumEff[j].var] = false;
+			for (unsigned int j = 0; i < a->endNumEff.size(); i++) {
+				staticNumFunctions[a->endNumEff[j].var] = false;
 			}
 		}
 	}
 	else {
 		staticNumFunctions = nullptr;
 	}
-	bool *variablesOnMetric = new bool[numVariables.size()];
+  std::unique_ptr<bool[]> variablesOnMetric = std::make_unqiue<bool[]>(numVariables.size());
 	for (unsigned int i = 0; i < numVariables.size(); i++) {
 		variablesOnMetric[i] = false;
 	}
 	variableCosts = false;
 	metricDependsOnDuration = checkVariablesUsedInMetric(&metric, variablesOnMetric);
 	for (unsigned int i = 0; i < actions.size(); i++) {
-		computeActionCost(&actions[i], variablesOnMetric);
+		computeActionCost(actions[i], variablesOnMetric);
 		if (!actions[i].fixedCost) variableCosts = true;
 	}
 	for (unsigned int i = 0; i < goals.size(); i++) {
@@ -1020,7 +985,7 @@ bool SASTask::checkVariablesUsedInMetric(SASMetric* m, bool* variablesOnMetric) 
 // * The duration of the action depends on the state (numeric value of one or more variables) and the metric depends on the plan duration.
 // * A numeric variable (e.g. fuel-used) is modified through the action, and this change of value depends on the value of another numeric
 //   variable in the state (e.g. temperature), and the numeric variable (fuel-used) is used in the metric.
-void SASTask::computeActionCost(SASAction* a, bool* variablesOnMetric) {
+void SASTask::computeActionCost(std::shared_ptr<SASAction> a, bool* variablesOnMetric) {
 	a->fixedDuration = true;
 	for (unsigned int i = 0; i < a->duration.conditions.size(); i++) {
 		if (checkVariableExpression(&(a->duration.conditions[i].exp), nullptr)) {
@@ -1059,7 +1024,7 @@ void SASTask::computeActionCost(SASAction* a, bool* variablesOnMetric) {
 */
 
 /* Computes the cost of aplying an action in a given state
-float SASTask::computeActionCost(SASAction* a, float* numState, float makespan) {
+float SASTask::computeActionCost(std::shared_ptr<SASAction> a, float* numState, float makespan) {
 	float startMetricValue = evaluateMetric(&metric, numState, makespan), 
 		endMetricValue,
 		dur = a->fixedDurationValue[0];
@@ -1068,7 +1033,7 @@ float SASTask::computeActionCost(SASAction* a, float* numState, float makespan) 
 	}
 	else {
 		unsigned int numV = numVariables.size();
-		float* newState = new float[numV];
+    std::unique_ptr<float[]> newState = std::make_unique<float[]>(numV);
 		for (unsigned int i = 0; i < numV; i++) {
 			newState[i] = numState[i];
 		}
@@ -1099,7 +1064,7 @@ void SASTask::updateNumericState(float *s, SASNumericEffect* e, float duration) 
 }
 
 // Computes the duration of an action (used in TemporalRPG only)
-float SASTask::getActionDuration(SASAction* a, float* s) {
+float SASTask::getActionDuration(std::shared_ptr<SASAction> a, float* s) {
 	if (a->duration.constantDuration) {
 		return a->duration.minDuration;
 	}
@@ -1288,51 +1253,51 @@ string SASTask::toString() {
 }
 
 // Returns a string representation of this action
-string SASTask::toStringAction(SASAction &a) {
-	string s = "ACTION " + a.name + "\n";
-	for (SASControlVar& cv : a.controlVars) {
-		s += " :control " + cv.toString(&numVariables, &a.controlVars) + "\n";
+string SASTask::toStringAction(std::shared_ptr<SASAction> a) {
+	string s = "ACTION " + a->name + "\n";
+	for (SASControlVar& cv : a->controlVars) {
+		s += " :control " + cv.toString(&numVariables, &(a->controlVars)) + "\n";
 	}
-	for (auto& v : a.startNumConstrains) {
+	for (auto& v : a->startNumConstrains) {
 		s += " :start-const on " + numVariables[v.first].name + "\n";
 		for (SASNumericCondition& c : v.second)
-			s += "    " + c.toString(&numVariables, &a.controlVars) + "\n";
+			s += "    " + c.toString(&numVariables, &(a->controlVars)) + "\n";
 	}
-	s += " :duration " + a.duration.toString(&numVariables, &a.controlVars);
-	for (unsigned int i = 0; i < a.startNumCond.size(); i++)
-		s += " :con (at start " + a.startNumCond[i].toString(&numVariables, & a.controlVars) + ")\n";
-	for (unsigned int i = 0; i < a.startCond.size(); i++)
-		s += " :con (at start " + toStringCondition(a.startCond[i]) + ")\n";
-	for (unsigned int i = 0; i < a.overCond.size(); i++)
-		s += " :con (over all " + toStringCondition(a.overCond[i]) + ")\n";
-	for (unsigned int i = 0; i < a.overNumCond.size(); i++)
-		s += " :con (over all " + a.overNumCond[i].toString(&numVariables, &a.controlVars) + ")\n";
-	for (unsigned int i = 0; i < a.endCond.size(); i++)
-		s += " :con (at end " + toStringCondition(a.endCond[i]) + ")\n";
-	for (unsigned int i = 0; i < a.endNumCond.size(); i++)
-		s += " :con (at end " + a.endNumCond[i].toString(&numVariables, &a.controlVars) + ")\n";
-	for (unsigned int i = 0; i < a.preferences.size(); i++)
-		s += " :con (" + toStringPreference(&(a.preferences[i]), &a.controlVars) + ")\n";
-	for (unsigned int i = 0; i < a.startEff.size(); i++)
-		s += " :eff (at start " + toStringCondition(a.startEff[i]) + ")\n";
-	for (unsigned int i = 0; i < a.startNumEff.size(); i++)
-		s += " :eff (at start " + a.startNumEff[i].toString(&numVariables, &a.controlVars) + ")\n";
-	for (unsigned int i = 0; i < a.endEff.size(); i++)
-		s += " :eff (at end " + toStringCondition(a.endEff[i]) + ")\n";
-	for (unsigned int i = 0; i < a.endNumEff.size(); i++)
-		s += " :eff (at end " + a.endNumEff[i].toString(&numVariables, &a.controlVars) + ")\n";
+	s += " :duration " + a->duration.toString(&numVariables, &(a->controlVars));
+	for (unsigned int i = 0; i < a->startNumCond.size(); i++)
+		s += " :con (at start " + a->startNumCond[i].toString(&numVariables, &(a->controlVars)) + ")\n";
+	for (unsigned int i = 0; i < a->startCond.size(); i++)
+		s += " :con (at start " + toStringCondition(a->startCond[i]) + ")\n";
+	for (unsigned int i = 0; i < a->overCond.size(); i++)
+		s += " :con (over all " + toStringCondition(a->overCond[i]) + ")\n";
+	for (unsigned int i = 0; i < a->overNumCond.size(); i++)
+		s += " :con (over all " + a->overNumCond[i].toString(&numVariables, &(a->controlVars)) + ")\n";
+	for (unsigned int i = 0; i < a->endCond.size(); i++)
+		s += " :con (at end " + toStringCondition(a->endCond[i]) + ")\n";
+	for (unsigned int i = 0; i < a->endNumCond.size(); i++)
+		s += " :con (at end " + a->endNumCond[i].toString(&numVariables, &(a->controlVars)) + ")\n";
+	for (unsigned int i = 0; i < a->preferences.size(); i++)
+		s += " :con (" + toStringPreference(&(a->preferences[i]), &(a->controlVars)) + ")\n";
+	for (unsigned int i = 0; i < a->startEff.size(); i++)
+		s += " :eff (at start " + toStringCondition(a->startEff[i]) + ")\n";
+	for (unsigned int i = 0; i < a->startNumEff.size(); i++)
+		s += " :eff (at start " + a->startNumEff[i].toString(&numVariables, &(a->controlVars)) + ")\n";
+	for (unsigned int i = 0; i < a->endEff.size(); i++)
+		s += " :eff (at end " + toStringCondition(a->endEff[i]) + ")\n";
+	for (unsigned int i = 0; i < a->endNumEff.size(); i++)
+		s += " :eff (at end " + a->endNumEff[i].toString(&numVariables, &(a->controlVars)) + ")\n";
 	
-	for (unsigned int i = 0; i < a.conditionalEff.size(); i++) {
+	for (unsigned int i = 0; i < a->conditionalEff.size(); i++) {
 		s += " :cond.eff\n";
-		SASConditionalEffect& e = a.conditionalEff[i];
+		SASConditionalEffect& e = a->conditionalEff[i];
 		for (SASCondition& c : e.startCond) s += "\t:con (at-start " + toStringCondition(c) + ")\n";
 		for (SASCondition& c : e.endCond) s += "\t:con (at-end " + toStringCondition(c) + ")\n";
-		for (SASNumericCondition& c : e.startNumCond) s += "\t:con (at-start " + c.toString(&numVariables, &a.controlVars) + ")\n";
-		for (SASNumericCondition& c : e.endNumCond) s += "\t:con (at-end " + c.toString(&numVariables, &a.controlVars) + ")\n";
+		for (SASNumericCondition& c : e.startNumCond) s += "\t:con (at-start " + c.toString(&numVariables, &(a->controlVars)) + ")\n";
+		for (SASNumericCondition& c : e.endNumCond) s += "\t:con (at-end " + c.toString(&numVariables, &(a->controlVars)) + ")\n";
 		for (SASCondition& c : e.startEff) s += "\t:eff (at-start " + toStringCondition(c) + ")\n";
 		for (SASCondition& c : e.endEff) s += "\t:eff (at-end " + toStringCondition(c) + ")\n";
-		for (SASNumericEffect& c : e.startNumEff) s += "\t:eff (at-start " + c.toString(&numVariables, &a.controlVars) + ")\n";
-		for (SASNumericEffect& c : e.endNumEff) s += "\t:eff (at-end " + c.toString(&numVariables, &a.controlVars) + ")\n";
+		for (SASNumericEffect& c : e.startNumEff) s += "\t:eff (at-start " + c.toString(&numVariables, &(a->controlVars)) + ")\n";
+		for (SASNumericEffect& c : e.endNumEff) s += "\t:eff (at-end " + c.toString(&numVariables, &(a->controlVars)) + ")\n";
 	}
 	
 	return s;
@@ -1458,13 +1423,13 @@ string SASTask::toStringMetric(SASMetric* m) {
 std::vector<TVarValue>* SASTask::getListOfGoals() {
 	if (goalList.empty()) {
 		for (unsigned int i = 0; i < goals.size(); i++) {
-			SASAction& g = goals[i];
-			for (unsigned int j = 0; j < g.startCond.size(); j++)
-				addGoalToList(&(g.startCond[j]));
-			for (unsigned int j = 0; j < g.overCond.size(); j++)
-				addGoalToList(&(g.overCond[j]));
-			for (unsigned int j = 0; j < g.endCond.size(); j++)
-				addGoalToList(&(g.endCond[j]));
+			std::shared_ptr<SASAction> g = goals[i];
+			for (unsigned int j = 0; j < g->startCond.size(); j++)
+				addGoalToList(&(g->startCond[j]));
+			for (unsigned int j = 0; j < g->overCond.size(); j++)
+				addGoalToList(&(g->overCond[j]));
+			for (unsigned int j = 0; j < g->endCond.size(); j++)
+				addGoalToList(&(g->endCond[j]));
 		}
 	}
 	return &goalList;

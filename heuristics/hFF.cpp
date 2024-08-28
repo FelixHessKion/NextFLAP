@@ -17,7 +17,7 @@ FF_RPGVarValue::FF_RPGVarValue(TVariable var, TValue value) {
 	this->value = value;
 }
 
-FF_RPG::FF_RPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task) {
+FF_RPG::FF_RPG(std::shared_ptr<TState> fs, std::vector<std::shared_ptr<SASAction>>* tilActions, std::shared_ptr<SASTask> task) {
 	this->task = task;
 	initialize();
 	//cout << "STATE:" << endl;
@@ -33,9 +33,9 @@ FF_RPG::FF_RPG(TState* fs, std::vector<SASAction*>* tilActions, SASTask* task) {
 	expand();
 }
 
-void FF_RPG::addTILactions(std::vector<SASAction*>* tilActions) {
+void FF_RPG::addTILactions(std::vector<std::shared_ptr<SASAction>>* tilActions) {
 	for (unsigned int i = 0; i < tilActions->size(); i++) {
-		SASAction* a = tilActions->at(i);
+		std::shared_ptr<SASAction> a = tilActions->at(i);
 		for (unsigned int j = 0; j < a->endEff.size(); j++) {
 			TVariable v = a->endEff[j].var;
 			TValue value = a->endEff[j].value;
@@ -57,12 +57,12 @@ void FF_RPG::expand() {
 #ifdef DEBUG_RPG_ON
 			cout << "(" << task->variables[var].name << "," << task->values[value].name << ")" << endl;
 #endif
-			vector<SASAction*> &actions = task->requirers[var][value];
+			vector<std::shared_ptr<SASAction>> &actions = task->requirers[var][value];
 #ifdef DEBUG_RPG_ON
 			cout << actions.size() << " actions" << endl;
 #endif
 			for (unsigned int j = 0; j < actions.size(); j++) {
-				SASAction* a = actions[j];
+				std::shared_ptr<SASAction> a = actions[j];
 				if (actionLevels[a->index] == MAX_INT32 && isExecutable(a)) {
 #ifdef DEBUG_RPG_ON
 					cout << "[" << numLevels << "] " << a->name << endl;
@@ -74,7 +74,7 @@ void FF_RPG::expand() {
 		}
 		if (numLevels == 0) {
 			for (unsigned int j = 0; j < task->actionsWithoutConditions.size(); j++) {
-				SASAction* a = task->actionsWithoutConditions[j];
+				std::shared_ptr<SASAction> a = task->actionsWithoutConditions[j];
 				actionLevels[a->index] = numLevels;
 				addEffects(a);
 			}
@@ -83,18 +83,16 @@ void FF_RPG::expand() {
 		for (unsigned int i = 0; i < newLevel->size(); i++) {
 			literalLevels[(*newLevel)[i].var][(*newLevel)[i].value] = numLevels;
 		}
-		vector<FF_RPGVarValue>* aux = lastLevel;
-		lastLevel = newLevel;
-		newLevel = aux;
+    std::unique_ptr<std::vector<FF_RPGVarValue>> aux = std::move(lastLevel);
+		lastLevel = std::move(newLevel);
+		newLevel = std::move(aux);
 	}
-	delete lastLevel;
-	delete newLevel;
 #ifdef DEBUG_RPG_ON
 	cout << "There are " << numLevels << " levels" << endl;
 #endif
 }
 
-bool FF_RPG::isExecutable(SASAction* a) {
+bool FF_RPG::isExecutable(std::shared_ptr<SASAction> a) {
 	for (unsigned int i = 0; i < a->startCond.size(); i++) {
 		if (literalLevels[a->startCond[i].var][a->startCond[i].value] == MAX_INT32)
 			return false;
@@ -113,7 +111,7 @@ bool FF_RPG::isExecutable(SASAction* a) {
 	return true;
 }
 
-void FF_RPG::addEffects(SASAction* a) {
+void FF_RPG::addEffects(std::shared_ptr<SASAction> a) {
 	for (unsigned int i = 0; i < a->startEff.size(); i++) {
 		addEffect(a->startEff[i].var, a->startEff[i].value);
 	}
@@ -141,8 +139,8 @@ void FF_RPG::initialize() {
 		literalLevels[i].resize(task->values.size(), MAX_INT32);
 	}
 	actionLevels.resize(task->actions.size(), MAX_INT32);
-	lastLevel = new vector<FF_RPGVarValue>();
-	newLevel = new vector<FF_RPGVarValue>();
+	lastLevel = std::make_unique<vector<FF_RPGVarValue>>();
+	newLevel = std::make_unique<vector<FF_RPGVarValue>>();
 }
 
 void FF_RPG::resetReachedValues() {
@@ -160,24 +158,23 @@ uint16_t FF_RPG::computeHeuristic(PriorityQueue* openConditions) {
 	uint16_t bestCost;
 	uint16_t h = 0;
 	while (openConditions->size() > 0) {
-		FF_RPGCondition* g = (FF_RPGCondition*)openConditions->poll();
+    std::shared_ptr<FF_RPGCondition> g = std::dynamic_pointer_cast<FF_RPGCondition>(openConditions->poll());
 		//if (debug) cout << "Condition: " << task->variables[g->var].name << " = " << task->values[g->value].name << " (level " << literalLevels[g->var][g->value] << ")" << endl;
 #ifdef DEBUG_RPG_ON
 		cout << "Condition: " << task->variables[g->var].name << " = " << task->values[g->value].name << " (level " << literalLevels[g->var][g->value] << ")" << endl;
 #endif
 		gLevel = literalLevels[g->var][g->value];
 		if (gLevel <= 0) {
-			delete g;
 			continue;
 		}
 		if (gLevel == MAX_INT32) return MAX_UINT16;
 		literalLevels[g->var][g->value] = -gLevel;
 		reachedValues.push_back(SASTask::getVariableValueCode(g->var, g->value));
-		vector<SASAction*> &prod = task->producers[g->var][g->value];
-		SASAction* bestAction = nullptr;
+		vector<std::shared_ptr<SASAction>> &prod = task->producers[g->var][g->value];
+		std::shared_ptr<SASAction> bestAction = nullptr;
 		bestCost = MAX_UINT16;
 		for (unsigned int i = 0; i < prod.size(); i++) {
-			SASAction* a = prod[i];
+			std::shared_ptr<SASAction> a = prod[i];
 #ifdef DEBUG_RPG_ON
 			cout << a->name << ", dif. " << getDifficulty(a) << endl;
 #endif			
@@ -199,7 +196,6 @@ uint16_t FF_RPG::computeHeuristic(PriorityQueue* openConditions) {
 				}
 			}
 		}
-		delete g;
 		if (bestAction != nullptr) {
 			//if (debug) cout << bestAction->name << endl;
 #ifdef DEBUG_RPG_ON
@@ -241,14 +237,14 @@ void FF_RPG::addSubgoals(std::vector<TVarValue>* goals, PriorityQueue* openCondi
 void FF_RPG::addSubgoal(TVariable var, TValue value, PriorityQueue* openConditions) {
 	int level = literalLevels[var][value];
 	if (level > 0) {
-		openConditions->add(new FF_RPGCondition(var, value, level));
+		openConditions->add(std::make_shared<FF_RPGCondition>(var, value, level));
 #ifdef DEBUG_RPG_ON
 		cout << "* Adding subgoal: " << task->variables[var].name << " = " << task->values[value].name << " (level " << level << ")" << endl;
 #endif
 	}
 }
 
-void FF_RPG::addSubgoals(SASAction* a, PriorityQueue* openConditions) {
+void FF_RPG::addSubgoals(std::shared_ptr<SASAction> a, PriorityQueue* openConditions) {
 	TVariable var;
 	TValue value;
 	// Add the conditions of the action that do not hold in the frontier state as subgoals 
@@ -272,7 +268,7 @@ void FF_RPG::addSubgoals(SASAction* a, PriorityQueue* openConditions) {
 	}*/
 }
 
-uint16_t FF_RPG::getDifficulty(SASAction* a) {
+uint16_t FF_RPG::getDifficulty(std::shared_ptr<SASAction> a) {
 	uint16_t cost = 0;
 	for (unsigned int i = 0; i < a->startCond.size(); i++) {
 		cost += getDifficulty(&(a->startCond[i]));
